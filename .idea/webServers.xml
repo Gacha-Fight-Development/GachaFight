@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="1d340bef-fa97-4910-851f-ff047c12fb11" name="GachaFight">
+        <fileTransfer accessType="SFTP" host="avonelle.bloom.host" port="2022" sshConfigId="811e1381-5420-44ca-b6a1-9daca38fbb1a" sshConfig="eznjesk9.7868ced0@avonelle.bloom.host:2022 password">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="0" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="SshConfigs">
+    <configs>
+      <sshConfig authType="PASSWORD" host="avonelle.bloom.host" id="811e1381-5420-44ca-b6a1-9daca38fbb1a" port="2022" nameFormat="DESCRIPTIVE" username="eznjesk9.7868ced0" useOpenSSHConfig="true" />
+    </configs>
+  </component>
+</project>

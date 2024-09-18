@@ -1,0 +1,93 @@
+plugins {
+    id("io.github.goooler.shadow") version "8.1.8"
+    id 'java'
+}
+group = 'me.diu'
+version = '1.0'
+
+repositories {
+    mavenCentral()
+    maven {
+        name = "papermc-repo"
+        url = "https://repo.papermc.io/repository/maven-public/"
+    }
+    maven {
+        url = 'https://jitpack.io'
+    }
+    maven {
+        name = "sonatype"
+        url = "https://oss.sonatype.org/content/groups/public/"
+    }
+    maven { url = 'https://repo.extendedclip.com/content/repositories/placeholderapi/' }
+    maven { url = 'https://mvn.lumine.io/repository/maven-public/' }
+    maven { url = 'https://repo.codemc.io/repository/maven-releases/' }
+}
+
+dependencies {
+    compileOnly "io.papermc.paper:paper-api:1.20.6-R0.1-SNAPSHOT"
+
+    compileOnly 'org.projectlombok:lombok:1.18.34'
+    annotationProcessor 'org.projectlombok:lombok:1.18.34'
+
+    compileOnly 'org.mongodb:mongodb-driver-sync:5.1.2'
+    compileOnly 'org.mongodb:mongodb-driver-core:5.1.2'
+    compileOnly 'org.mongodb:bson:5.1.2'
+
+    compileOnly 'com.sk89q.worldedit:worldedit-core:7.2.0'
+    compileOnly 'com.sk89q.worldedit:worldedit-bukkit:7.2.0'
+
+    compileOnly 'me.clip:placeholderapi:2.11.6'
+    compileOnly 'io.lumine:Mythic-Dist:5.6.1'
+    compileOnly 'net.luckperms:api:5.4'
+    implementation "net.kyori:adventure-text-minimessage:4.17.0"
+    compileOnly 'com.github.LoneDev6:API-ItemsAdder:3.6.1'
+    implementation "com.zaxxer:HikariCP:4.0.3"
+}
+
+shadowJar {
+    minimize()
+}
+
+// Set target Java version
+def targetJavaVersion = 21
+java {
+    def javaVersion = JavaVersion.toVersion(targetJavaVersion)
+    sourceCompatibility = javaVersion
+    targetCompatibility = javaVersion
+    if (JavaVersion.current() < javaVersion) {
+        toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+
+    if (targetJavaVersion >= 10 || JavaVersion.current().isJava10Compatible()) {
+        options.release.set(targetJavaVersion)
+    }
+}
+
+processResources {
+    def props = [version: version]
+    inputs.properties props
+    filteringCharset 'UTF-8'
+    filesMatching('plugin.yml') {
+        expand props
+    }
+}
+
+// Task to copy the built JAR to the local server's plugins directory
+tasks.register('deployToServer', Copy) {
+    dependsOn shadowJar // Ensure shadowJar task is completed first
+    from tasks.shadowJar
+    into 'C:/Users/xiaol/OneDrive/Desktop/Server/plugins' // Update with your server's plugins directory
+    doLast {
+        println "Deployed to server's plugin directory."
+    }
+    outputs.upToDateWhen { false } // Mark the task as not up-to-date to force execution
+}
+
+// Automatically build and deploy the plugin on code changes
+tasks.build {
+    dependsOn deployToServer
+}

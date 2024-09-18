@@ -1,0 +1,48 @@
+name: GachaFight
+version: '1.0'
+main: me.diu.gachafight.GachaFight
+api-version: '1.20'
+commands:
+  updatescoreboard:
+    usage: /<command>
+  playerdata:
+    usage: /<command>
+  adminplayerdata:
+    description: Admin command to manage player data
+    usage: /<command> <player> <action> [value]
+    permission: gacha.admin
+  discord:
+    usage: /discord
+  gachareload:
+    usage: /gachareload
+    permission: gacha.admin
+  editgacha:
+    usage: /editgacha
+    permission: gacha.admin
+  checkmodel:
+    usage: /checkmodel
+  autosellgacha:
+    description: Toggle auto-sell for gacha items.
+    usage: /autosellgacha <on|off>
+  help:
+    usage: /help
+  editpotion:
+    usage: /editpotion
+    permission: gacha.admin
+  baltop:
+    usage: /baltop
+  viewplayer:
+    usage: /viewplayer
+  staff:
+    usage: /staff
+  toggledamage:
+    usage: /toggledamage
+libraries:
+  - org.mongodb:mongodb-driver-sync:5.1.2
+  - org.mongodb:mongodb-driver-core:5.1.2
+  - org.mongodb:bson:5.1.2
+depend:
+  - MythicMobs
+softdepend:
+  - PlaceholderAPI
+
