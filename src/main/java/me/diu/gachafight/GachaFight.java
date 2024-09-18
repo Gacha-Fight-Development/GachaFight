@@ -45,7 +45,7 @@ import java.util.Map;
 
 @Getter
 public final class GachaFight extends JavaPlugin implements Listener {
-    @Getter //hi
+    @Getter //hiNOW
     private static GachaFight instance;
     private DatabaseManager databaseManager;
     private DIContainer diContainer;
