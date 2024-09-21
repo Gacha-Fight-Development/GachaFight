@@ -4,6 +4,7 @@ import me.diu.gachafight.GachaFight;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -50,6 +51,8 @@ public class PotionShopEditorGUI {
                     plugin.getPotionItemManager().removeItemFromLootTable(rarityIndex, event.getSlot());
                     player.sendMessage(MiniMessage.miniMessage().deserialize("<red>Item removed"));
                     open(player, rarityIndex, plugin); // Refresh inventory
+                } else if (event.getClick() == ClickType.MIDDLE) {
+                    player.getInventory().addItem(event.getCurrentItem());
                 }
             }
         }

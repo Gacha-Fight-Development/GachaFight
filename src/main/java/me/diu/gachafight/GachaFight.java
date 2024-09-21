@@ -22,6 +22,9 @@ import me.diu.gachafight.quest.QuestManager;
 import me.diu.gachafight.quest.gui.QuestGUI;
 import me.diu.gachafight.quest.listeners.QuestNPCListener;
 import me.diu.gachafight.scoreboard.Board;
+import me.diu.gachafight.shop.buy.BuyItemManager;
+import me.diu.gachafight.shop.buy.gui.BuyShopClickHandler;
+import me.diu.gachafight.shop.buy.listener.BuyShopSelectionListener;
 import me.diu.gachafight.shop.equipmentspecialist.EquipmentSpecialistListener;
 import me.diu.gachafight.shop.equipmentspecialist.EquipmentSpecialistNPC;
 import me.diu.gachafight.shop.potion.listeners.PotionUseListener;
@@ -32,7 +35,6 @@ import me.diu.gachafight.utils.ColorChat;
 import me.diu.gachafight.utils.FurnitureDataManager;
 import net.luckperms.api.LuckPerms;
 import org.bukkit.Bukkit;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.RegisteredServiceProvider;
@@ -61,6 +63,7 @@ public final class GachaFight extends JavaPlugin implements Listener {
     private FurnitureDataManager furnitureDataManager;
     private QuestManager questManager;
     private QuestGUI questGUI;
+    private BuyItemManager buyItemManager;
     @Override
     public void onEnable() {
         this.instance = this;
@@ -81,11 +84,12 @@ public final class GachaFight extends JavaPlugin implements Listener {
         this.gachaManager = new GachaManager(this, luckPerms, questManager);
         this.furnitureDataManager = new FurnitureDataManager(this);
         this.questGUI = new QuestGUI(questManager);
+        this.buyItemManager = new BuyItemManager(this);
         registerEvents();
         registerCommands();
         loadAllPlayerData(diContainer);
-        Blocks.spawnTutorialGachaChest();
         Blocks.spawnGachaChest();
+        Blocks.spawnTutorialGachaChest();
         furnitureDataManager.loadMissingFurniture();
         if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
             PlaceholderAPIHook.registerHook();
@@ -95,12 +99,9 @@ public final class GachaFight extends JavaPlugin implements Listener {
             public void run() {
                 if (Blocks.gachaChest != null) {
                     Blocks.gachaChest.remove();
-                    Blocks.tutorialGachaChest.remove();
                 }
                 Blocks.spawnGachaChest();
-                Blocks.spawnTutorialGachaChest();
                 questManager.checkAllPlayersForExpiredQuests();
-                Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "citizens reload");
             }
         }.runTaskTimer(this, 6000, 4000);
         new BukkitRunnable() {
@@ -111,7 +112,7 @@ public final class GachaFight extends JavaPlugin implements Listener {
                     stats.updateActionbar(player); // Update action bar with current HP
                 }
             }
-        }.runTaskTimer(this, 0L, 20L); // Runs every 20 ticks (1 second)
+        }.runTaskTimerAsynchronously(this, 0L, 20L);
     }
 
     @Override
@@ -171,6 +172,8 @@ public final class GachaFight extends JavaPlugin implements Listener {
         new ViewPlayerCommand(this);
         new StaffCommand(this, luckPerms);
         new ToggleDamageCommand(this, luckPerms);
+        new EditShopCommand(this);
+        new PayCommand(this);
     }
 
     private void registerEvents() {
@@ -215,15 +218,5 @@ public final class GachaFight extends JavaPlugin implements Listener {
         onDisable();
         onEnable();
     }
-
-    public GachaManager getGachaManager() {
-        return gachaManager;
-    }
-
-    public GachaLootTableManager getGachaLootTableManager() {
-        return GachaLootTableManager;
-    }
-
-    public PotionItemManager getPotionItemManager() { return potionItemManager;}
 
 }

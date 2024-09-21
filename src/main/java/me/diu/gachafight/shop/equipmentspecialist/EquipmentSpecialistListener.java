@@ -254,6 +254,8 @@ public class EquipmentSpecialistListener implements Listener {
                                 Component newName = LevelUpDisplayName(levelUpItemMeta.displayName(), player, rarity);
                                 levelUpItemMeta.displayName(newName);
                                 itemLevelUp.setItemMeta(levelUpItemMeta);
+                                inventory.setItem(10, chestArrow1);
+                                inventory.setItem(16, chestArrow2);
                                 inventory.setItem(13, itemLevelUp);  // Place the leveled-up item in slot 13
                             }
                         }

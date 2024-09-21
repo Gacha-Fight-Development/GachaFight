@@ -56,6 +56,50 @@ public class AdminPlayerDataCommand implements CommandExecutor {
                 sender.sendMessage(String.valueOf(stats.getGearStats().getTotalArmor()));
                 sender.sendMessage(String.valueOf(stats.getWeaponStats().getDamage()));
                 break;
+            case "add":
+                if (args.length < 4) {
+                    sender.sendMessage("Usage: /adminplayerdata <player> add <stat> <value>");
+                    return true;
+                }
+                try {
+                    double doubleValue = Double.parseDouble(args[3]);
+                    int intValue = (int) doubleValue;
+
+                    switch (args[2].toLowerCase()) {
+                        case "damage":
+                            stats.setDamage(stats.getDamage() + doubleValue);
+                            break;
+                        case "armor":
+                            stats.setArmor(stats.getArmor() + doubleValue);
+                            break;
+                        case "hp":
+                            stats.setMaxhp(stats.getMaxhp() + doubleValue);
+                            break;
+                        case "luck":
+                            stats.setLuck(stats.getLuck() + intValue);
+                            break;
+                        case "level":
+                            stats.setLevel(stats.getLevel() + intValue);
+                            break;
+                        case "exp":
+                            stats.setExp(stats.getExp() + doubleValue);
+                            break;
+                        case "money":
+                            stats.setMoney(stats.getMoney() + doubleValue);
+                            break;
+                        case "gem":
+                            stats.setGem(stats.getGem() + intValue);
+                            break;
+                        default:
+                            sender.sendMessage("Unknown stat.");
+                            return true;
+                    }
+
+                    sender.sendMessage("Player stats have been updated.");
+                } catch (NumberFormatException e) {
+                    sender.sendMessage("Invalid value. Please enter a number.");
+                }
+                break;
 
             case "set":
                 if (args.length < 4) {

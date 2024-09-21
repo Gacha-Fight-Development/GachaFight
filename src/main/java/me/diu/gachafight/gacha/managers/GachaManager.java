@@ -47,8 +47,6 @@ public class GachaManager {
             player.sendMessage(ColorChat.chat("&cFull Inventory"));
             return;
         }
-        key.setAmount(key.getAmount() - 1);
-
         // Randomly choose a rarity based on custom probabilities using the key
         int rarityIndex = getRandomRarity(key, player);
 
@@ -121,18 +119,30 @@ public class GachaManager {
                     customizedReward.setItemMeta(meta);
                 }
 
+                String plainRarityName = PlainTextComponentSerializer.plainText().serialize(
+                        MiniMessage.miniMessage().deserialize(RaritySelectionGUI.RARITY_NAMES[rarityIndex])
+                );
 
-                // Check if the player has the "gacha.autosell.gacha" permission
+                String rarityPermission = "gacha.autosell." + plainRarityName.toLowerCase();
                 User user = luckPerms.getUserManager().getUser(player.getUniqueId());
-                if (player.hasPermission("gacha.autosell.gacha") && !user.getPrimaryGroup().contains("owner")) {
-                    // Sell the item automatically
+                player.sendMessage(rarityPermission);
+
+                if (player.hasPermission(rarityPermission) && !user.getPrimaryGroup().contains("owner")) {
+                    // Auto-sell the item
+                    if (player.hasPermission(rarityPermission+".50") && statMedium > 50) {
+                        double sellPrice = SellPriceCalculator.calculateSellPrice(customizedReward, rarityIndex);
+                        player.sendMessage(MiniMessage.miniMessage().deserialize("<green>Auto-sold " + RaritySelectionGUI.RARITY_NAMES[rarityIndex] + " item for " + String.format("%.1f" + sellPrice) + " money!"));
+                        PlayerStats playerStats = PlayerStats.getPlayerStats(player);
+                        playerStats.setMoney(playerStats.getMoney() + sellPrice);
+                    }
                     double sellPrice = SellPriceCalculator.calculateSellPrice(customizedReward, rarityIndex);
-                    player.sendMessage(MiniMessage.miniMessage().deserialize("<green>Auto-sold " + RaritySelectionGUI.RARITY_NAMES[rarityIndex] + " item for " + sellPrice + " money!"));
+                    player.sendMessage(MiniMessage.miniMessage().deserialize("<green>Auto-sold " + RaritySelectionGUI.RARITY_NAMES[rarityIndex] + " item for " + String.format("%.1f" + sellPrice) + " money!"));
                     PlayerStats playerStats = PlayerStats.getPlayerStats(player);
                     playerStats.setMoney(playerStats.getMoney() + sellPrice);
                 } else {
                     // Give the item to the player
                     player.getInventory().addItem(customizedReward);
+                    key.setAmount(key.getAmount() - 1);
                     player.sendMessage(MiniMessage.miniMessage().deserialize("<green>You received a " + RaritySelectionGUI.RARITY_NAMES[rarityIndex] + " item!"));
                 }
             }

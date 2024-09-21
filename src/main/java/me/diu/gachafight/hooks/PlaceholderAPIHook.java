@@ -58,6 +58,8 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
                         return String.format("%.2f", stats.getMoney());
                     case "gem":
                         return String.valueOf(stats.getGem());
+                    case "speed":
+                        return String.format("%.1f", stats.getSpeed());
 
                     // Placeholder for leaderboard rank of the player
                     case "money_rank":

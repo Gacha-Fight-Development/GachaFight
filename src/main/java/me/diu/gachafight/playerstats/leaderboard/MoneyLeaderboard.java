@@ -46,7 +46,7 @@ public class MoneyLeaderboard {
         Bukkit.getScheduler().runTaskTimer(plugin, this::updateLeaderboard, 0L, 24000L); // 24000 ticks = 20 minutes
 
         // Schedule save tasks 10 minutes before the leaderboard updates
-        Bukkit.getScheduler().runTaskTimer(plugin, this::saveAllOnlinePlayers, 0L, 12000L); // 12000 ticks = 10 minutes
+        Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, this::saveAllOnlinePlayers, 0L, 12000L); // 12000 ticks = 10 minutes
     }
 
     // Save all online players' money data 10 minutes before leaderboard updates

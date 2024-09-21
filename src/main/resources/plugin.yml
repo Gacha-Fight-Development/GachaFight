@@ -29,6 +29,9 @@ commands:
   editpotion:
     usage: /editpotion
     permission: gacha.admin
+  editshop:
+    usage: /editshop
+    permission: gacha.admin
   baltop:
     usage: /baltop
   viewplayer:
@@ -37,6 +40,9 @@ commands:
     usage: /staff
   toggledamage:
     usage: /toggledamage
+  pay:
+    usage: /pay <player> <amount>
+
 libraries:
   - org.mongodb:mongodb-driver-sync:5.1.2
   - org.mongodb:mongodb-driver-core:5.1.2
@@ -45,4 +51,5 @@ depend:
   - MythicMobs
 softdepend:
   - PlaceholderAPI
+  - ItemsAdder
 

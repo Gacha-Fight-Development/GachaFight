@@ -1,12 +1,15 @@
 package me.diu.gachafight.listeners;
 
 import me.diu.gachafight.GachaFight;
+import me.diu.gachafight.display.Blocks;
 import me.diu.gachafight.playerstats.PlayerDataManager;
 import me.diu.gachafight.playerstats.PlayerStats;
 import me.diu.gachafight.di.ServiceLocator;
 import me.diu.gachafight.scoreboard.Board;
 import me.diu.gachafight.utils.ColorChat;
 import org.bukkit.Bukkit;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -41,8 +44,18 @@ public class Join implements Listener {
                     Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "warp tutorial " + player.getName());
                 }
             }.runTaskLater(plugin, 300L);
+            new BukkitRunnable() {
+                public void run() {
+                    Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "mm m kill GachaChestSmall");
+                    Blocks.spawnTutorialGachaChest();
+                }
+            }.runTaskLater(plugin, 350L);
         }
         playerDataManager.loadPlayerData(player);
+        if (player.hasPermission("op")) {
+            player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).addModifier(new AttributeModifier("GENERIC_MOVEMENT_SPEED", -10, AttributeModifier.Operation.ADD_NUMBER));
+        }
+        player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(playerDataManager.getPlayerStats(player.getUniqueId()).getSpeed()*0.1);
         for (int i = 1; i < 9; i++) {
             plugin.getQuestManager().loadQuestProgress(player, i);
         }

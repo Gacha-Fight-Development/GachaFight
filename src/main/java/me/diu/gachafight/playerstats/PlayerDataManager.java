@@ -43,6 +43,9 @@ public class PlayerDataManager {
             stats.setLuck(document.getInteger("luck", 5));
             stats.setMoney(document.getDouble("money"));
             stats.setGem(document.getInteger("gem", 0));
+            if (document.getDouble("speed") != null) {
+                stats.setSpeed(document.getDouble("speed"));
+            };
 
 
             PlayerStatsListener.updateSpecificGearStats(stats, player.getInventory().getHelmet(), PlayerArmorChangeEvent.SlotType.HEAD);
@@ -99,6 +102,7 @@ public class PlayerDataManager {
             document.put("luck", stats.getLuck());
             document.put("money", stats.getMoney());
             document.put("gem", stats.getGem());
+            document.put("speed", stats.getSpeed());
             collection.replaceOne(Filters.eq("uuid", player.getUniqueId().toString()), document, new ReplaceOptions().upsert(true));
             plugin.getLogger().info("Saved data for player: " + player.getName());
         } else {

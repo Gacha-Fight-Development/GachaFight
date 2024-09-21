@@ -14,8 +14,8 @@ import java.util.stream.Collectors;
 
 public class AdminPlayerDataTabCompleter implements TabCompleter {
 
-    private static final List<String> ACTIONS = List.of("view", "set");
-    private static final List<String> STATS = List.of("level", "exp", "damage", "armor", "hp", "luck");
+    private static final List<String> ACTIONS = List.of("view", "set", "add");
+    private static final List<String> STATS = List.of("level", "exp", "damage", "armor", "hp", "luck", "gem", "money");
 
     public AdminPlayerDataTabCompleter(GachaFight plugin) {
         plugin.getCommand("adminplayerdata").setTabCompleter(this);

@@ -22,8 +22,7 @@ public class PlayerStats {
     private double maxhp;
     private double hp;
     private double crit;
-    //    private int intelligence;
-//    private int wisdom;
+    private double speed;
     private int luck;
     private double money;
     private int gem;
@@ -35,7 +34,7 @@ public class PlayerStats {
         this.level = 1;
         this.exp = 0.0;
         this.damage = 1;
-        this.maxhp = 10;
+        this.maxhp = 20;
         this.hp = this.getMaxhp();
         this.armor = 0.2;
         this.crit = 1;
@@ -44,7 +43,7 @@ public class PlayerStats {
         this.luck = 5;
         this.money = 0;
         this.gem = 0;
-
+        this.speed = 1;
         this.gearStats = new GearStats();
         this.weaponStats = new WeaponStats();
     }
@@ -68,15 +67,6 @@ public class PlayerStats {
 //            } else if (stat.equalsIgnoreCase("wisdom")) {
 //                this.wisdom++;
             }
-
-            if (stat.equalsIgnoreCase("strength")
-                    || stat.equalsIgnoreCase("stamina")
-                    || stat.equalsIgnoreCase("dexterity")
-//                    || stat.equalsIgnoreCase("intelligence")
-                    || stat.equalsIgnoreCase("luck")
-//                    || stat.equalsIgnoreCase("wisdom")
-            ) {
-            }
         }
     }
 
@@ -89,6 +79,7 @@ public class PlayerStats {
                 "&eHP: " + getPlayerStats(player).getMaxhp() + " (+" + String.format("%.1f", getPlayerStats(player).getGearStats().getTotalMaxHp()) + ")\n" +
                 "&eOffhand Stats: " + getPlayerStats(player).getGearStats().getOffhandStats().getDamage() + " damage, " +
                 getPlayerStats(player).getGearStats().getOffhandStats().getArmor() + " armor\n" +
+                "&eSpeed: " + getPlayerStats(player).getSpeed() + "\n" +
                 "&eLuck: " + getPlayerStats(player).getLuck() + "\n");
     }
 
@@ -105,7 +96,7 @@ public class PlayerStats {
     }
 
     public int getRequiredExp() {
-        return (int) (Math.pow(this.level, 2.77) + 55 * this.level);
+        return (int) (Math.pow(this.level, 2.88) + 25 * this.level);
     }
 
     // Added a new method to sync player's health with their hearts

@@ -5,6 +5,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -51,6 +52,8 @@ public class RarityLootTableEditorGUI {
                 plugin.getGachaLootTableManager().removeItemFromLootTable(rarityIndex, event.getSlot());
                 player.sendMessage(MiniMessage.miniMessage().deserialize("<red>Item removed from " + RaritySelectionGUI.RARITY_NAMES[rarityIndex] + " loot table."));
                 openGacha(player, rarityIndex, plugin); // Refresh inventory
+            }  else if (event.getClick() == ClickType.MIDDLE) {
+                player.getInventory().addItem(event.getCursor());
             }
         }
     }

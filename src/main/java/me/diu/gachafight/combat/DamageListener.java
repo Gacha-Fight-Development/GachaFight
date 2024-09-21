@@ -5,6 +5,7 @@ import io.lumine.mythic.bukkit.adapters.BukkitEntity;
 import io.lumine.mythic.bukkit.events.MythicDamageEvent;
 import io.lumine.mythic.core.mobs.ActiveMob;
 import me.diu.gachafight.GachaFight;
+import me.diu.gachafight.combat.mobdrops.GoblinDeathReward;
 import me.diu.gachafight.playerstats.PlayerStats;
 import me.diu.gachafight.quest.listeners.QuestKillListener;
 import me.diu.gachafight.utils.ColorChat;
@@ -93,7 +94,7 @@ public class DamageListener implements Listener {
         }
 
         if (player.hasPermission("gachafight.toggledamage")) {
-            player.sendMessage(ColorChat.chat("&cFinal Damage: &f" + totalDamage));
+            player.sendMessage(ColorChat.chat("&cFinal Damage: &f" + String.format("%.1f",totalDamage)));
         }
 
         // Cancel the default damage and apply custom damage
@@ -155,18 +156,12 @@ public class DamageListener implements Listener {
 
             // Add money to the player
             playerStats.setMoney(playerStats.getMoney() + moneyGained);
-            BossDeathReward.specificBossDeath(entity.getName(), player);
-
-            double random = Math.random();
-
-            // Optionally, reward the player with an item
-            if (random < (0.15 + (playerStats.getLuck() * 0.001))) {
-                Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "si give 991 1 " + player.getName() + " true");
-                player.sendMessage(MiniMessage.miniMessage().deserialize("<green>+ <white>Common Gacha Key"));
+            if (entity.getName().contains("Goblin")) {
+                GoblinDeathReward.MobDeath(entity.getName(), player);
             }
 
             // Notify the player of the exp and money gained
-            player.sendMessage(MiniMessage.miniMessage().deserialize("<green>+ <dark_aqua>Exp: <aqua>" + String.format("%.2f", expGained) + "<black> | <gold> Money: <yellow>" + String.format("%.2f", moneyGained) + "</green>"));
+            player.sendActionBar(MiniMessage.miniMessage().deserialize("<green>+ <dark_aqua>Exp: <aqua>" + String.format("%.2f", expGained) + "<black> | <gold> Money: <yellow>" + String.format("%.2f", moneyGained) + "</green>"));
         }
     }
 
@@ -201,9 +196,11 @@ public class DamageListener implements Listener {
                     if (stats.getHp() <= 0) {
                         player.setHealth(0); // This will trigger the death event
                         stats.syncHealthWithHearts(player);
+                        stats.updateActionbar(player);
                     } else {
                         // Sync the player's hearts with the current HP
                         stats.syncHealthWithHearts(player);
+                        stats.updateActionbar(player);
                     }
                 }
             }
@@ -251,7 +248,7 @@ public class DamageListener implements Listener {
         }
         event.setCancelled(true);
         Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "spawn " + player.getName());
-        player.sendMessage(ColorChat.chat("&4You have Died."));
+        player.sendMessage(ColorChat.chat("&4You have Died to " + event.getDamageSource().getDirectEntity().getName()));
     }
 
     private double getMobArmor(Entity entity) {

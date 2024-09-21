@@ -29,7 +29,7 @@ public class Discord implements CommandExecutor {
         if (sender instanceof Player player) {
             TextComponent message = new TextComponent(ColorChat.chat("&dClick Me!"));
             message.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text(ColorChat.chat("&bClick to join Discord Server!"))));
-            message.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://discord.gg/XkbVC7pPWh"));
+            message.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://discord.gg/wzAGMs3"));
             player.spigot().sendMessage(message);
             return true;
         } else {

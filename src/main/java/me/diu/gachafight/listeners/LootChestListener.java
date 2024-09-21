@@ -1,16 +1,20 @@
 package me.diu.gachafight.listeners;
 
 import dev.lone.itemsadder.api.CustomFurniture;
+import dev.lone.itemsadder.api.Events.FurnitureBreakEvent;
 import dev.lone.itemsadder.api.Events.FurnitureInteractEvent;
 import me.diu.gachafight.GachaFight;
+import me.diu.gachafight.utils.ColorChat;
 import me.diu.gachafight.utils.FurnitureDataManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Entity;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import java.util.List;
 import java.util.Random;
 
 public class LootChestListener implements Listener {
@@ -29,6 +33,29 @@ public class LootChestListener implements Listener {
     @EventHandler
     public void onPlayerRightClick(FurnitureInteractEvent event) {
         // Check if the clicked block is a goblin loot chest
+        if (isGoblinLootChest(event.getFurniture().getEntity().getLocation())) {
+            // Spawn loot and remove the furniture temporarily
+            Location location = event.getFurniture().getEntity().getLocation();
+            event.getFurniture().remove(false);
+            furnitureDataManager.removeFurnitureState(location);
+            for (int i = 0; i < event.getPlayer().getNearbyEntities(5,5,5).size(); i++) {
+                if (event.getPlayer().getNearbyEntities(5,5,5).get(i).getName().equals("ItemsAdder_furniture")) {
+                    event.getPlayer().getNearbyEntities(5,5,5).get(i).remove();
+                }
+            }
+
+
+            spawnLoot(location);
+            event.getPlayer().sendMessage(ColorChat.chat("&aLoot Crate Opened!"));
+            furnitureDataManager.saveFurnitureState(location, event.getNamespacedID());
+            // Schedule respawn after the delay
+            respawnFurniture(event.getFurniture().getEntity().getLocation(), event.getNamespacedID());
+        }
+    }
+    @EventHandler
+    public void onPlayerLeftClick(FurnitureBreakEvent event) {
+        // Check if the clicked block is a goblin loot chest
+        if (event.getPlayer().hasPermission("gacha.op")) return;
         if (isGoblinLootChest(event.getFurniture().getEntity().getLocation())) {
             // Spawn loot and remove the furniture temporarily
             spawnLoot(event.getFurniture().getEntity().getLocation());

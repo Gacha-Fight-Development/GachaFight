@@ -1,9 +1,12 @@
 package me.diu.gachafight.listeners;
 
+import me.clip.placeholderapi.PlaceholderAPI;
 import me.diu.gachafight.GachaFight;
+import me.diu.gachafight.hooks.PlaceholderAPIHook;
 import me.diu.gachafight.playerstats.PlayerStats;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerChatEvent;
 
 public class ChatListener implements Listener {
@@ -13,40 +16,41 @@ public class ChatListener implements Listener {
     }
 
     @EventHandler
-    public void onPlayerChat(PlayerChatEvent event) {
+    public void onPlayerChat(AsyncPlayerChatEvent event) {
         String playerName = event.getPlayer().getName();
         PlayerStats playerStats = PlayerStats.getPlayerStats(event.getPlayer());
-        String prefix = ":player:";
+        String prefix = "%img_player%";
 
         if (event.getPlayer().hasPermission("gacha.owner")) {
-            prefix = ":owner:";
+            prefix = "%img_owner%";
         } else if (event.getPlayer().hasPermission("gacha.manager")) {
-            prefix = ":manager:";
+            prefix = "%img_manager%";
         } else if (event.getPlayer().hasPermission("gacha.dev")) {
-            prefix = ":dev:";
+            prefix = "%img_dev%";
         } else if (event.getPlayer().hasPermission("gacha.staff")) {
-            prefix = ":manager:";
+            prefix = "%img_manager%";
         } else if (event.getPlayer().hasPermission("gacha.mod")) {
-            prefix = ":mod:";
+            prefix = "%img_mod%";
         } else if (event.getPlayer().hasPermission("gacha.builder")) {
-            prefix = ":builder:";
+            prefix = "%img_builder%";
         } else if (event.getPlayer().hasPermission("gacha.helper")) {
-            prefix = ":helper:";
+            prefix = "%img_helper%";
         } else if (event.getPlayer().hasPermission("gacha.youtube")) {
-            prefix = ":youtube:";
+            prefix = "%img_youtube%";
         } else if (event.getPlayer().hasPermission("gacha.tiktok")) {
-            prefix = ":tiktok:";
+            prefix = "%img_tiktok%";
         } else if (event.getPlayer().hasPermission("gacha.mvpplus")) {
-            prefix = ":mvp_plus:";
+            prefix = "%img_mvp_plus%";
         } else if (event.getPlayer().hasPermission("gacha.mvp")) {
-            prefix = ":mvp:";
+            prefix = "%img_mvp%";
         } else if (event.getPlayer().hasPermission("gacha.vipplus")) {
-            prefix = ":vip_plus:";
+            prefix = "%img_vip_plus%";
         } else if (event.getPlayer().hasPermission("gacha.vip")) {
-            prefix = ":vip:";
+            prefix = "%img_vip%";
         }
 
         // Modify the format to include prefix and properly handle the player's name and message
+        prefix = PlaceholderAPI.setPlaceholders(event.getPlayer(), prefix);
         event.setFormat(prefix + " §8[§6" + playerStats.getLevel() + "§8] §f%1$s: %2$s");
     }
 }
