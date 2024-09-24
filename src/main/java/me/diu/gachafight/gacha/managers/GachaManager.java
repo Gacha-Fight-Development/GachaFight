@@ -125,7 +125,6 @@ public class GachaManager {
 
                 String rarityPermission = "gacha.autosell." + plainRarityName.toLowerCase();
                 User user = luckPerms.getUserManager().getUser(player.getUniqueId());
-                player.sendMessage(rarityPermission);
 
                 if (player.hasPermission(rarityPermission) && !user.getPrimaryGroup().contains("owner")) {
                     // Auto-sell the item
@@ -377,8 +376,8 @@ public class GachaManager {
     // Probability table for Common Gacha Key
     private final double[] commonKeyProbabilities = {
             89, // common
-            10, // uncommon
-            0.9, // rare
+            10.4, // uncommon
+            0.5, // rare
             0.1,  // epic
             0,  // unique
             0,  // legendary
@@ -388,10 +387,10 @@ public class GachaManager {
 
     private final double[] uncommonKeyProbabilities = {
             55, // common
-            36, // uncommon
-            8, // rare
-            0.9,  // epic
-            0.1,  // unique
+            44.4, // uncommon
+            0.5, // rare
+            0.1,  // epic
+            0,  // unique
             0,  // legendary
             0,  // mythic
             0   // event
@@ -401,9 +400,9 @@ public class GachaManager {
     private final double[] rareKeyProbabilities = {
             30, // common
             40, // uncommon
-            23, // rare
-            6,  // epic
-            1,  // unique
+            29.4, // rare
+            0.5,  // epic
+            0.1,  // unique
             0,  // legendary
             0,  // mythic
             0   // event
@@ -412,18 +411,18 @@ public class GachaManager {
             10, // common
             40, // uncommon
             30, // rare
-            15,  // epic
-            4.8,  // unique
-            0.2,  // legendary
+            19.1,  // epic
+            0.8,  // unique
+            0.1,  // legendary
             0,  // mythic
             0   // event
     };
     private final double[] uniqueKeyProbabilities = {
             0, // common
-            20, // uncommon
-            40, // rare
+            10, // uncommon
+            35, // rare
             30,  // epic
-            9,  // unique
+            24,  // unique
             0.99,  // legendary
             0.01,  // mythic
             0   // event

@@ -5,11 +5,31 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
-public class GoblinDeathReward {
+public class RPGDeathReward {
     public static void MobDeath(String mobName, Player player) {
         PlayerStats stats = PlayerStats.getPlayerStats(player);
-        if (mobName.contains("Goblin Warrior")) {
-
+        if (mobName.contains("rpg_slime_cube") || mobName.contains("rpg_mushroom") || mobName.contains("rpg_mushroom_red") || mobName.contains("rpg_rat") || mobName.contains("rpg_bat") || mobName.contains("rpg_zombie_head")) {
+            //tier 1 loot
+            if (Math.random() < (0.15 + (stats.getLuck() * 0.001))) {
+                Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "si give 991 1 " + player.getName() + " true");
+                player.sendMessage(MiniMessage.miniMessage().deserialize("<green>+ <white>Common Gacha Key"));
+            }
+            if (Math.random() < (0.01 + (stats.getLuck() * 0.001))) {
+                Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "si give 992 1 " + player.getName() + " true");
+                player.sendMessage(MiniMessage.miniMessage().deserialize("<green>+ <gray>Uncommon Gacha Key"));
+            }
+        }
+        if (mobName.contains("rpg_zombie") || mobName.contains("rpg_rat_undead") || mobName.contains("rpg_poison_slime_cube")) {
+            if (Math.random() < (0.17 + (stats.getLuck() * 0.001))) {
+                Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "si give 991 1 " + player.getName() + " true");
+                player.sendMessage(MiniMessage.miniMessage().deserialize("<green>+ <white>Common Gacha Key"));
+            }
+            if (Math.random() < (0.02 + (stats.getLuck() * 0.001))) {
+                Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "si give 992 1 " + player.getName() + " true");
+                player.sendMessage(MiniMessage.miniMessage().deserialize("<green>+ <gray>Uncommon Gacha Key"));
+            }
+        }
+        if (mobName.contains("rpg_skeleton") || mobName.contains("rpg_skeleton_crossbow")) {
             if (Math.random() < (0.20 + (stats.getLuck() * 0.001))) {
                 Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "si give 991 1 " + player.getName() + " true");
                 player.sendMessage(MiniMessage.miniMessage().deserialize("<green>+ <white>Common Gacha Key"));
@@ -19,32 +39,20 @@ public class GoblinDeathReward {
                 player.sendMessage(MiniMessage.miniMessage().deserialize("<green>+ <gray>Uncommon Gacha Key"));
             }
         }
-        if (mobName.contains("Goblin Knife")) {
-            if (Math.random() < (0.25 + (stats.getLuck() * 0.001))) {
-                Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "si give 991 1 " + player.getName() + " true");
-                player.sendMessage(MiniMessage.miniMessage().deserialize("<green>+ <white>Common Gacha Key"));
-            }
-            if (Math.random() < (0.09 + (stats.getLuck() * 0.001))) {
-                Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "si give 992 1 " + player.getName() + " true");
-                player.sendMessage(MiniMessage.miniMessage().deserialize("<green>+ <gray>Uncommon Gacha Key"));
-            }
-        }
-        if (mobName.contains("Goblin Shaman")) {
-            if (Math.random() < (0.30 + (stats.getLuck() * 0.001))) {
-                Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "si give 991 1 " + player.getName() + " true");
-                player.sendMessage(MiniMessage.miniMessage().deserialize("<green>+ <white>Common Gacha Key"));
-            }
-            if (Math.random() < (0.12 + (stats.getLuck() * 0.001))) {
-                Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "si give 992 1 " + player.getName() + " true");
-                player.sendMessage(MiniMessage.miniMessage().deserialize("<green>+ <gray>Uncommon Gacha Key"));
-            }
-        }
-        if (mobName.contains("Goblin King")) {
+        if (mobName.contains("rpg_sand_golem") || mobName.contains("rpg_stone_golem")) {
             if (Math.random() < (1 + (stats.getLuck() * 0.001))) {
-                Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "si give 992 5 " + player.getName() + " true");
-                player.sendMessage(MiniMessage.miniMessage().deserialize("<green>+ <gray>5x Uncommon Gacha Key"));
+                Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "si give 991 5 " + player.getName() + " true");
+                player.sendMessage(MiniMessage.miniMessage().deserialize("<green>+ <white>5x Common Gacha Key"));
             }
-            if (Math.random() < (0.08 + (stats.getLuck() * 0.001))) {
+            if (Math.random() < (1 + (stats.getLuck() * 0.001))) {
+                Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "si give 992 1 " + player.getName() + " true");
+                player.sendMessage(MiniMessage.miniMessage().deserialize("<green>+ <gray>Uncommon Gacha Key"));
+            }
+            if (Math.random() < (0.2 + (stats.getLuck() * 0.001))) {
+                Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "si give 992 1 " + player.getName() + " true");
+                player.sendMessage(MiniMessage.miniMessage().deserialize("<green>+ <gray>Uncommon Gacha Key"));
+            }
+            if (Math.random() < (0.02 + (stats.getLuck() * 0.001))) {
                 Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "si give 993 1 " + player.getName() + " true");
                 player.sendMessage(MiniMessage.miniMessage().deserialize("<green>+ <green>Rare Gacha Key"));
             }

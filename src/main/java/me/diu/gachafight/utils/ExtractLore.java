@@ -73,7 +73,6 @@ public class ExtractLore {
         try {
             // Parse the cleaned stat part
             double statValue = Double.parseDouble(statPart);
-            System.out.println("Parsed stat value: " + statValue);
             return statValue;
         } catch (NumberFormatException e) {
             System.out.println("Failed to parse stat value from lore: " + loreLine + ", Error: " + e.getMessage());

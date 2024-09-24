@@ -11,6 +11,8 @@ import me.diu.gachafight.quest.objectives.OnlineTimeObjective;
 import me.diu.gachafight.quest.utils.QuestFactory;
 import me.diu.gachafight.quest.utils.QuestObjective;
 import me.diu.gachafight.utils.FeedbackUtils;
+import net.luckperms.api.model.user.User;
+import net.luckperms.api.node.types.PermissionNode;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -84,6 +86,10 @@ public class QuestManager {
 
                 int slot = (int) questData.get("slot");
                 Quest quest = new Quest(name, description, objective, id, slot);
+                Map<String, Object> rewards = (Map<String, Object>) questData.get("rewards");
+                if (rewards != null) {
+                    quest.setRewards(rewards);
+                }
                 configuredQuests.put(id, quest);
                 List<Integer> dependencies = (List<Integer>) questData.get("dependencies");
                 quest.setDependencies(dependencies != null ? dependencies : new ArrayList<>());
@@ -179,8 +185,6 @@ public class QuestManager {
                 int progress = rs.getInt("progress");
                 System.out.println("Quest progress: " + progress);
                 return progress;
-            } else {
-                System.out.println("No quest found for player " + player.getUniqueId() + " and quest ID " + questId);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -239,11 +243,32 @@ public class QuestManager {
     public void completeQuest(Player player, int questId) {
         Quest quest = getQuestById(questId, player);
         if (quest == null) return;
+        Map<String, Object> rewards = quest.getRewards();
+        User user = plugin.getLuckPerms().getUserManager().getUser(player.getUniqueId());
 
-        // Reward the player
-        PlayerStats playerStats = PlayerStats.getPlayerStats(player);
-        playerStats.setGem(playerStats.getGem() + 1);
-        player.sendMessage("§aQuest completed! You have received 1 gem.");
+        // Reward player with money if applicable
+        PlayerStats stats = PlayerStats.getPlayerStats(player);
+        if (rewards.containsKey("money")) {
+            int money = (int) rewards.get("money");
+            // Assuming you have a money system like Vault or something similar
+            stats.setMoney(stats.getMoney() + money);
+            player.sendMessage("§aYou received " + money + " gold!");
+        }
+
+        // Reward player with gems if applicable
+        if (rewards.containsKey("gems")) {
+            int gems = (int) rewards.get("gems");
+            PlayerStats playerStats = PlayerStats.getPlayerStats(player);
+            playerStats.setGem(playerStats.getGem() + gems);
+            player.sendMessage("§aYou received " + gems + " gems!");
+        }
+
+        // Reward player with suffix tags if applicable
+        if (rewards.containsKey("suffix_tag")) {
+            String tagName = (String) rewards.get("suffix_tag");
+            givePlayerTagPermission(player, tagName);
+            player.sendMessage("§aYou received the suffix tag: " + tagName + "!");
+        }
 
         // Enhanced feedback
         FeedbackUtils.playCompletionSound(player);
@@ -264,7 +289,16 @@ public class QuestManager {
         }
     }
 
-
+    // Method to give player permission for a suffix tag
+    private void givePlayerTagPermission(Player player, String tagName) {
+        User user = plugin.getLuckPerms().getUserManager().getUser(player.getUniqueId());
+        if (user != null) {
+            String permission = "gacha.tags." + tagName.toLowerCase();
+            PermissionNode permissionNode = PermissionNode.builder(permission).build();
+            user.data().add(permissionNode);
+            plugin.getLuckPerms().getUserManager().saveUser(user);
+        }
+    }
 
 
     public void deleteQuestProgress(@NotNull Player player, int questId) {

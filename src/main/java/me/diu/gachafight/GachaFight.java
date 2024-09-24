@@ -174,6 +174,7 @@ public final class GachaFight extends JavaPlugin implements Listener {
         new ToggleDamageCommand(this, luckPerms);
         new EditShopCommand(this);
         new PayCommand(this);
+        new TagsCommand(this);
     }
 
     private void registerEvents() {

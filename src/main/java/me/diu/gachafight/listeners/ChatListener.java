@@ -4,6 +4,10 @@ import me.clip.placeholderapi.PlaceholderAPI;
 import me.diu.gachafight.GachaFight;
 import me.diu.gachafight.hooks.PlaceholderAPIHook;
 import me.diu.gachafight.playerstats.PlayerStats;
+import me.diu.gachafight.utils.ColorChat;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
@@ -51,6 +55,13 @@ public class ChatListener implements Listener {
 
         // Modify the format to include prefix and properly handle the player's name and message
         prefix = PlaceholderAPI.setPlaceholders(event.getPlayer(), prefix);
-        event.setFormat(prefix + " §8[§6" + playerStats.getLevel() + "§8] §f%1$s: %2$s");
+        String rawSuffix = PlaceholderAPI.setPlaceholders(event.getPlayer(), "%luckperms_suffix%");
+        if (rawSuffix.isEmpty()) {
+            event.setFormat(prefix + " §8[§6" + playerStats.getLevel() + "§8] §f%1$s: %2$s");
+        } else {
+            // Parse the suffix using MiniMessage for color codes
+            rawSuffix = rawSuffix.replace("&", "§");
+            event.setFormat(prefix + " §8[§6" + playerStats.getLevel() + "§8] §f%1$s " + rawSuffix +  "§f: %2$s");
+        }
     }
 }

@@ -1,27 +1,26 @@
 package me.diu.gachafight.listeners;
 
-import dev.lone.itemsadder.api.CustomFurniture;
-import dev.lone.itemsadder.api.Events.FurnitureBreakEvent;
-import dev.lone.itemsadder.api.Events.FurnitureInteractEvent;
 import me.diu.gachafight.GachaFight;
 import me.diu.gachafight.utils.ColorChat;
 import me.diu.gachafight.utils.FurnitureDataManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.block.Block;
+import org.bukkit.block.Chest;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.entity.Entity;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.scheduler.BukkitRunnable;
-
-import java.util.List;
-import java.util.Random;
 
 public class LootChestListener implements Listener {
 
     private final GachaFight plugin;
-    private final FurnitureDataManager furnitureDataManager; // Add the data manager
-    private final int respawnTime = 5 * 60 * 20; // 5 minutes in ticks (5 * 60 seconds * 20 ticks)
+    private final FurnitureDataManager furnitureDataManager;
+    private final int respawnTime = 5 * 60 * 20; // 5 minutes in ticks
 
     public LootChestListener(GachaFight plugin, FurnitureDataManager furnitureDataManager) {
         this.plugin = plugin;
@@ -29,87 +28,105 @@ public class LootChestListener implements Listener {
         Bukkit.getPluginManager().registerEvents(this, plugin);
     }
 
-    // This method will be triggered when a player interacts with a block
+    // Player right-clicking (interacting) with the chest
     @EventHandler
-    public void onPlayerRightClick(FurnitureInteractEvent event) {
-        // Check if the clicked block is a goblin loot chest
-        if (isGoblinLootChest(event.getFurniture().getEntity().getLocation())) {
-            // Spawn loot and remove the furniture temporarily
-            Location location = event.getFurniture().getEntity().getLocation();
-            event.getFurniture().remove(false);
-            furnitureDataManager.removeFurnitureState(location);
-            for (int i = 0; i < event.getPlayer().getNearbyEntities(5,5,5).size(); i++) {
-                if (event.getPlayer().getNearbyEntities(5,5,5).get(i).getName().equals("ItemsAdder_furniture")) {
-                    event.getPlayer().getNearbyEntities(5,5,5).get(i).remove();
-                }
+    public void onPlayerRightClick(PlayerInteractEvent event) {
+        if (event.getClickedBlock() == null) return;
+
+        Block block = event.getClickedBlock();
+        if (block.getType() == Material.CHEST) {
+            Chest chest = (Chest) block.getState();
+            Location location = block.getLocation();
+
+            // Check if it's a Goblin or RPG Loot Chest
+            if (isGoblinLootChest(location)) {
+                // Goblin Loot Chest logic
+                block.setType(Material.AIR);  // Remove the chest
+                furnitureDataManager.removeFurnitureState(location);
+                spawnGoblinLoot(location);
+                event.getPlayer().sendMessage(ColorChat.chat("&aGoblin Loot Crate Opened!"));
+                furnitureDataManager.saveFurnitureState(location, "minecraft:chest");
+                respawnChest(location);
+            } else if (isRPGLootChest(location)) {
+                // RPG Loot Chest logic
+                block.setType(Material.AIR);  // Remove the chest
+                furnitureDataManager.removeFurnitureState(location);
+                spawnRPGLoot(location);
+                event.getPlayer().sendMessage(ColorChat.chat("&aRPG Loot Crate Opened!"));
+                furnitureDataManager.saveFurnitureState(location, "minecraft:chest");
+                respawnChest(location);
             }
-
-
-            spawnLoot(location);
-            event.getPlayer().sendMessage(ColorChat.chat("&aLoot Crate Opened!"));
-            furnitureDataManager.saveFurnitureState(location, event.getNamespacedID());
-            // Schedule respawn after the delay
-            respawnFurniture(event.getFurniture().getEntity().getLocation(), event.getNamespacedID());
-        }
-    }
-    @EventHandler
-    public void onPlayerLeftClick(FurnitureBreakEvent event) {
-        // Check if the clicked block is a goblin loot chest
-        if (event.getPlayer().hasPermission("gacha.op")) return;
-        if (isGoblinLootChest(event.getFurniture().getEntity().getLocation())) {
-            // Spawn loot and remove the furniture temporarily
-            spawnLoot(event.getFurniture().getEntity().getLocation());
-
-            event.getFurniture().remove(false);
-            furnitureDataManager.removeFurnitureState(event.getFurniture().getEntity().getLocation());
-            furnitureDataManager.saveFurnitureState(event.getFurniture().getEntity().getLocation(), event.getNamespacedID());
-            // Schedule respawn after the delay
-            respawnFurniture(event.getFurniture().getEntity().getLocation(), event.getNamespacedID());
         }
     }
 
-    // Respawn the furniture after a delay
-    private void respawnFurniture(Location location, String furnitureID) {
+    // Respawn the chest after a delay
+    private void respawnChest(Location location) {
         new BukkitRunnable() {
             @Override
             public void run() {
-                // Retrieve the block at the given location and respawn the furniture
-                CustomFurniture.spawn(furnitureID, location.getBlock());  // Spawn the furniture at the location
+                // Respawn the chest at the location
+                location.getBlock().setType(Material.CHEST);
                 furnitureDataManager.removeFurnitureState(location);
             }
         }.runTaskLater(plugin, respawnTime);
     }
 
-    // Spawn loot at the location
-    private void spawnLoot(Location location) {
-        // Example loot spawning commands
+    // Spawn Goblin loot at the location
+    private void spawnGoblinLoot(Location location) {
+        // Example Goblin loot spawning commands
         if (Math.random() < 0.5) {
-            Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "si drop 991 " +  //common Key
-                    (int) (Math.floor(Math.random() * 2) + 1) + " " + "Spawn " +
+            Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "si drop 991 " +
+                    (int) (Math.floor(Math.random() * 2) + 1) + " Spawn " +
                     location.getX() + " " + location.getY() + 1 + " " +
                     location.getZ());
         }
         if (Math.random() < 0.3) {
-            Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "si drop 901 " +  //small hp
-                    (int) (Math.floor(Math.random() * 1) + 1) + " " + "Spawn " + location.getX() + " " +
+            Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "si drop 901 " +
+                    (int) (Math.floor(Math.random() * 1) + 1) + " Spawn " + location.getX() + " " +
                     location.getY() + 1 + " " + location.getZ());
         }
         if (Math.random() < 0.5) {
-            Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "si drop 611 " +  //gold
-                    (int) (Math.floor(Math.random() * 12) + 1) + " " + "Spawn " + location.getX() + " " +
+            Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "si drop 611 " +
+                    (int) (Math.floor(Math.random() * 12) + 1) + " Spawn " + location.getX() + " " +
                     location.getY() + 1 + " " + location.getZ());
         }
         if (Math.random() < 0.05) {
-            Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "si drop 992 " +  //uncommon Key
-                    (int) (Math.floor(Math.random() * 1) + 1) + " " + "Spawn " + location.getX() + " " +
+            Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "si drop 992 " +
+                    (int) (Math.floor(Math.random() * 1) + 1) + " Spawn " + location.getX() + " " +
                     location.getY() + 1 + " " + location.getZ());
         }
     }
 
+    // Spawn RPG loot at the location
+    private void spawnRPGLoot(Location location) {
+        // Example RPG loot spawning commands
+        if (Math.random() < 0.5) {
+            Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "si drop 991 " +
+                    (int) (Math.floor(Math.random() * 2) + 1) + " Spawn " +
+                    location.getX() + " " + location.getY() + 1 + " " +
+                    location.getZ());
+        }
+        if (Math.random() < 0.3) {
+            Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "si drop 901 " +
+                    (int) (Math.floor(Math.random() * 1) + 1) + " Spawn " + location.getX() + " " +
+                    location.getY() + 1 + " " + location.getZ());
+        }
+        if (Math.random() < 0.5) {
+            Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "si drop 611 " +
+                    (int) (Math.floor(Math.random() * 12) + 1) + " Spawn " + location.getX() + " " +
+                    location.getY() + 1 + " " + location.getZ());
+        }
+        if (Math.random() < 0.05) {
+            Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "si drop 992 " +
+                    (int) (Math.floor(Math.random() * 1) + 1) + " Spawn " + location.getX() + " " +
+                    location.getY() + 1 + " " + location.getZ());
+        }
+    }
 
+    // Check if the chest location is one of the designated Goblin Loot Chest locations
     private boolean isGoblinLootChest(Location location) {
-        Location[] lootChestLocations = {
-                new Location(location.getWorld(), -702.5, 4, 290.5),
+        Location[] goblinLootChestLocations = {
+                new Location(location.getWorld(), -702.5, 4, 290.5), // Goblin start
                 new Location(location.getWorld(), -703.5, 4, 317.5),
                 new Location(location.getWorld(), -636.5, 4, 369.5),
                 new Location(location.getWorld(), -648.5, 4, 414.5),
@@ -118,11 +135,33 @@ public class LootChestListener implements Listener {
                 new Location(location.getWorld(), -714.5, 4, 433.5),
                 new Location(location.getWorld(), -770.5, 4, 382.5),
                 new Location(location.getWorld(), -745.5, 4, 347.5),
-                new Location(location.getWorld(), -655.5, 4, 328.5)
+                new Location(location.getWorld(), -655.5, 4, 328.5) // Goblin end
         };
 
-        for (Location chestLocation : lootChestLocations) {
-            // Compare only the world and (x, y, z) coordinates
+        for (Location chestLocation : goblinLootChestLocations) {
+            if (location.getWorld().equals(chestLocation.getWorld())
+                    && location.getBlockX() == chestLocation.getBlockX()
+                    && location.getBlockY() == chestLocation.getBlockY()
+                    && location.getBlockZ() == chestLocation.getBlockZ()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Check if the chest location is one of the designated RPG Loot Chest locations
+    private boolean isRPGLootChest(Location location) {
+        Location[] rpgLootChestLocations = {
+                new Location(location.getWorld(), -927, 8, 430), // RPG start
+                new Location(location.getWorld(), -855.5, 5, 303),
+                new Location(location.getWorld(), -853, 5, 368),
+                new Location(location.getWorld(), -945, 5, 323),
+                new Location(location.getWorld(), -910, 5, 304), // RPG end
+                new Location(location.getWorld(), -916, 5, 419),
+                new Location(location.getWorld(), -877, 5, 431)
+        };
+
+        for (Location chestLocation : rpgLootChestLocations) {
             if (location.getWorld().equals(chestLocation.getWorld())
                     && location.getBlockX() == chestLocation.getBlockX()
                     && location.getBlockY() == chestLocation.getBlockY()

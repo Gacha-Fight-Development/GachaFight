@@ -11,6 +11,9 @@ import java.util.List;
 import java.util.Objects;
 
 public class ColorChat {
+    public static String strip(String s) {
+        return ChatColor.stripColor(s);
+    }
     public static String chat (String s) {
         return ChatColor.translateAlternateColorCodes('&', s);
     }

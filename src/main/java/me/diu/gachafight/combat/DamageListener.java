@@ -6,6 +6,7 @@ import io.lumine.mythic.bukkit.events.MythicDamageEvent;
 import io.lumine.mythic.core.mobs.ActiveMob;
 import me.diu.gachafight.GachaFight;
 import me.diu.gachafight.combat.mobdrops.GoblinDeathReward;
+import me.diu.gachafight.combat.mobdrops.RPGDeathReward;
 import me.diu.gachafight.playerstats.PlayerStats;
 import me.diu.gachafight.quest.listeners.QuestKillListener;
 import me.diu.gachafight.utils.ColorChat;
@@ -13,6 +14,7 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.damage.DamageSource;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -81,16 +83,13 @@ public class DamageListener implements Listener {
         }
 
         if (isCritical(player)) {
-            Bukkit.getLogger().info("CRIT");
             totalDamage = totalDamage*1.2;
-            Bukkit.getLogger().info("CRIT Done");
         }
 
         // Check if the mob will die from this hit
         if (entity.getHealth() - totalDamage <= 0) {
             handleMobDeath(player, entity);  // Handle mob death, rewards, etc.
             QuestKillListener.questKill(player, entity); //handle quest
-            Bukkit.getLogger().info("questKill method called for entity: " + entity.getName());
         }
 
         if (player.hasPermission("gachafight.toggledamage")) {
@@ -120,7 +119,7 @@ public class DamageListener implements Listener {
         double targetArmor = targetStats.getArmor() + targetStats.getGearStats().getTotalArmor();
 
         // Calculate the custom damage for PvP
-        double totalDamage = attackerDamage - (targetArmor * 0.5); // Adjust the armor effect as needed
+        double totalDamage = attackerDamage - (targetArmor); // Adjust the armor effect as needed
         if (attackerStats.getLevel() > targetStats.getLevel()) {
             totalDamage = totalDamage*(1-((attackerStats.getLevel()-targetStats.getLevel())*0.1));
         }
@@ -158,6 +157,8 @@ public class DamageListener implements Listener {
             playerStats.setMoney(playerStats.getMoney() + moneyGained);
             if (entity.getName().contains("Goblin")) {
                 GoblinDeathReward.MobDeath(entity.getName(), player);
+            } else if (entity.getName().contains("rpg")) {
+                RPGDeathReward.MobDeath(entity.getName(), player);
             }
 
             // Notify the player of the exp and money gained
@@ -248,7 +249,7 @@ public class DamageListener implements Listener {
         }
         event.setCancelled(true);
         Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "spawn " + player.getName());
-        player.sendMessage(ColorChat.chat("&4You have Died to " + event.getDamageSource().getDirectEntity().getName()));
+        player.sendMessage(ColorChat.chat("&4You have Died"));
     }
 
     private double getMobArmor(Entity entity) {

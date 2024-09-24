@@ -7,7 +7,9 @@ import me.diu.gachafight.quest.objectives.OnlineTimeObjective;
 import me.diu.gachafight.quest.utils.QuestObjective;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Getter
 @Setter
@@ -17,8 +19,8 @@ public class Quest {
     private final QuestObjective objective;
     private final int id;
     private int slot;
-
     private List<Integer> dependencies = new ArrayList<>();
+    private Map<String, Object> rewards = new HashMap<>();
 
     public Quest(String name, String description, QuestObjective objective, int id, int slot) {
         this.name = name;

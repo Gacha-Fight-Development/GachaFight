@@ -277,6 +277,10 @@ public class EquipmentSpecialistListener implements Listener {
                         player.sendMessage("§cThis Item Is Stackable!");
                         return;
                     }
+                    if (slot16.getType() != Material.PAPER) {
+                        player.sendMessage("§cRemove item from Slot 2!");
+                        return;
+                    }
                     if (ExtractLore.extractLevelFromName(clickedItem.getItemMeta().getItemName()) >= PlayerStats.getPlayerStats(player).getLevel()) {
                         player.sendMessage("§cThis Item is already your level!");
                         return;
@@ -284,11 +288,15 @@ public class EquipmentSpecialistListener implements Listener {
                     guiInventory.setItem(10, clickedItem);
                     player.getInventory().setItem(event.getSlot(), null);  // Remove item from player's cursor
                     int rarity = ExtractLore.extractRarityFromLore(clickedItem.getLore());
-                    costForLevel = 100* Math.pow( PlayerStats.getPlayerStats(player).getLevel(), (1+(rarity*0.67)));
+                    costForLevel = 25 * Math.pow( PlayerStats.getPlayerStats(player).getLevel(), (1+(rarity*0.67)));
                     ItemStack greenCheck = createCustomItem(Material.PAPER, "§aConfirm", 10109, "§aCost: §6" + String.format("%.2f",costForLevel));
                     guiInventory.setItem(22, greenCheck);
                     player.sendMessage("§aItem placed in slot 1");
                 } else if (slot16 == null || slot16.getType() == Material.PAPER) {
+                    if (clickedItem.getMaxStackSize() > 1) {
+                        player.sendMessage("§cThis Item Is Stackable!");
+                        return;
+                    }
                     if (ExtractLore.ExtractItemName(guiInventory.getItem(10).getItemMeta().getDisplayName())
                             .equals(ExtractLore.ExtractItemName(clickedItem.getItemMeta().getDisplayName())) &&  //same item name
                             ExtractLore.extractRarityFromLore(guiInventory.getItem(10).getItemMeta().getLore()) ==

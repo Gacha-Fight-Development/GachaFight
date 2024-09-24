@@ -42,6 +42,9 @@ commands:
     usage: /toggledamage
   pay:
     usage: /pay <player> <amount>
+  tags:
+    description: Open the tag selection GUI
+    usage: /tags
 
 libraries:
   - org.mongodb:mongodb-driver-sync:5.1.2

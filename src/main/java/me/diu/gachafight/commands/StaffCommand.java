@@ -21,9 +21,9 @@ public class StaffCommand implements CommandExecutor {
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         Player player = (Player) sender;
         User user = luckPerms.getUserManager().getUser(player.getUniqueId());
-        if (sender.hasPermission("gachafight.builder") && !user.getPrimaryGroup().contains("builder")) {
+        if (sender.hasPermission("gacha.builder") && !user.getPrimaryGroup().contains("builder")) {
             Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "lp user " + sender.getName() + " parent set builder");
-        } else if (sender.hasPermission("gachafight.builder") && user.getPrimaryGroup().contains("builder")) {
+        } else if (sender.hasPermission("gacha.builder") && user.getPrimaryGroup().contains("builder")) {
             Bukkit.dispatchCommand(Bukkit.getServer().getConsoleSender(), "lp user " + sender.getName() + " parent set default");
         }
         return false;

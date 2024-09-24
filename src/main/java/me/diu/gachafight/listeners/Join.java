@@ -52,9 +52,6 @@ public class Join implements Listener {
             }.runTaskLater(plugin, 350L);
         }
         playerDataManager.loadPlayerData(player);
-        if (player.hasPermission("op")) {
-            player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).addModifier(new AttributeModifier("GENERIC_MOVEMENT_SPEED", -10, AttributeModifier.Operation.ADD_NUMBER));
-        }
         player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(playerDataManager.getPlayerStats(player.getUniqueId()).getSpeed()*0.1);
         for (int i = 1; i < 9; i++) {
             plugin.getQuestManager().loadQuestProgress(player, i);
