@@ -130,14 +130,15 @@ public class GachaManager {
                     // Auto-sell the item
                     if (player.hasPermission(rarityPermission+".50") && statMedium > 50) {
                         double sellPrice = SellPriceCalculator.calculateSellPrice(customizedReward, rarityIndex);
-                        player.sendMessage(MiniMessage.miniMessage().deserialize("<green>Auto-sold " + RaritySelectionGUI.RARITY_NAMES[rarityIndex] + " item for " + String.format("%.1f" + sellPrice) + " money!"));
+                        player.sendMessage(MiniMessage.miniMessage().deserialize("<green>Auto-sold " + RaritySelectionGUI.RARITY_NAMES[rarityIndex] + " item for " + String.format("%.1f", sellPrice) + " money!"));
                         PlayerStats playerStats = PlayerStats.getPlayerStats(player);
                         playerStats.setMoney(playerStats.getMoney() + sellPrice);
                     }
                     double sellPrice = SellPriceCalculator.calculateSellPrice(customizedReward, rarityIndex);
-                    player.sendMessage(MiniMessage.miniMessage().deserialize("<green>Auto-sold " + RaritySelectionGUI.RARITY_NAMES[rarityIndex] + " item for " + String.format("%.1f" + sellPrice) + " money!"));
+                    player.sendMessage(MiniMessage.miniMessage().deserialize("<green>Auto-sold " + RaritySelectionGUI.RARITY_NAMES[rarityIndex] + " item for " + String.format("%.1f", sellPrice) + " money!"));
                     PlayerStats playerStats = PlayerStats.getPlayerStats(player);
                     playerStats.setMoney(playerStats.getMoney() + sellPrice);
+                    key.setAmount(key.getAmount() - 1);
                 } else {
                     // Give the item to the player
                     player.getInventory().addItem(customizedReward);

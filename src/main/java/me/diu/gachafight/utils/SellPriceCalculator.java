@@ -47,7 +47,7 @@ public class SellPriceCalculator {
             case 5: return 150.0; // Legendary
             case 6: return 666.0; // Mythic
             case 7: return 777.0; // Event
-            default: return 10.0; // Default to Common base price
+            default: return 1.0; // Default to Common base price
         }
     }
 }

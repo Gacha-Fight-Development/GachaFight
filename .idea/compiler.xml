@@ -10,6 +10,25 @@
         <module name="GachaFight.main" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel target="21" />
+    <bytecodeTargetLevel target="21">
+      <module name="GachaFightGit" target="22" />
+      <module name="GachaFightGit.combat" target="22" />
+      <module name="GachaFightGit.combat.main" target="22" />
+      <module name="GachaFightGit.combat.test" target="22" />
+      <module name="GachaFightGit.dungeon" target="22" />
+      <module name="GachaFightGit.dungeon.main" target="22" />
+      <module name="GachaFightGit.dungeon.test" target="22" />
+      <module name="GachaFightGit.main" target="22" />
+      <module name="GachaFightGit.npc" target="22" />
+      <module name="GachaFightGit.npc.main" target="22" />
+      <module name="GachaFightGit.npc.test" target="22" />
+      <module name="GachaFightGit.playerstats" target="22" />
+      <module name="GachaFightGit.playerstats.main" target="22" />
+      <module name="GachaFightGit.playerstats.test" target="22" />
+      <module name="GachaFightGit.quest" target="22" />
+      <module name="GachaFightGit.quest.main" target="22" />
+      <module name="GachaFightGit.quest.test" target="22" />
+      <module name="GachaFightGit.test" target="22" />
+    </bytecodeTargetLevel>
   </component>
 </project>
