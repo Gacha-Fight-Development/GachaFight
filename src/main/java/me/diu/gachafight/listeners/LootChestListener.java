@@ -153,7 +153,7 @@ public class LootChestListener implements Listener {
     private boolean isRPGLootChest(Location location) {
         Location[] rpgLootChestLocations = {
                 new Location(location.getWorld(), -927, 8, 430), // RPG start
-                new Location(location.getWorld(), -855.5, 5, 303),
+                new Location(location.getWorld(), -855, 5, 303),
                 new Location(location.getWorld(), -853, 5, 368),
                 new Location(location.getWorld(), -945, 5, 323),
                 new Location(location.getWorld(), -910, 5, 304), // RPG end

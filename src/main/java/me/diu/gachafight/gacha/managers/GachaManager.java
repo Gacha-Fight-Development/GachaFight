@@ -17,6 +17,7 @@ import net.luckperms.api.model.user.User;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -58,6 +59,9 @@ public class GachaManager {
             ItemStack customizedReward = reward.clone();
             if (isCrystal(customizedReward)) {
                 applyCrystalBoost(player, customizedReward);
+            } else if (isPotion(customizedReward)) {
+                player.getInventory().addItem(customizedReward);
+                player.sendMessage(ColorChat.chat("&a+ &6Potion"));
             } else {
                 List<String> lore = customizedReward.getItemMeta().getLore();
                 List<Double> statPercentages = new ArrayList<>();
@@ -337,7 +341,13 @@ public class GachaManager {
         return item;
     }
 
-
+    private boolean isPotion(ItemStack item) {
+        if (item.getType() == Material.LEATHER_HORSE_ARMOR && item.getItemMeta().getDisplayName().contains("Potion")) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 
     private boolean isCrystal(ItemStack item) {
         if (item.getType() == Material.NETHER_STAR && item.hasItemMeta()) {

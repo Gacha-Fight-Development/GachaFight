@@ -31,8 +31,8 @@ public class ShopManager implements Listener {
     }
 
     // Opens the shop GUI for the player
-    public void openShopGUI(Player player) {
-        Inventory shopInventory = Bukkit.createInventory(new ShopInventoryHolder(plugin), 54, MiniMessage.miniMessage().deserialize("<!i><gold>Sell Items"));
+    public static void openShopGUI(Player player) {
+        Inventory shopInventory = Bukkit.createInventory(new ShopInventoryHolder(GachaFight.getInstance()), 54, MiniMessage.miniMessage().deserialize("<!i><gold>Sell Items"));
 
         // Set the sell button in the middle of the last row (slot 49)
         ItemStack sellButton = createSellButton();
@@ -41,7 +41,7 @@ public class ShopManager implements Listener {
         player.openInventory(shopInventory);
     }
 
-    private ItemStack createSellButton() {
+    private static ItemStack createSellButton() {
         ItemStack sellButton = new ItemStack(Material.EMERALD);
         ItemMeta meta = sellButton.getItemMeta();
 
@@ -54,7 +54,7 @@ public class ShopManager implements Listener {
         return sellButton;
     }
 
-    private List<Component> updateSellButtonLore(int common, int uncommon, int rare, int unique, int legendary, int mythic) {
+    private static List<Component> updateSellButtonLore(int common, int uncommon, int rare, int unique, int legendary, int mythic) {
         List<Component> lore = new ArrayList<>();
         lore.add(MiniMessage.miniMessage().deserialize("<!i><white>Common: " + common + "</white>"));
         lore.add(MiniMessage.miniMessage().deserialize("<!i><gray>Uncommon: " + uncommon + "</gray>"));

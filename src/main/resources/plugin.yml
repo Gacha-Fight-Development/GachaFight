@@ -40,6 +40,8 @@ commands:
     usage: /staff
   toggledamage:
     usage: /toggledamage
+  shop:
+    usage: /shop
   pay:
     usage: /pay <player> <amount>
   tags:

@@ -243,14 +243,16 @@ public class QuestManager {
     public void completeQuest(Player player, int questId) {
         Quest quest = getQuestById(questId, player);
         if (quest == null) return;
+
         Map<String, Object> rewards = quest.getRewards();
         User user = plugin.getLuckPerms().getUserManager().getUser(player.getUniqueId());
 
-        // Reward player with money if applicable
+        // Ensure PlayerStats is correctly updated
         PlayerStats stats = PlayerStats.getPlayerStats(player);
+
+        // Reward player with money if applicable
         if (rewards.containsKey("money")) {
             int money = (int) rewards.get("money");
-            // Assuming you have a money system like Vault or something similar
             stats.setMoney(stats.getMoney() + money);
             player.sendMessage("§aYou received " + money + " gold!");
         }
@@ -258,8 +260,7 @@ public class QuestManager {
         // Reward player with gems if applicable
         if (rewards.containsKey("gems")) {
             int gems = (int) rewards.get("gems");
-            PlayerStats playerStats = PlayerStats.getPlayerStats(player);
-            playerStats.setGem(playerStats.getGem() + gems);
+            stats.setGem(stats.getGem() + gems);
             player.sendMessage("§aYou received " + gems + " gems!");
         }
 
@@ -275,19 +276,20 @@ public class QuestManager {
         FeedbackUtils.displayCompletionTitle(player);
         FeedbackUtils.showCompletionParticles(player);
 
+        // Handle daily quest or permanent quest completion
         if (!isDailyQuest(questId)) {
             // Only mark non-daily quests as completed
             markQuestAsCompleted(player, questId);
             // Remove quest progress from the database
             deleteQuestProgress(player, questId);
         } else {
-            // For daily quests, just remove the progress to reset it
+            // For daily quests, just reset the progress and set a cooldown
             deleteQuestProgress(player, questId);
-            // Set a cooldown timestamp to prevent immediate repetition
             Timestamp newCooldownStartTime = Timestamp.from(Instant.now());
-            saveQuestProgress(player, -1, 0, newCooldownStartTime, -1); // Use -1 to track cooldown
+            saveQuestProgress(player, -1, 0, newCooldownStartTime, -1); // Use quest ID -1 to track cooldown
         }
     }
+
 
     // Method to give player permission for a suffix tag
     private void givePlayerTagPermission(Player player, String tagName) {
