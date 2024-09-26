@@ -86,7 +86,7 @@ public class PlayerStats {
     public void addExp(double amount, Player player) {
         this.exp += amount;
         syncPlayerLevelWithMinecraft(player);
-        syncExpBarWithMinecraft(player);  // Sync experience bar progress :)
+        syncExpBarWithMinecraft(player);  // Sync experience bar progress
 
         if (this.exp >= getRequiredExp()) {
             this.exp -= getRequiredExp();
