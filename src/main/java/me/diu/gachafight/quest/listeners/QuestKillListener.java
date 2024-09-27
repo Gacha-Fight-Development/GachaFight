@@ -3,8 +3,8 @@ package me.diu.gachafight.quest.listeners;
 import lombok.Getter;
 import lombok.Setter;
 import me.diu.gachafight.quest.Quest;
-import me.diu.gachafight.quest.QuestManager;
-import org.bukkit.Bukkit;
+import me.diu.gachafight.quest.managers.QuestManager;
+import me.diu.gachafight.quest.utils.QuestUtils;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 
@@ -18,28 +18,15 @@ public class QuestKillListener {
         this.questManager = questManager;
     }
 
-    public static void questKill(Player player, Entity entity) {
+    public static void questKillMob(Player player, Entity entity) {
+        // Check if the killed entity is a Goblin Warrior (or any quest-related mob)
         if (entity.getName().contains("Goblin Warrior")) {
-            // Increment quest progress for the "Kill Goblin Warriors" quest
-            Quest goblinQuest = questManager.getQuestById(1, player);
+            // Fetch the quest by ID (assume quest ID 1 is the Goblin Warrior quest)
+            Quest goblinQuest = QuestUtils.getQuestById(1, player);
 
-            // Check if the player has this quest
-            Integer currentProgress = questManager.loadQuestProgress(player, goblinQuest.getId());
-            if (currentProgress == null) { // Player doesn't have the quest
-                return;
-            }
-
-            if (goblinQuest != null) {
-                questManager.incrementQuestProgress(player, goblinQuest.getId());
-
-                // Get the required amount from the Quest's objective
-                int requiredAmount = goblinQuest.getObjective().getRequiredAmount();
-                player.sendMessage("§aGoblin Warrior killed! Progress: " +
-                        (currentProgress + 1) + "/" + requiredAmount);
-            }
-        } else {
+            // Increment the quest progress if the player has this quest
+            QuestUtils.incrementQuestProgress(player, goblinQuest, 1); // Increment by 1 for each kill
         }
     }
-
 
 }

@@ -89,7 +89,7 @@ public class DamageListener implements Listener {
         // Check if the mob will die from this hit
         if (entity.getHealth() - totalDamage <= 0) {
             handleMobDeath(player, entity);  // Handle mob death, rewards, etc.
-            QuestKillListener.questKill(player, entity); //handle quest
+            QuestKillListener.questKillMob(player, entity); //handle quest
         }
 
         if (player.hasPermission("gachafight.toggledamage")) {

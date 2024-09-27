@@ -1,11 +1,10 @@
 package me.diu.gachafight.quest.gui;
 
-import lombok.Getter;
-import lombok.Setter;
-import me.diu.gachafight.GachaFight;
 import me.diu.gachafight.quest.Quest;
-import me.diu.gachafight.quest.QuestManager;
-import me.diu.gachafight.utils.ColorChat;
+import me.diu.gachafight.quest.managers.DailyQuestManager;
+import me.diu.gachafight.quest.managers.QuestManager;
+import me.diu.gachafight.quest.managers.SideQuestManager;
+import me.diu.gachafight.quest.utils.QuestUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -13,190 +12,225 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import java.time.Duration;
-import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
-@Getter
-@Setter
 public class QuestGUI {
-    private final QuestManager questManager;
+
+    private final QuestManager questManager; // Assuming this is passed from your plugin to manage quests
 
     public QuestGUI(QuestManager questManager) {
         this.questManager = questManager;
     }
 
-    public static void openQuestSelection(Player player) {
-        Inventory questInventory = Bukkit.createInventory(null, 9, "Select a Quest");
-        // Load player's quests from the database
-        List<Quest> playerQuests = GachaFight.getInstance().getQuestManager().getPlayerQuests(player);
-        playerQuests.removeIf(quest -> GachaFight.getInstance().getQuestManager().hasCompletedQuest(player, quest.getId()));
+    // Method to create and open the quest GUI for the player
+    public void openQuestGUI(Player player) {
+        // Create a 3-row (27-slot) inventory with the title "Quest Selection"
+        Inventory questInventory = Bukkit.createInventory(null, 27, "Quest Selection");
 
-        // Create an array to track if a slot is filled by a quest
-        boolean[] filledSlots = new boolean[9];
-        // Place player's quests in their respective slots
-        for (Quest quest : playerQuests) {
-            int slot = quest.getSlot(); // Get the slot from the quest
-            if (slot == -1) {
-            } else {
-                ItemStack questItem = createQuestItem(player, quest);
-                questInventory.setItem(slot, questItem);
-                filledSlots[slot] = true;
-            }
+        // Check if the player already has side quests, if not assign new ones
+        assignSideQuestsIfNecessary(player);
+
+        // Check if the player has a daily quest, if not assign a new one
+        Quest dailyQuest = QuestManager.getDailyQuestForPlayer(player);
+        if (dailyQuest == null) {
+            dailyQuest = QuestManager.assignRandomDailyQuest(player);
         }
 
-        // Populate the remaining slots with placeholders if they are not already filled
-        for (int i = 0; i < 8; i++) { // Slots 0-7 for quests
-            if (!filledSlots[i]) {
-                if (i == 0) {
-                    questInventory.setItem(i, createDailyQuestItem(player, GachaFight.getInstance().getQuestManager().getPlayerQuests(player)));
-                } else {
-                    questInventory.setItem(i, createPlaceholderQuestItem(i + 1));
-                }
-            }
-        }
+        // Paper at slot 10 (for daily quest)
+        ItemStack dailyQuestItem = createPaperItem(player, dailyQuest);
+        questInventory.setItem(10, dailyQuestItem);
 
-        // Set the compass in slot 8
-        questInventory.setItem(8, createQuestExplanationCompass());
+        // Clock at slot 5 (indicating quest refresh times)
+        ItemStack clockItem = createClockItem();
+        questInventory.setItem(5, clockItem);
 
+        // Books and quills at slots 12-16 (side quests)
+        int[] sideQuestSlots = {12, 13, 14, 15, 16};
+        setSideQuestItems(questInventory, sideQuestSlots, player);
+
+        // Compass at slot 24
+        ItemStack compassItem = createCompassItem();
+        questInventory.setItem(23, compassItem);
+
+        // Open the GUI for the player
         player.openInventory(questInventory);
     }
 
-    private static ItemStack createQuestItem(Player player, Quest quest) {
-        ItemStack questItem = new ItemStack(Material.BOOK); // Default to book
-        ItemMeta meta = questItem.getItemMeta();
+    // Method to create a paper item representing the daily quest
+    private ItemStack createPaperItem(Player player, Quest dailyQuest) {
+        ItemStack paper = new ItemStack(Material.PAPER);
+        ItemMeta meta = paper.getItemMeta();
 
-        // Set the display name to the quest's name with color
-        meta.setDisplayName(ColorChat.chat("&a" + quest.getName()));
-
-        // Show progress and time left in the lore
-        List<String> lore = new ArrayList<>();
-        int progress = GachaFight.getInstance().getQuestManager().loadQuestProgress(player, quest.getId());
-
-        // Get the required amount from the Quest's objective
-        int requiredAmount = quest.getObjective().getRequiredAmount();
-        lore.add(ColorChat.chat("&6Progress: &e" + progress + "/" + requiredAmount));
-        // Add rewards to the lore
-        lore.add(ColorChat.chat("&6Rewards: &e1 Gem"));
-        // Calculate the time left for the quest
-        String timeLeft = calculateTimeLeft(player, quest);
-        lore.add(ColorChat.chat("&6Time Left: &e" + timeLeft));
-
-        meta.setLore(lore);
-
-        questItem.setItemMeta(meta);
-        return questItem;
-    }
-
-
-    private static String calculateTimeLeft(Player player, Quest quest) {
-        // Load the quest start time from the database
-        Instant startTime = GachaFight.getInstance().getQuestManager().loadQuestStartTime(player, quest.getId()).toInstant();
-
-        // Define the quest duration (e.g., 24 hours for daily quests)
-        Duration questDuration = Duration.ofHours(24);
-        Instant endTime = startTime.plus(questDuration);
-
-        // Calculate the remaining time
-        Duration timeLeft = Duration.between(Instant.now(), endTime);
-
-        // Convert to hours and minutes for display
-        long hoursLeft = timeLeft.toHours();
-        long minutesLeft = timeLeft.toMinutes() % 60;
-
-        // Return formatted time left
-        return hoursLeft + "h " + minutesLeft + "m";
-    }
-
-    private static ItemStack createDailyQuestItem(Player player, List<Quest> questList) {
-        ItemStack dailyQuestItem = new ItemStack(Material.PAPER);
-        ItemMeta meta = dailyQuestItem.getItemMeta();
-
-        meta.setDisplayName(ColorChat.chat("&bDaily Quest"));
-
-        List<String> lore = new ArrayList<>();
-        lore.add(ColorChat.chat("&7A new quest every day!"));
-        for (Quest quest : questList) {
-            int slot = quest.getSlot(); // Get the slot from the quest
-            if (slot == -1) {
-                String timeLeft = calculateTimeLeft(player, quest);
-                lore.add(ColorChat.chat("&7Cooldown: &e" + timeLeft));
-            } else {
-            }
+        // Check if the player has completed their daily quest today
+        if (meta != null && DailyQuestManager.hasCompletedDailyQuestToday(player)) {
+            meta.setDisplayName("§eDaily Quest: Completed");
+            meta.setLore(List.of(
+                    "§7You have completed your daily quest for today.",
+                    "§7Please wait for the next refresh to receive a new quest."
+            ));
+            paper.setItemMeta(meta);
+            return paper; // Return early since the player has completed their daily quest
         }
-        meta.setLore(lore);
 
-        dailyQuestItem.setItemMeta(meta);
-        return dailyQuestItem;
+        // If the player hasn't completed their daily quest, show the current quest
+        if (meta != null && dailyQuest != null) {
+            meta.setDisplayName("§eDaily Quest: " + dailyQuest.getName());
+            // Set description, reward, and progress as lore
+            meta.setLore(List.of(
+                    "§7" + dailyQuest.getDescription(),
+                    "§7Reward: " + formatRewards(dailyQuest),
+                    "§7Progress: " + QuestUtils.getQuestProgress(player, dailyQuest)
+            ));
+            paper.setItemMeta(meta);
+        } else if (meta != null) {
+            meta.setDisplayName("§eDaily Quest");
+            meta.setLore(List.of("§7You currently have no daily quest."));
+            paper.setItemMeta(meta);
+        }
+
+        return paper;
     }
 
-    private static ItemStack createPlaceholderQuestItem(int questNumber) {
-        ItemStack placeholderQuestItem = new ItemStack(Material.PAPER);
-        ItemMeta meta = placeholderQuestItem.getItemMeta();
 
-        meta.setDisplayName(ColorChat.chat("&cQuest " + questNumber));
 
-        List<String> lore = new ArrayList<>();
-        lore.add(ColorChat.chat("&7Complete this quest to earn rewards."));
-        meta.setLore(lore);
 
-        placeholderQuestItem.setItemMeta(meta);
-        return placeholderQuestItem;
+    private ItemStack createClockItem() {
+        ItemStack clock = new ItemStack(Material.CLOCK);
+        ItemMeta meta = clock.getItemMeta();
+
+        if (meta != null) {
+            meta.setDisplayName("§eQuest Refresh Timer");
+
+            // Calculate the time until the next refresh
+            String timeUntilNextRefresh = QuestUtils.getTimeUntilNextRefresh();
+
+            meta.setLore(List.of(
+                    "§7Daily Quests refresh at:",
+                    "§7- 2 & 8 AM Central Time",
+                    "§7- 2 & 8 PM Central Time",
+                    "§7Time until next refresh: §e" + timeUntilNextRefresh
+            ));
+            clock.setItemMeta(meta);
+        }
+
+        return clock;
     }
 
-    private static ItemStack createQuestExplanationCompass() {
+    // Method to create book and quill items for the side quests
+    private void setSideQuestItems(Inventory questInventory, int[] slots, Player player) {
+        // Fetch available side quest IDs from SideQuestManager
+        int[] sideQuestIds = SideQuestManager.getSideQuests(player); // Get the quest IDs stored in the player's side quests
+
+        for (int i = 0; i < slots.length && i < sideQuestIds.length; i++) {
+            int questId = sideQuestIds[i];
+
+            // Fetch the quest object using the quest ID
+            Quest quest = QuestManager.getQuestById(questId);
+            if (quest == null) {
+                continue; // If the quest does not exist, skip this slot
+            }
+
+            // Create a writable book to represent the side quest
+            ItemStack book = new ItemStack(Material.WRITABLE_BOOK);
+            ItemMeta meta = book.getItemMeta();
+
+            if (meta != null) {
+                // Set the display name and lore of the book based on the quest data
+                meta.setDisplayName("§b" + quest.getName());
+                meta.setLore(List.of(
+                        "§7" + quest.getDescription(),
+                        "§7Reward: " + formatRewards(quest)
+                ));
+                book.setItemMeta(meta);
+            }
+
+            // Set the book in the corresponding slot in the inventory
+            questInventory.setItem(slots[i], book);
+        }
+    }
+
+
+    // Method to create a compass item (for navigation or quest info)
+    private ItemStack createCompassItem() {
         ItemStack compass = new ItemStack(Material.COMPASS);
         ItemMeta meta = compass.getItemMeta();
 
-        meta.setDisplayName(ColorChat.chat("&dQuest System Guide"));
+        if (meta != null) {
+            meta.setDisplayName("§eQuest Info");
+            meta.setLore(List.of(
+                    "§7Navigate to quests",
+                    "§7or check your progress."
+            ));
+            compass.setItemMeta(meta);
+        }
 
-        List<String> lore = new ArrayList<>();
-        lore.add(ColorChat.chat("&61. Select a quest to start."));
-        lore.add(ColorChat.chat("&62. Complete the objectives to earn rewards."));
-        lore.add(ColorChat.chat("&63. Check back daily for new quests!"));
-        meta.setLore(lore);
-
-        compass.setItemMeta(meta);
         return compass;
     }
 
-    public static void updateQuestItem(Player player, Quest quest, int slot) {
-        Inventory inventory = player.getOpenInventory().getTopInventory();
-        if (inventory == null) {
-            Bukkit.getLogger().severe("Inventory is null when trying to update quest item.");
-            return;
+    // Utility method to format rewards into a displayable string (e.g., "200 money, 1 gem")
+    private String formatRewards(Quest quest) {
+        Map<String, Object> rewards = quest.getRewards();
+        List<String> rewardList = new ArrayList<>();
+
+        if (rewards.containsKey("money")) {
+            rewardList.add(rewards.get("money") + " money");
+        }
+        if (rewards.containsKey("gems")) {
+            rewardList.add(rewards.get("gems") + " gems");
+        }
+        if (rewards.containsKey("suffix_tag")) {
+            rewardList.add("Suffix: " + rewards.get("suffix_tag"));
         }
 
-        // Log the inventory size and slot to be updated
-        Bukkit.getLogger().info("Updating quest item in slot: " + slot + " of inventory size: " + inventory.getSize());
+        return String.join(", ", rewardList);
+    }
 
-        // Ensure the slot is within inventory bounds
-        if (slot >= 0 && slot < inventory.getSize()) {
-            // Create a book item to represent the quest
-            ItemStack questItem = createQuestItem(player, quest);
+    private void assignSideQuestsIfNecessary(Player player) {
+        int[] sideQuests = SideQuestManager.getSideQuests(player);
 
-            // Update the specific slot with the new quest item
-            inventory.setItem(slot, questItem);
-        } else {
-            Bukkit.getLogger().warning("Attempted to update inventory slot out of bounds: " + slot);
+        // Check if the player already has side quests
+        boolean hasSideQuests = false;
+        for (int questId : sideQuests) {
+            if (questId > 0) { // Check if any side quest slot is filled
+                hasSideQuests = true;
+                break;
+            }
+        }
+
+        // If the player doesn't have side quests, assign new ones
+        if (!hasSideQuests) {
+            int[] newSideQuests = assignRandomSideQuests(player);
+            SideQuestManager.saveSideQuests(player, newSideQuests);
         }
     }
 
-    private void createCustomQuest(Player player, int questId) {
-        // Check if the player has already completed this custom quest
-        if (questManager.hasCompletedQuest(player, questId)) {
-            player.sendMessage("§cYou have already completed this quest and cannot accept it again.");
-            return;
+    // Assign random side quests to the player (5 quests from the range 1001 to max ID)
+    private int[] assignRandomSideQuests(Player player) {
+        List<Quest> availableSideQuests = QuestManager.getQuestsInRange(1001, Integer.MAX_VALUE); // Get all quests from 1001+
+        Collections.shuffle(availableSideQuests); // Randomize the list
+
+        int[] assignedQuests = new int[5];
+        for (int i = 0; i < 5 && i < availableSideQuests.size(); i++) {
+            assignedQuests[i] = availableSideQuests.get(i).getId(); // Assign random quests
         }
+        return assignedQuests;
+    }
 
-        // Create and assign the custom quest
-        Quest customQuest = questManager.getQuestFactory().createQuest(questId, player);
-        questManager.assignQuest(player, customQuest, customQuest.getSlot()); // No slot assignment needed for this logic
-        player.sendMessage("§aYou have accepted a custom quest: " + customQuest.getName());
+    public void updateQuestGUI(Player player, Inventory questInventory) {
+        // Fetch the player's daily quest
+        Quest dailyQuest = QuestManager.getDailyQuestForPlayer(player);
+        ItemStack dailyQuestItem = createPaperItem(player, dailyQuest);
+        questInventory.setItem(10, dailyQuestItem);
 
-        // Update the inventory to show the new quest (if needed in the GUI)
-        QuestGUI.updateQuestItem(player, customQuest, customQuest.getSlot()); // Assuming event.getSlot() is the slot clicked
+        // Fetch side quests and update the GUI
+        int[] sideQuestSlots = {12, 13, 14, 15, 16};
+        setSideQuestItems(questInventory, sideQuestSlots, player);
+
+        // Open the updated inventory for the player
+        player.updateInventory();
     }
 
 

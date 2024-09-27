@@ -18,13 +18,15 @@ import me.diu.gachafight.hooks.PlaceholderAPIHook;
 import me.diu.gachafight.playerstats.PlayerStatsListener;
 import me.diu.gachafight.playerstats.leaderboard.MoneyLeaderboard;
 import me.diu.gachafight.quest.DatabaseManager;
-import me.diu.gachafight.quest.QuestManager;
+import me.diu.gachafight.quest.listeners.QuestClickListener;
+import me.diu.gachafight.quest.managers.QuestManager;
 import me.diu.gachafight.quest.gui.QuestGUI;
 import me.diu.gachafight.quest.listeners.QuestNPCListener;
+import me.diu.gachafight.quest.utils.DailyQuestScheduler;
+import me.diu.gachafight.quest.utils.QuestUtils;
+import me.diu.gachafight.quest.utils.SideQuestScheduler;
 import me.diu.gachafight.scoreboard.Board;
 import me.diu.gachafight.shop.buy.BuyItemManager;
-import me.diu.gachafight.shop.buy.gui.BuyShopClickHandler;
-import me.diu.gachafight.shop.buy.listener.BuyShopSelectionListener;
 import me.diu.gachafight.shop.equipmentspecialist.EquipmentSpecialistListener;
 import me.diu.gachafight.shop.equipmentspecialist.EquipmentSpecialistNPC;
 import me.diu.gachafight.shop.potion.listeners.PotionUseListener;
@@ -80,7 +82,10 @@ public final class GachaFight extends JavaPlugin implements Listener {
         this.GachaLootTableManager = new GachaLootTableManager(this);
         this.potionItemManager = new PotionItemManager(this);
         this.moneyLeaderboard = new MoneyLeaderboard(this);
-        this.questManager= new QuestManager(this, databaseManager);
+        this.questManager= new QuestManager(this, getDataFolder(), databaseManager);
+        QuestUtils.initialize(questManager);
+        SideQuestScheduler.scheduleQuestClearTask(this);
+        DailyQuestScheduler.scheduleDailyQuestRefresh(this);
         this.gachaManager = new GachaManager(this, luckPerms, questManager);
         this.furnitureDataManager = new FurnitureDataManager(this);
         this.questGUI = new QuestGUI(questManager);
@@ -101,7 +106,6 @@ public final class GachaFight extends JavaPlugin implements Listener {
                     Blocks.gachaChest.remove();
                 }
                 Blocks.spawnGachaChest();
-                questManager.checkAllPlayersForExpiredQuests();
             }
         }.runTaskTimer(this, 6000, 4000);
         new BukkitRunnable() {
@@ -197,7 +201,7 @@ public final class GachaFight extends JavaPlugin implements Listener {
         new EquipmentSpecialistNPC(this);
         new QuestNPCListener(this, questManager);
         new DamageListener(this);
-        questManager.startOnlineTimeTracking();
+        new QuestClickListener(this);
     }
 
     public void cancelPlayerTasks(Player player) {

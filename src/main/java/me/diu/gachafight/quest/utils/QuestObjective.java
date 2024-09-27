@@ -7,13 +7,10 @@ import lombok.Setter;
 @Getter
 @Setter
 public abstract class QuestObjective {
-    private final String description;
-    private final int requiredAmount; // Add this field
+    protected String description;
+    protected int amount;
 
-    public QuestObjective(String description, int requiredAmount) {
+    public QuestObjective(String description) {
         this.description = description;
-        this.requiredAmount = requiredAmount; // Initialize the required amount
     }
-
-    public abstract boolean isCompleted();
 }

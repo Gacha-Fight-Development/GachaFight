@@ -4,7 +4,8 @@ import me.diu.gachafight.GachaFight;
 import me.diu.gachafight.playerstats.PlayerStats;
 import me.diu.gachafight.gacha.gui.RaritySelectionGUI;
 import me.diu.gachafight.quest.Quest;
-import me.diu.gachafight.quest.QuestManager;
+import me.diu.gachafight.quest.managers.QuestManager;
+import me.diu.gachafight.quest.utils.QuestUtils;
 import me.diu.gachafight.utils.Calculations;
 import me.diu.gachafight.utils.ColorChat;
 import me.diu.gachafight.utils.ExtractLore;
@@ -17,7 +18,6 @@ import net.luckperms.api.model.user.User;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
-import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -267,10 +267,10 @@ public class GachaManager {
         // Determine which probability table to use based on the gacha key's display name
         if (displayName.contains("Common Gacha Key")) {
             probabilities = commonKeyProbabilities;
-            Quest openCommonKeyQuest = questManager.getQuestById(3, player);
-            Integer currentProgress = questManager.loadQuestProgress(player, openCommonKeyQuest.getId());
-            if (currentProgress != null) { // Player doesn't have the quest
-                questManager.incrementQuestProgress(player, 3);
+            Quest openCommonKeyQuest = QuestManager.getQuestById(3);
+            Integer currentProgress = QuestUtils.loadQuestProgress(player, openCommonKeyQuest.getId());
+            if (currentProgress != null) {
+                QuestUtils.incrementQuestProgress(player, openCommonKeyQuest, 1);
             }
         } else if (displayName.contains("Uncommon Gacha Key")) {
             probabilities = uncommonKeyProbabilities;

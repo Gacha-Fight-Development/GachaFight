@@ -44,7 +44,8 @@ public class ShopCommand implements CommandExecutor {
                 } else if (args[0].equalsIgnoreCase("potion")) {
                     PotionRaritySelectionGUI.openShop(player, plugin); // Opens rarity selection GUI
                 } else if (args[0].equalsIgnoreCase("quest")) {
-                    QuestGUI.openQuestSelection(player);
+                    QuestGUI questGUI = new QuestGUI(plugin.getQuestManager());
+                    questGUI.openQuestGUI(player);
                 } else if (args[0].equalsIgnoreCase("bank")) {
                     BankNPCListener.redeemGold(player);
                 } else {

@@ -8,18 +8,10 @@ import me.diu.gachafight.quest.utils.QuestObjective;
 @Getter
 @Setter
 public class OnlineTimeObjective extends QuestObjective {
-    private int currentTime;
+    private final int timeInSeconds;
 
-    public OnlineTimeObjective(String description, int requiredTime) {
-        super(description, requiredTime); // Pass to superclass
-    }
-
-    public void incrementTime(int time) {
-        currentTime += time;
-    }
-
-    @Override
-    public boolean isCompleted() {
-        return currentTime >= getRequiredAmount();
+    public OnlineTimeObjective(String description, int timeInSeconds) {
+        super(description);
+        this.timeInSeconds = timeInSeconds;
     }
 }
