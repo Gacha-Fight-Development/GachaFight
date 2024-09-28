@@ -4,6 +4,7 @@ import lombok.Getter;
 import me.diu.gachafight.commands.*;
 import me.diu.gachafight.commands.tabs.AdminPlayerDataTabCompleter;
 import me.diu.gachafight.combat.DamageListener;
+import me.diu.gachafight.commands.tabs.ShopTabCompleter;
 import me.diu.gachafight.dungeon.DungeonGUI;
 import me.diu.gachafight.listeners.*;
 import me.diu.gachafight.playerstats.PlayerDataManager;
@@ -180,6 +181,8 @@ public final class GachaFight extends JavaPlugin implements Listener {
         new PayCommand(this);
         new TagsCommand(this);
         new ShopCommand(this);
+        new ShopTabCompleter(this);
+        new RefreshQuestCommand(this);
     }
 
     private void registerEvents() {

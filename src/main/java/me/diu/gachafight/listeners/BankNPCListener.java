@@ -11,6 +11,7 @@ import org.bukkit.entity.Villager;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -26,6 +27,9 @@ public class BankNPCListener implements Listener {
     public void onPlayerInteractWithNPC(PlayerInteractEntityEvent event) {
 
         // Check if the NPC's name is "Bank"
+        if (event.getHand() != EquipmentSlot.HAND) {
+            return; // Ignore offhand interactions
+        }
         if (event.getRightClicked().getName().equals("bank")) {
             redeemGold(event.getPlayer());
         }

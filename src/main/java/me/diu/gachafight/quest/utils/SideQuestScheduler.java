@@ -1,8 +1,13 @@
 package me.diu.gachafight.quest.utils;
 
+import me.diu.gachafight.GachaFight;
 import me.diu.gachafight.quest.managers.SideQuestManager;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -13,6 +18,7 @@ public class SideQuestScheduler {
     public static void scheduleQuestClearTask(JavaPlugin plugin) {
         Bukkit.getScheduler().runTaskTimer(plugin, () -> {
             if (isCentralTimeForClear()) {
+                clearSideQuestsFromProgress();
                 SideQuestManager.clearSideQuests();
                 Bukkit.getLogger().info("Side quests cleared at specified time.");
             }
@@ -28,6 +34,17 @@ public class SideQuestScheduler {
             return hour == 2 || hour == 8 || hour == 14 || hour == 20;
         } else {
             return false;
+        }
+    }
+    private static void clearSideQuestsFromProgress() {
+        String sql = "DELETE FROM quest_progress WHERE quest_id >= 1001";
+
+        try (Connection conn = GachaFight.getInstance().getDatabaseManager().getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.executeUpdate();
+            Bukkit.getLogger().info("All side quests have been cleared from quest_progress.");
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 }

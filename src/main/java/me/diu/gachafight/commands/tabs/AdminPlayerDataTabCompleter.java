@@ -1,6 +1,7 @@
 package me.diu.gachafight.commands.tabs;
 
 import me.diu.gachafight.GachaFight;
+import me.diu.gachafight.utils.TabCompleteUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -27,35 +28,17 @@ public class AdminPlayerDataTabCompleter implements TabCompleter {
 
         if (args.length == 1) {
             // First argument: player name
-            return getPlayerNamesMatching(args[0]);
+            return TabCompleteUtils.getPlayerNamesMatching(args[0]);
         } else if (args.length == 2) {
             // Second argument: action
-            return getMatchingOptions(args[1], ACTIONS);
+            return TabCompleteUtils.getMatchingOptions(args[1], ACTIONS);
         } else if (args.length == 3) {
             // Third argument: stat (only for set and add actions)
             if ("set".equalsIgnoreCase(args[1]) || "add".equalsIgnoreCase(args[1])) {
-                return getMatchingOptions(args[2], STATS);
+                return TabCompleteUtils.getMatchingOptions(args[2], STATS);
             }
         }
         return Collections.emptyList();
-    }
-
-
-    private List<String> getMatchingOptions(String current, List<String> options) {
-        List<String> result = new ArrayList<>();
-        for (String option : options) {
-            if (option.startsWith(current.toLowerCase())) {
-                result.add(option);
-            }
-        }
-        return result;
-    }
-
-    private List<String> getPlayerNamesMatching(String current) {
-        return Bukkit.getOnlinePlayers().stream()
-                .map(player -> player.getName())
-                .filter(name -> name.toLowerCase().startsWith(current.toLowerCase()))
-                .collect(Collectors.toList());
     }
 }
 

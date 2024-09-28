@@ -30,7 +30,7 @@ public class QuestClickListener implements Listener {
         Inventory questInventory = event.getClickedInventory();
 
         // Handle quest clicks (daily or side quests)
-        if (event.getView().getTitle().equals("Quest Selection")) {
+        if (event.getView().getTitle().equals("Quest Selection") && event.getClickedInventory() != event.getView().getBottomInventory()) {
             event.setCancelled(true); // Prevent moving items in the GUI
 
             // Handle daily quest click (slot 10)

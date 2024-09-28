@@ -4,7 +4,12 @@ import me.diu.gachafight.GachaFight;
 import me.diu.gachafight.quest.Quest;
 import me.diu.gachafight.quest.managers.DailyQuestManager;
 import me.diu.gachafight.quest.managers.QuestManager;
+import me.diu.gachafight.quest.objectives.KeyOpenObjective;
+import me.diu.gachafight.quest.objectives.KillMobObjective;
+import me.diu.gachafight.quest.objectives.OnlineTimeObjective;
 import net.luckperms.api.node.types.PermissionNode;
+import org.bukkit.Bukkit;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 
 import java.sql.Connection;
@@ -20,19 +25,12 @@ import java.util.UUID;
 public class QuestUtils {
 
     private static QuestManager questManager; // Reference to the QuestManager
-
-    // Initialize QuestUtils with a QuestManager instance
     public static void initialize(QuestManager manager) {
         questManager = manager;
     }
 
-    // Helper method to fetch a quest by its ID and player
-    public static Quest getQuestById(int questId, Player player) {
-        return questManager.getQuestById(questId);
-    }
-
     // Method to increment quest progress for the player
-    public static void incrementQuestProgress(Player player, Quest quest, int incrementAmount) {
+    public static void incrementQuestProgress(Player player, Quest quest, String objectiveType, int incrementAmount) {
         if (quest == null) {
             return; // Quest does not exist
         }
@@ -40,23 +38,40 @@ public class QuestUtils {
         // Load the current progress
         Integer currentProgress = loadQuestProgress(player, quest.getId());
         if (currentProgress == null) {
-            return; // Player does not have the quest active
+            currentProgress = 0; // Initialize progress if none found
         }
 
-        // Increment the quest progress
-        currentProgress += incrementAmount;
-
-        // Get the required amount from the quest objective
-        int requiredAmount = quest.getObjective().getAmount();
+        switch (objectiveType) {
+            case "killMob":
+                // Specific logic for kill mob quests
+                if (quest.getObjective() instanceof KillMobObjective) {
+                    currentProgress += incrementAmount;
+                }
+                break;
+            case "keyOpen":
+                // Specific logic for key open quests
+                if (quest.getObjective() instanceof KeyOpenObjective) {
+                    currentProgress += incrementAmount;
+                }
+                break;
+            case "onlineTime":
+                // Specific logic for time spent online quests
+                if (quest.getObjective() instanceof OnlineTimeObjective) {
+                    currentProgress += incrementAmount;
+                }
+                break;
+            default:
+                return; // Unknown objective type
+        }
 
         // Save the new progress
         saveQuestProgress(player, quest.getId(), currentProgress);
 
         // Notify the player about the progress
-        player.sendMessage("§aProgress: " + currentProgress + "/" + requiredAmount);
+        player.sendMessage("§aProgress: " + currentProgress + "/" + quest.getObjective().getAmount());
 
         // If the quest is completed, handle completion
-        if (currentProgress >= requiredAmount) {
+        if (currentProgress >= quest.getObjective().getAmount()) {
             completeQuest(player, quest);
         }
     }
@@ -68,6 +83,9 @@ public class QuestUtils {
         // Apply quest rewards (this method can be expanded to handle more complex rewards)
         applyRewards(player, quest);
 
+        player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
+        player.sendTitle("Quest Completed!", quest.getName(), 10, 70, 20);
+
         // Check if it's a daily quest (ID between 1 and 1000)
         if (quest.getId() >= 1 && quest.getId() <= 1000) {
             // Use DailyQuestManager to mark the daily quest as completed
@@ -78,6 +96,7 @@ public class QuestUtils {
                 questManager.markQuestAsCompleted(player, quest.getId());
             }
         }
+        deleteQuestProgress(player, quest.getId());
     }
 
 
@@ -206,4 +225,69 @@ public class QuestUtils {
 
         return hoursUntilNext + "h " + minutesUntilNext + "m";
     }
+
+    // Method to delete a quest from quest_progress for the player
+    private static void deleteQuestProgress(Player player, int questId) {
+        UUID playerUUID = player.getUniqueId();
+        String sql = "DELETE FROM quest_progress WHERE player_uuid = ? AND quest_id = ?";
+
+        try (Connection conn = GachaFight.getInstance().getDatabaseManager().getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, playerUUID.toString());
+            stmt.setInt(2, questId);
+            stmt.executeUpdate();
+            Bukkit.getLogger().info("Quest " + questId + " removed from quest_progress for player " + player.getName());
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+    // Helper method to get the active daily quest for the player (check if they are already working on one)
+    public static Quest getActiveDailyQuestForPlayer(Player player) {
+        UUID playerUUID = player.getUniqueId(); // Get player's UUID
+        String sql = "SELECT quest_id FROM quest_progress WHERE player_uuid = ? AND quest_id BETWEEN 1 AND 1000";
+
+        try (Connection conn = GachaFight.getInstance().getDatabaseManager().getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, playerUUID.toString());
+
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                int questId = rs.getInt("quest_id");
+                return QuestManager.getQuestById(questId); // Fetch and return the quest if found
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return null; // No active daily quest found
+    }
+
+    public static boolean isQuestCompleted(Player player, int questId) {
+        UUID playerUUID = player.getUniqueId();
+
+        // Check if the quest is non-repeatable
+        Quest quest = QuestManager.getQuestById(questId);
+        if (quest == null || quest.isRepeatable()) {
+            return false; // Repeatable quests can't be "completed" permanently
+        }
+
+        // Check if the quest exists in quest_progress
+        String sql = "SELECT 1 FROM quest_progress WHERE player_uuid = ? AND quest_id = ? LIMIT 1";
+
+        try (Connection conn = GachaFight.getInstance().getDatabaseManager().getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, playerUUID.toString());
+            stmt.setInt(2, questId);
+
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return false; // Quest is still in progress (found in quest_progress)
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return true; // Quest is not in quest_progress and is non-repeatable, meaning it's completed
+    }
+
 }

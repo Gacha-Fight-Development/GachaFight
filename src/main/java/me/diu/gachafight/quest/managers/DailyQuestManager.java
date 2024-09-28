@@ -11,6 +11,8 @@ import java.util.Collections;
 
 import me.diu.gachafight.GachaFight;
 import me.diu.gachafight.quest.DatabaseManager;
+import me.diu.gachafight.quest.utils.DailyQuestScheduler;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import me.diu.gachafight.quest.Quest;
@@ -82,22 +84,28 @@ public class DailyQuestManager {
         UUID playerUUID = player.getUniqueId();
         int questId = dailyQuest.getId();
 
-        // Insert or update the quest progress in the database
         String sql = "INSERT INTO quest_progress (player_uuid, quest_id, progress) " +
-                "VALUES (?, ?, 0) ON DUPLICATE KEY UPDATE quest_id = quest_id";
+                "VALUES (?, ?, 0) " +
+                "ON DUPLICATE KEY UPDATE quest_id = quest_id"; // Prevent duplicate insertion
 
-        try (Connection conn = GachaFight.getInstance().getDatabaseManager().getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = GachaFight.getInstance().getDatabaseManager().getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, playerUUID.toString());
             stmt.setInt(2, questId);
             stmt.executeUpdate();
+
+            // Add logging to track saving
+            Bukkit.getLogger().info("Daily quest saved: " + dailyQuest.getName() + " for player: " + player.getName());
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
+
     // Method to clear daily quest completion data (called during quest refresh times)
     public static void clearDailyQuestCompletionData() {
         String sql = "DELETE FROM daily_quest_completion";
+        DailyQuestScheduler.clearDailyQuestsFromProgress();
 
         try (Connection conn = GachaFight.getInstance().getDatabaseManager().getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.executeUpdate(); // Clear all daily quest completion data

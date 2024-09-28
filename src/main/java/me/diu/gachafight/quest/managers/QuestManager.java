@@ -13,6 +13,7 @@ import me.diu.gachafight.quest.utils.QuestObjective;
 import me.diu.gachafight.quest.utils.QuestUtils;
 import net.luckperms.api.model.user.User;
 import net.luckperms.api.node.types.PermissionNode;
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -54,9 +55,10 @@ public class QuestManager {
             String type = (String) objectiveData.get("type");
 
             QuestObjective objective;
+            String target;
             switch (type) {
                 case "killMob":
-                    String target = (String) objectiveData.get("target");
+                    target = (String) objectiveData.get("target");
                     int amount = (int) objectiveData.get("amount");
                     objective = new KillMobObjective(description, target, amount);
                     break;
@@ -65,8 +67,9 @@ public class QuestManager {
                     objective = new OnlineTimeObjective(description, timeInSeconds);
                     break;
                 case "keyOpen":
+                    target = (String) objectiveData.get("target");
                     amount = (int) objectiveData.get("amount");
-                    objective = new KeyOpenObjective(description, amount);
+                    objective = new KeyOpenObjective(description, target, amount);
                     break;
                 default:
                     throw new IllegalArgumentException("Unknown quest objective type: " + type);
@@ -116,78 +119,38 @@ public class QuestManager {
         return quests.get(id);
     }
     public static Quest getDailyQuestForPlayer(Player player) {
-        // Fetch all available daily quests (IDs 1-1000)
-        List<Quest> dailyQuests = quests.values().stream()
-                .filter(quest -> quest.getId() >= 1 && quest.getId() <= 1000) // Quest ID between 1 and 1000
-                .collect(Collectors.toList());
-
-        // Optionally, check if the player already has an active or completed daily quest
-        Quest activeDailyQuest = getActiveDailyQuestForPlayer(player);
+        // Step 1: Check if the player already has an active daily quest
+        Quest activeDailyQuest = QuestUtils.getActiveDailyQuestForPlayer(player);
         if (activeDailyQuest != null) {
             return activeDailyQuest; // Return the active daily quest if the player is already on it
         }
 
-        // Assign a new daily quest to the player
-        Quest newDailyQuest = assignNewDailyQuest(player, dailyQuests);
-
-        // Optionally, track the assignment in a database or cache
-        saveAssignedDailyQuest(player, newDailyQuest);
+        // Step 2: If no active daily quest is found, assign a new daily quest
+        Quest newDailyQuest = assignRandomDailyQuest(player);
+        // Step 3: Save the newly assigned daily quest in the database
+        DailyQuestManager.saveAssignedDailyQuest(player, newDailyQuest);
 
         return newDailyQuest;
-    }
-
-    // Helper method to get the active daily quest for the player (check if they are already working on one)
-    public static Quest getActiveDailyQuestForPlayer(Player player) {
-        // Assuming you have a method that checks the player's progress on daily quests
-        for (int questId = 1; questId <= 1000; questId++) {
-            Integer progress = QuestUtils.loadQuestProgress(player, questId); // Fetch quest progress for daily quests
-            if (progress != null && progress > 0) {
-                return getQuestById(questId); // Return the quest if the player is actively working on it
-            }
-        }
-        return null; // No active daily quest found
-    }
-
-    // Helper method to assign a new daily quest
-    public static Quest assignNewDailyQuest(Player player, List<Quest> dailyQuests) {
-        // Here you can implement logic to randomly assign a daily quest or pick the next available quest.
-        // For this example, we'll just pick the first available daily quest that isn't completed.
-        for (Quest quest : dailyQuests) {
-            Integer progress = QuestUtils.loadQuestProgress(player, quest.getId());
-            if (progress == null || progress == 0) { // Player hasn't started this quest
-                return quest; // Assign this quest
-            }
-        }
-
-        // If all quests have been completed, return null or recycle quests (optional logic)
-        return null; // No available daily quest found
-    }
-
-    // Optionally, save the assigned daily quest for the player (can store in a database)
-    private static void saveAssignedDailyQuest(Player player, Quest quest) {
-        if (quest != null) {
-            // Save the assigned daily quest in the database if necessary
-            // This can track that the player has been assigned a specific daily quest for today.
-        }
     }
     public static Quest assignRandomDailyQuest(Player player) {
         // Fetch all available daily quests (IDs 1-1000)
         List<Quest> availableDailyQuests = getQuestsInRange(1, 1000);
 
-        // Check if there are no available quests
         if (availableDailyQuests.isEmpty()) {
             return null; // No daily quests available
         }
 
         // Randomly select a daily quest
-        Collections.shuffle(availableDailyQuests); // Randomize the list
+        Collections.shuffle(availableDailyQuests); // Shuffle for randomness
         Quest randomDailyQuest = availableDailyQuests.get(0); // Pick the first random quest
 
-        // Save assigned daily quest (if needed)
-        saveAssignedDailyQuest(player, randomDailyQuest);
+        // Add logging to track assignments
+        Bukkit.getLogger().info("Assigning daily quest: " + randomDailyQuest.getName() + " to player: " + player.getName());
 
+        // Return the assigned quest
         return randomDailyQuest;
     }
+
     public static List<Quest> getQuestsInRange(int minId, int maxId) {
         return quests.values().stream()
                 .filter(quest -> quest.getId() >= minId && quest.getId() <= maxId) // Filter by quest ID range
@@ -212,4 +175,37 @@ public class QuestManager {
         // Return null if no progress is found (the player hasn't started the quest)
         return null;
     }
+
+    // Method to retrieve active quests for a player
+    public List<Quest> getActiveQuestsForPlayer(Player player) {
+        List<Quest> activeQuests = new ArrayList<>();
+
+        // Get player's UUID
+        UUID playerUUID = player.getUniqueId();
+
+        // Fetch all active quests for the player (both daily quests and side quests)
+        String sql = "SELECT quest_id FROM quest_progress WHERE player_uuid = ?";
+
+        try (Connection conn = GachaFight.getInstance().getDatabaseManager().getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, playerUUID.toString());
+
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                int questId = rs.getInt("quest_id");
+
+                // Get the quest object by its ID
+                Quest quest = getQuestById(questId);
+                if (quest != null) {
+                    activeQuests.add(quest);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return activeQuests; // Return the list of active quests
+    }
+
 }
+

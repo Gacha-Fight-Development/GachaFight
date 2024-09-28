@@ -103,7 +103,6 @@ public class PlayerStats {
     public void syncHealthWithHearts(Player player) {
         double currentHp = Math.min(this.hp + this.getGearStats().getTotalMaxHp(), this.maxhp+ this.getGearStats().getTotalMaxHp());
         if (currentHp < 0) {
-            Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "kill" + player.getName());
         } else {
             player.setHealth(currentHp / (this.maxhp+this.getGearStats().getTotalMaxHp()) * 20); // Scale to Minecraft's health system (20 half hearts)
         }

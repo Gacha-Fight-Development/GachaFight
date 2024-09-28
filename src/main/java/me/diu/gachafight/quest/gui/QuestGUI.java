@@ -30,14 +30,22 @@ public class QuestGUI {
         // Create a 3-row (27-slot) inventory with the title "Quest Selection"
         Inventory questInventory = Bukkit.createInventory(null, 27, "Quest Selection");
 
+        // Adding black stained glass pane as the border
+        ItemStack cyanPane = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
+        ItemMeta cyanPaneMeta = cyanPane.getItemMeta();
+        cyanPaneMeta.setHideTooltip(true);
+        cyanPane.setItemMeta(cyanPaneMeta);
+
+        // Set the layout for the GUI
+        for (int i = 0; i < questInventory.getSize(); i++) {
+            questInventory.setItem(i, cyanPane);  // Fill with stained glass
+        }
+
         // Check if the player already has side quests, if not assign new ones
-        assignSideQuestsIfNecessary(player);
+        SideQuestManager.assignSideQuestsIfNecessary(player);
 
         // Check if the player has a daily quest, if not assign a new one
         Quest dailyQuest = QuestManager.getDailyQuestForPlayer(player);
-        if (dailyQuest == null) {
-            dailyQuest = QuestManager.assignRandomDailyQuest(player);
-        }
 
         // Paper at slot 10 (for daily quest)
         ItemStack dailyQuestItem = createPaperItem(player, dailyQuest);
@@ -133,17 +141,31 @@ public class QuestGUI {
                 continue; // If the quest does not exist, skip this slot
             }
 
-            // Create a writable book to represent the side quest
+            // Check if the quest is completed (i.e., not in quest_progress and non-repeatable)
+            boolean isQuestCompleted = QuestUtils.isQuestCompleted(player, questId);
+
+            // Create a book to represent the side quest
             ItemStack book = new ItemStack(Material.WRITABLE_BOOK);
             ItemMeta meta = book.getItemMeta();
 
             if (meta != null) {
                 // Set the display name and lore of the book based on the quest data
                 meta.setDisplayName("§b" + quest.getName());
-                meta.setLore(List.of(
-                        "§7" + quest.getDescription(),
-                        "§7Reward: " + formatRewards(quest)
-                ));
+                if (isQuestCompleted) {
+                    // Show "Progress: Completed" if the quest is completed
+                    meta.setLore(List.of(
+                            "§7" + quest.getDescription(),
+                            "§7Reward: " + formatRewards(quest),
+                            "§7Progress: Completed"
+                    ));
+                } else {
+                    // Otherwise, show the player's current progress
+                    meta.setLore(List.of(
+                            "§7" + quest.getDescription(),
+                            "§7Reward: " + formatRewards(quest),
+                            "§7Progress: " + QuestUtils.getQuestProgress(player, quest)
+                    ));
+                }
                 book.setItemMeta(meta);
             }
 
@@ -188,37 +210,6 @@ public class QuestGUI {
         return String.join(", ", rewardList);
     }
 
-    private void assignSideQuestsIfNecessary(Player player) {
-        int[] sideQuests = SideQuestManager.getSideQuests(player);
-
-        // Check if the player already has side quests
-        boolean hasSideQuests = false;
-        for (int questId : sideQuests) {
-            if (questId > 0) { // Check if any side quest slot is filled
-                hasSideQuests = true;
-                break;
-            }
-        }
-
-        // If the player doesn't have side quests, assign new ones
-        if (!hasSideQuests) {
-            int[] newSideQuests = assignRandomSideQuests(player);
-            SideQuestManager.saveSideQuests(player, newSideQuests);
-        }
-    }
-
-    // Assign random side quests to the player (5 quests from the range 1001 to max ID)
-    private int[] assignRandomSideQuests(Player player) {
-        List<Quest> availableSideQuests = QuestManager.getQuestsInRange(1001, Integer.MAX_VALUE); // Get all quests from 1001+
-        Collections.shuffle(availableSideQuests); // Randomize the list
-
-        int[] assignedQuests = new int[5];
-        for (int i = 0; i < 5 && i < availableSideQuests.size(); i++) {
-            assignedQuests[i] = availableSideQuests.get(i).getId(); // Assign random quests
-        }
-        return assignedQuests;
-    }
-
     public void updateQuestGUI(Player player, Inventory questInventory) {
         // Fetch the player's daily quest
         Quest dailyQuest = QuestManager.getDailyQuestForPlayer(player);
@@ -232,6 +223,4 @@ public class QuestGUI {
         // Open the updated inventory for the player
         player.updateInventory();
     }
-
-
 }

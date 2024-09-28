@@ -57,7 +57,7 @@ public class PotionUseListener implements Listener {
         double newSpeed = originalSpeed + (speed * 0.01);
 
         player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue((PlayerStats.getPlayerStats(player).getSpeed()*0.1) + (speed * 0.01));
-        player.sendMessage(ColorChat.chat("&a+ &b"+speed+" Speed"));
+        player.sendMessage(ColorChat.chat("&a+ &b"+(speed*0.1)+" Speed"));
 
         new BukkitRunnable() {
             @Override

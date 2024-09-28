@@ -9,6 +9,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.inventory.EquipmentSlot;
 
 public class PotionShopListener implements Listener {
     private final GachaFight plugin;
@@ -42,6 +43,9 @@ public class PotionShopListener implements Listener {
 
     @EventHandler
     public void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
+        if (event.getHand() != EquipmentSlot.HAND) {
+            return; // Ignore offhand interactions
+        }
         if (event.getRightClicked().getName() != null && event.getRightClicked().getName().equalsIgnoreCase("Potion Shop")) {
             event.setCancelled(true);
             PotionRaritySelectionGUI.openShop(event.getPlayer(), plugin); // Opens rarity selection GUI

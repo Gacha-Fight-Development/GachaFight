@@ -8,9 +8,11 @@ import me.diu.gachafight.quest.utils.QuestObjective;
 @Setter
 public class KeyOpenObjective extends QuestObjective {
     private final int amount;
+    private final String target;
 
-    public KeyOpenObjective(String description, int amount) {
+    public KeyOpenObjective(String description, String target, int amount) {
         super(description);
+        this.target = target;
         this.amount = amount;
     }
 }

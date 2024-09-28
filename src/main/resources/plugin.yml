@@ -47,6 +47,9 @@ commands:
   tags:
     description: Open the tag selection GUI
     usage: /tags
+  refreshquest:
+    usage: /refreshquest
+    aliases: rq
 
 libraries:
   - org.mongodb:mongodb-driver-sync:5.1.2

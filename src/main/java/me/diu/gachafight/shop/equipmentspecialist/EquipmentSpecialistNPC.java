@@ -53,7 +53,7 @@ public class EquipmentSpecialistNPC implements Listener {
         // Adding cyan stained glass pane as the border
         ItemStack cyanPane = new ItemStack(Material.CYAN_STAINED_GLASS_PANE);
         ItemMeta cyanPaneMeta = cyanPane.getItemMeta();
-        cyanPaneMeta.setDisplayName(" ");
+        cyanPaneMeta.setHideTooltip(true);
         cyanPane.setItemMeta(cyanPaneMeta);
 
         // Set the layout for the GUI

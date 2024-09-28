@@ -11,6 +11,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.inventory.EquipmentSlot;
 
 @Getter
 @Setter
@@ -27,6 +28,10 @@ public class QuestNPCListener implements Listener {
     public void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
         Player player = event.getPlayer();
         Entity entity = event.getRightClicked();
+
+        if (event.getHand() != EquipmentSlot.HAND) {
+            return; // Ignore offhand interactions
+        }
         if (entity.getName().equals("Quest")) {
             // Open the quest GUI (daily quests or side quests) for the player
             QuestGUI questGUI = new QuestGUI(questManager); // Assuming this is your QuestGUI class
