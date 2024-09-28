@@ -29,7 +29,6 @@ import org.bukkit.persistence.PersistentDataType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 public class GachaManager {
@@ -143,7 +142,7 @@ public class GachaManager {
                             .filter(node -> node.getKey().startsWith("gacha.autosell." + plainRarityName.toLowerCase()))
                             .map(Node::getKey)
                             .collect(Collectors.joining(", "));
-                    double autoSellCutoff = ((double) Integer.parseInt(autoSellPerms.split("\\.")[1])) / 100;
+                    double autoSellCutoff = ((double) Integer.parseInt(autoSellPerms.split("\\.")[3])) / 100;
                     if (autoSellCutoff >= statMedium) {
                         // Auto-sell the item
                         double sellPrice = SellPriceCalculator.calculateSellPrice(customizedReward, rarityIndex);

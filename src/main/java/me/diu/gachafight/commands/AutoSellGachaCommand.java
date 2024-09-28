@@ -24,7 +24,7 @@ import org.bukkit.plugin.Plugin;
 
 import java.util.HashMap;
 import java.util.Map;
-
+import java.util.stream.Collectors;
 
 
 public class AutoSellGachaCommand implements CommandExecutor, Listener {
@@ -33,7 +33,7 @@ public class AutoSellGachaCommand implements CommandExecutor, Listener {
     private final LuckPerms luckPerms;
     private final Plugin plugin;
 
-    private Map<String, Integer> rarityPermissions;
+    private final Map<String, Integer> rarityPermissions;
 
     public AutoSellGachaCommand(GachaFight plugin, GachaManager gachaManager, LuckPerms luckPerms) {
         this.gachaManager = gachaManager;
@@ -46,6 +46,7 @@ public class AutoSellGachaCommand implements CommandExecutor, Listener {
 
 
         // Map equipment percent to defaults
+        rarityPermissions = new HashMap<>();
         rarityPermissions.put("Common", 0);
         rarityPermissions.put("Uncommon", 0);
         rarityPermissions.put("Rare", 0);
@@ -78,7 +79,19 @@ public class AutoSellGachaCommand implements CommandExecutor, Listener {
         // Create items for each rarity
         for (Map.Entry<String, Integer> entry : rarityPermissions.entrySet()) {
             String rarity = entry.getKey();
-            double damageValue = rarityPermissions.get(rarity);
+
+            User user = luckPerms.getUserManager().getUser(player.getUniqueId());
+            String getCurrentPerm = user.getNodes().stream()
+                    .filter(node -> node.getKey().startsWith("gacha.autosell." + rarity.toLowerCase() + "."))
+                    .map(Node::getKey)
+                    .collect(Collectors.joining(", "));
+
+            if(getCurrentPerm.isEmpty()){
+                getCurrentPerm = "gacha.autosell." + rarity.toLowerCase() + "." + entry.getValue();
+                user.data().add(Node.builder(getCurrentPerm).build());
+                luckPerms.getUserManager().saveUser(user);
+            }
+            int damageValue =  Integer.parseInt(getCurrentPerm.split("\\.")[3]);
             ItemStack item = new ItemStack(Material.PAPER);  // Use PAPER as a placeholder item
             ItemMeta meta = item.getItemMeta();
             if (meta != null) {
@@ -110,7 +123,7 @@ public class AutoSellGachaCommand implements CommandExecutor, Listener {
                     String permission = rarity + "." + itemPercentValue;
                     User user = luckPerms.getUserManager().getUser(player.getUniqueId());
                     if (user != null) {
-                        // Check if the player already has the permission
+                                                // Check if the player already has the permission
                         if (player.hasPermission(permission)) {
                             // Remove old permission
                             user.data().remove(Node.builder(permission).build());
@@ -124,6 +137,9 @@ public class AutoSellGachaCommand implements CommandExecutor, Listener {
 
                             // Send message indicating that auto-sell is updated
                             player.sendMessage(ColorChat.chat("&cAuto-sell for &e" + rarity + " now set to values of " + itemPercentValue + " or less"));
+                            ItemMeta meta = clickedItem.getItemMeta();
+                            meta.setDisplayName(ColorChat.chat("&aAuto-Sell &e" + rarity + " below " + itemPercentValue + "%"));
+                            clickedItem.setItemMeta(meta);
 
                         } else {
                             player.sendMessage(ColorChat.chat("&cAuto-sell permission not found.  Please make a bug report! :)"));
@@ -143,7 +159,7 @@ public class AutoSellGachaCommand implements CommandExecutor, Listener {
     }
 
     // This method will change the damage value used to determine if an item is automatically sold
-    public int updateItemPercent(int percent, ClickType clickType){;
+    public int updateItemPercent(int percent, ClickType clickType){
         switch (clickType){
             case ClickType.LEFT:
                 percent += 5;
