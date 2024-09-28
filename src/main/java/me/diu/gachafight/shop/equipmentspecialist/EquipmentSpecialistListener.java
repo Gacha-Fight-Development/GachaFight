@@ -62,7 +62,7 @@ public class EquipmentSpecialistListener implements Listener {
                 if (player.hasPermission("gachafight.admin")) return;
                 openRerollStatsMenu(player);  // Open the third GUI for Reroll Stats
             }
-        } else if (event.getView().getTitle().equals("Reroll Stats")) {
+        }else if (event.getView().getTitle().equals("Reroll Stats")) {
             event.setCancelled(true);  // Prevent moving items in the menu
 
             if (clickedItem == null || clickedItem.getType() == Material.AIR) return;
@@ -74,17 +74,29 @@ public class EquipmentSpecialistListener implements Listener {
 
                 if (equipment != null && cloneItem != null) {
                     PlayerStats playerStats = PlayerStats.getPlayerStats(player);
-                    // Check if player has enough money (this part depends on how you're handling player stats)
+
+                    // Ensure the player has enough currency for the reroll
                     if (playerStats.getMoney() >= costForReroll) {
-                        // Deduct money
-                        playerStats.setMoney(playerStats.getMoney()-costForReroll);
+                        // Deduct currency for reroll
+                        playerStats.setMoney(playerStats.getMoney() - costForReroll);
 
-                        // Create the clone of the equipment and place it in the middle slot (13)
-                        ItemStack clonedItem = equipment.clone();
-                        inventory.setItem(13, clonedItem);
+                        // Get the ItemMeta and PDC from the equipment
+                        ItemMeta itemMeta = equipment.getItemMeta();
+                        PersistentDataContainer pdc = itemMeta.getPersistentDataContainer();
+                        int itemLevel = ExtractLore.extractLevelFromName(itemMeta.getDisplayName());
 
-                        player.sendMessage("§aItem leveled up successfully!");
+                        // Call upgradeStat for rerolling stats
+                        rerollStat(player, itemMeta, pdc, new NamespacedKey(plugin, "MinMaxDamage"), "Damage", itemLevel);
+                        rerollStat(player, itemMeta, pdc, new NamespacedKey(plugin, "MinMaxArmor"), "Armor", itemLevel);
+                        rerollStat(player, itemMeta, pdc, new NamespacedKey(plugin, "MinMaxHP"), "HP", itemLevel);
 
+                        // Update the item's meta
+                        equipment.setItemMeta(itemMeta);
+
+                        // Put the rerolled item in the middle slot (13)
+                        inventory.setItem(13, equipment);
+
+                        player.sendMessage("§aItem rerolled successfully!");
                     } else {
                         player.sendMessage("§cNot enough money.");
                     }
@@ -199,58 +211,9 @@ public class EquipmentSpecialistListener implements Listener {
                             ItemMeta levelUpItemMeta = itemLevelUp.getItemMeta();
                             if (levelUpItemMeta != null) {
                                 PersistentDataContainer pdc = levelUpItemMeta.getPersistentDataContainer();
-                                NamespacedKey damageKey = new NamespacedKey(plugin, "MinMaxDamage");
-                                NamespacedKey armorKey = new NamespacedKey(plugin, "MinMaxArmor");
-                                NamespacedKey hpKey = new NamespacedKey(plugin, "MinMaxHP");
-                                if (pdc.has(damageKey, PersistentDataType.STRING)) {
-                                    List<String> minMax = ExtractLore.extractMinAndMaxFromPDC(pdc, damageKey);
-                                    double min = Double.parseDouble(minMax.get(0));  // Get the min value
-                                    double max = Double.parseDouble(minMax.get(1));  // Get the max value
-                                    player.sendMessage("Min: " + min + ", Max: " + max);
-                                    double newStat = levelUpItem(min, max, levelMulti, GachaManager.getRarityMultiplier(rarity), ExtractLore.extractPercentageFromName(levelUpItemMeta.getDisplayName()));
-
-                                    // Find the lore line containing the "Damage:" keyword and update it with newStat
-                                    List<String> loreString = levelUpItemMeta.getLore();
-                                    List<Component> lore = levelUpItemMeta.lore();
-                                    int damageLineIndex = ExtractLore.getLoreLine(loreString, "Damage:");
-                                    if (damageLineIndex != -1) {
-                                        lore.set(damageLineIndex, MiniMessage.miniMessage().deserialize(Prefix.getDamagePrefix() + String.format("%.2f", newStat)));  // Format the new stat
-                                        levelUpItemMeta.lore(lore);  // Set updated lore
-                                    }
-                                }
-
-                                if (pdc.has(armorKey, PersistentDataType.STRING)) {
-                                    List<String> minMax = ExtractLore.extractMinAndMaxFromPDC(pdc, armorKey);
-                                    double min = Double.parseDouble(minMax.get(0));  // Get the min value
-                                    double max = Double.parseDouble(minMax.get(1));  // Get the max value
-                                    player.sendMessage("Min: " + min + ", Max: " + max);
-                                    double newStat = levelUpItem(min, max, levelMulti, GachaManager.getRarityMultiplier(rarity), ExtractLore.extractPercentageFromName(levelUpItemMeta.getDisplayName()));
-
-                                    // Find the lore line containing the "Armor:" keyword and update it with newStat
-                                    List<String> loreString = levelUpItemMeta.getLore();
-                                    List<Component> lore = levelUpItemMeta.lore();
-                                    int armorLineIndex = ExtractLore.getLoreLine(loreString, "Armor:");
-                                    if (armorLineIndex != -1) {
-                                        lore.set(armorLineIndex, MiniMessage.miniMessage().deserialize(Prefix.getArmorPrefix()+ String.format("%.2f", newStat)));  // Format the new stat
-                                        levelUpItemMeta.lore(lore);  // Set updated lore
-                                    }
-                                }
-
-                                if (pdc.has(hpKey, PersistentDataType.STRING)) {
-                                    List<String> minMax = ExtractLore.extractMinAndMaxFromPDC(pdc, hpKey);
-                                    double min = Double.parseDouble(minMax.get(0));  // Get the min value
-                                    double max = Double.parseDouble(minMax.get(1));  // Get the max value
-                                    double newStat = levelUpItem(min, max, levelMulti, GachaManager.getRarityMultiplier(rarity), ExtractLore.extractPercentageFromName(levelUpItemMeta.getDisplayName()));
-
-                                    // Find the lore line containing the "HP:" keyword and update it with newStat
-                                    List<String> loreString = levelUpItemMeta.getLore();
-                                    List<Component> lore = levelUpItemMeta.lore();
-                                    int hpLineIndex = ExtractLore.getLoreLine(loreString, "HP:");
-                                    if (hpLineIndex != -1) {
-                                        lore.set(hpLineIndex, MiniMessage.miniMessage().deserialize(Prefix.getHealthPrefix()+ String.format("%.2f", newStat)));  // Format the new stat
-                                        levelUpItemMeta.lore(lore);  // Set updated lore
-                                    }
-                                }
+                                upgradeStat(player, levelUpItemMeta, pdc, new NamespacedKey(plugin, "MinMaxDamage"), "Damage", levelMulti, rarity, false);
+                                upgradeStat(player, levelUpItemMeta, pdc, new NamespacedKey(plugin, "MinMaxArmor"), "Armor", levelMulti, rarity, false);
+                                upgradeStat(player, levelUpItemMeta, pdc, new NamespacedKey(plugin, "MinMaxHP"), "HP", levelMulti, rarity, false);
                                 Component newName = LevelUpDisplayName(levelUpItemMeta.displayName(), player, rarity);
                                 levelUpItemMeta.displayName(newName);
                                 itemLevelUp.setItemMeta(levelUpItemMeta);
@@ -455,4 +418,53 @@ public class EquipmentSpecialistListener implements Listener {
         return originalName;
     }
 
+    private void upgradeStat(Player player, ItemMeta itemMeta, PersistentDataContainer pdc, NamespacedKey key, String statType, double levelMulti, int rarity, boolean isReroll) {
+        if (pdc.has(key, PersistentDataType.STRING)) {
+            List<String> minMax = ExtractLore.extractMinAndMaxFromPDC(pdc, key);
+            double min = Double.parseDouble(minMax.get(0));
+            double max = Double.parseDouble(minMax.get(1));
+
+            // Reroll or Level up logic
+            double newStat = levelUpItem(min, max, levelMulti, GachaManager.getRarityMultiplier(rarity), ExtractLore.extractPercentageFromName(itemMeta.getDisplayName()));
+            // Update the lore with the new stat
+            List<String> loreString = itemMeta.getLore();
+            List<Component> lore = itemMeta.lore();
+            int statLineIndex = ExtractLore.getLoreLine(loreString, statType + ":");
+            if (statLineIndex != -1) {
+                lore.set(statLineIndex, MiniMessage.miniMessage().deserialize(Prefix.getPrefixForStat(statType) + String.format("%.2f", newStat)));
+                itemMeta.lore(lore);
+            }
+
+            player.sendMessage(statType + " " + (isReroll ? "rerolled" : "leveled up") + ": Min " + min + ", Max " + max + ", New Stat: " + newStat);
+        }
+    }
+    private void rerollStat(Player player, ItemMeta itemMeta, PersistentDataContainer pdc, NamespacedKey key, String statType, int itemLevel) {
+        // Extract min and max values from the PDC
+        List<String> minMax = ExtractLore.extractMinAndMaxFromPDC(pdc, key);
+        if (minMax != null && minMax.size() == 2) {
+            double min = Double.parseDouble(minMax.get(0));  // Get the min value
+            double max = Double.parseDouble(minMax.get(1));  // Get the max value
+
+            // Generate a new random value between min and max
+            double rerolledStat = min + (Math.random() * (max - min));
+
+            // Format the stat and set it in the lore
+            List<String> loreString = itemMeta.getLore();
+            List<Component> lore = itemMeta.lore();
+            int statLineIndex = ExtractLore.getLoreLine(loreString, statType + ":");
+            if (statLineIndex != -1) {
+                lore.set(statLineIndex, MiniMessage.miniMessage().deserialize(Prefix.getPrefixForStat(statType) + String.format("%.2f", rerolledStat)));
+                itemMeta.lore(lore);
+            }
+
+            player.sendMessage(statType + " rerolled: Min " + min + ", Max " + max + ", New Stat: " + rerolledStat);
+        }
+    }
+
+    private boolean isValidEquipmentPair(ItemStack item1, ItemStack item2) {
+        return item1 != null && item2 != null &&
+                item1.getType() == item2.getType() &&
+                ExtractLore.extractRarityFromLore(item1.getLore()) == ExtractLore.extractRarityFromLore(item2.getLore()) &&
+                item1.getMaxStackSize() == 1 && item2.getMaxStackSize() == 1;
+    }
 }
