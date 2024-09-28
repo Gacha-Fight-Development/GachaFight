@@ -4,7 +4,9 @@ import me.diu.gachafight.GachaFight;
 import me.diu.gachafight.playerstats.PlayerStats;
 import me.diu.gachafight.gacha.gui.RaritySelectionGUI;
 import me.diu.gachafight.quest.Quest;
-import me.diu.gachafight.quest.QuestManager;
+import me.diu.gachafight.quest.managers.QuestManager;
+import me.diu.gachafight.quest.objectives.KeyOpenObjective;
+import me.diu.gachafight.quest.utils.QuestUtils;
 import me.diu.gachafight.utils.Calculations;
 import me.diu.gachafight.utils.ColorChat;
 import me.diu.gachafight.utils.ExtractLore;
@@ -58,6 +60,9 @@ public class GachaManager {
             ItemStack customizedReward = reward.clone();
             if (isCrystal(customizedReward)) {
                 applyCrystalBoost(player, customizedReward);
+            } else if (isPotion(customizedReward)) {
+                player.getInventory().addItem(customizedReward);
+                player.sendMessage(ColorChat.chat("&a+ &6Potion"));
             } else {
                 List<String> lore = customizedReward.getItemMeta().getLore();
                 List<Double> statPercentages = new ArrayList<>();
@@ -130,14 +135,15 @@ public class GachaManager {
                     // Auto-sell the item
                     if (player.hasPermission(rarityPermission+".50") && statMedium > 50) {
                         double sellPrice = SellPriceCalculator.calculateSellPrice(customizedReward, rarityIndex);
-                        player.sendMessage(MiniMessage.miniMessage().deserialize("<green>Auto-sold " + RaritySelectionGUI.RARITY_NAMES[rarityIndex] + " item for " + String.format("%.1f" + sellPrice) + " money!"));
+                        player.sendMessage(MiniMessage.miniMessage().deserialize("<green>Auto-sold " + RaritySelectionGUI.RARITY_NAMES[rarityIndex] + " item for " + String.format("%.1f", sellPrice) + " money!"));
                         PlayerStats playerStats = PlayerStats.getPlayerStats(player);
                         playerStats.setMoney(playerStats.getMoney() + sellPrice);
                     }
                     double sellPrice = SellPriceCalculator.calculateSellPrice(customizedReward, rarityIndex);
-                    player.sendMessage(MiniMessage.miniMessage().deserialize("<green>Auto-sold " + RaritySelectionGUI.RARITY_NAMES[rarityIndex] + " item for " + String.format("%.1f" + sellPrice) + " money!"));
+                    player.sendMessage(MiniMessage.miniMessage().deserialize("<green>Auto-sold " + RaritySelectionGUI.RARITY_NAMES[rarityIndex] + " item for " + String.format("%.1f", sellPrice) + " money!"));
                     PlayerStats playerStats = PlayerStats.getPlayerStats(player);
                     playerStats.setMoney(playerStats.getMoney() + sellPrice);
+                    key.setAmount(key.getAmount() - 1);
                 } else {
                     // Give the item to the player
                     player.getInventory().addItem(customizedReward);
@@ -259,14 +265,23 @@ public class GachaManager {
         double[] probabilities;
         String displayName = meta.getDisplayName();
 
+        //Quest Detection
+        for (Quest quest : questManager.getActiveQuestsForPlayer(player)) {
+            if (quest.getObjective() instanceof KeyOpenObjective) {
+                KeyOpenObjective objective = (KeyOpenObjective) quest.getObjective();
+
+                // Check if the key type matches the objective's target
+                if (displayName.contains(objective.getTarget())) {
+                    // Increment quest progress
+                    QuestUtils.incrementQuestProgress(player, quest, "keyOpen", 1);
+                    player.sendMessage("§aProgress updated for quest: " + quest.getName());
+                }
+            }
+        }
+
         // Determine which probability table to use based on the gacha key's display name
         if (displayName.contains("Common Gacha Key")) {
             probabilities = commonKeyProbabilities;
-            Quest openCommonKeyQuest = questManager.getQuestById(3, player);
-            Integer currentProgress = questManager.loadQuestProgress(player, openCommonKeyQuest.getId());
-            if (currentProgress != null) { // Player doesn't have the quest
-                questManager.incrementQuestProgress(player, 3);
-            }
         } else if (displayName.contains("Uncommon Gacha Key")) {
             probabilities = uncommonKeyProbabilities;
         } else if (displayName.contains("Rare Gacha Key")) {
@@ -336,7 +351,13 @@ public class GachaManager {
         return item;
     }
 
-
+    private boolean isPotion(ItemStack item) {
+        if (item.getType() == Material.LEATHER_HORSE_ARMOR && item.getItemMeta().getDisplayName().contains("Potion")) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 
     private boolean isCrystal(ItemStack item) {
         if (item.getType() == Material.NETHER_STAR && item.hasItemMeta()) {

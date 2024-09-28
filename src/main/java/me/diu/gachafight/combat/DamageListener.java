@@ -89,7 +89,7 @@ public class DamageListener implements Listener {
         // Check if the mob will die from this hit
         if (entity.getHealth() - totalDamage <= 0) {
             handleMobDeath(player, entity);  // Handle mob death, rewards, etc.
-            QuestKillListener.questKill(player, entity); //handle quest
+            QuestKillListener.questKillMob(player, entity); //handle quest
         }
 
         if (player.hasPermission("gachafight.toggledamage")) {
@@ -138,6 +138,7 @@ public class DamageListener implements Listener {
         // Check if the target will die from this hit
         if (targetStats.getHp() <= 0) {
             target.setHealth(0); // Trigger death event
+            target.sendMessage(ColorChat.chat("&4You have Died to " + attacker.getName()));
         }
     }
 
@@ -198,6 +199,7 @@ public class DamageListener implements Listener {
                         player.setHealth(0); // This will trigger the death event
                         stats.syncHealthWithHearts(player);
                         stats.updateActionbar(player);
+                        player.sendMessage(ColorChat.chat("&4You have Died to " + mythicMob.getName()));
                     } else {
                         // Sync the player's hearts with the current HP
                         stats.syncHealthWithHearts(player);
@@ -249,7 +251,6 @@ public class DamageListener implements Listener {
         }
         event.setCancelled(true);
         Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "spawn " + player.getName());
-        player.sendMessage(ColorChat.chat("&4You have Died"));
     }
 
     private double getMobArmor(Entity entity) {
@@ -274,7 +275,7 @@ public class DamageListener implements Listener {
                         player.getLocation().getBlock().getType() != Material.VINE;
     }
 
-    private boolean isSafezone(Location location) {
+    public static boolean isSafezone(Location location) {
         if (location.getX() > -259 && location.getX() < 220 && location.getZ() >-419 && location.getZ() < 502) {
             return true;
         }

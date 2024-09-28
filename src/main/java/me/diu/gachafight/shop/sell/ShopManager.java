@@ -13,6 +13,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -31,8 +32,8 @@ public class ShopManager implements Listener {
     }
 
     // Opens the shop GUI for the player
-    public void openShopGUI(Player player) {
-        Inventory shopInventory = Bukkit.createInventory(new ShopInventoryHolder(plugin), 54, MiniMessage.miniMessage().deserialize("<!i><gold>Sell Items"));
+    public static void openShopGUI(Player player) {
+        Inventory shopInventory = Bukkit.createInventory(new ShopInventoryHolder(GachaFight.getInstance()), 54, MiniMessage.miniMessage().deserialize("<!i><gold>Sell Items"));
 
         // Set the sell button in the middle of the last row (slot 49)
         ItemStack sellButton = createSellButton();
@@ -41,7 +42,7 @@ public class ShopManager implements Listener {
         player.openInventory(shopInventory);
     }
 
-    private ItemStack createSellButton() {
+    private static ItemStack createSellButton() {
         ItemStack sellButton = new ItemStack(Material.EMERALD);
         ItemMeta meta = sellButton.getItemMeta();
 
@@ -54,7 +55,7 @@ public class ShopManager implements Listener {
         return sellButton;
     }
 
-    private List<Component> updateSellButtonLore(int common, int uncommon, int rare, int unique, int legendary, int mythic) {
+    private static List<Component> updateSellButtonLore(int common, int uncommon, int rare, int unique, int legendary, int mythic) {
         List<Component> lore = new ArrayList<>();
         lore.add(MiniMessage.miniMessage().deserialize("<!i><white>Common: " + common + "</white>"));
         lore.add(MiniMessage.miniMessage().deserialize("<!i><gray>Uncommon: " + uncommon + "</gray>"));
@@ -69,6 +70,9 @@ public class ShopManager implements Listener {
 
     @EventHandler
     public void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
+        if (event.getHand() != EquipmentSlot.HAND) {
+            return; // Ignore offhand interactions
+        }
         if (event.getRightClicked().getName().equalsIgnoreCase("sell shop")) {
             event.setCancelled(true);
             openShopGUI(event.getPlayer());

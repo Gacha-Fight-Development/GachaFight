@@ -9,6 +9,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.inventory.EquipmentSlot;
 
 public class HealerNPCListener implements Listener {
 
@@ -25,6 +26,9 @@ public class HealerNPCListener implements Listener {
         Entity entity = event.getRightClicked();
 
         // Check if the entity is the healer NPC (assuming the healer's name is "Healer")
+        if (event.getHand() != EquipmentSlot.HAND) {
+            return; // Ignore offhand interactions
+        }
         if (entity.getName().equalsIgnoreCase("healer")) {
             PlayerStats stats = PlayerStats.getPlayerStats(player);
 

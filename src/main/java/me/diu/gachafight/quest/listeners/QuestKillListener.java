@@ -3,8 +3,9 @@ package me.diu.gachafight.quest.listeners;
 import lombok.Getter;
 import lombok.Setter;
 import me.diu.gachafight.quest.Quest;
-import me.diu.gachafight.quest.QuestManager;
-import org.bukkit.Bukkit;
+import me.diu.gachafight.quest.managers.QuestManager;
+import me.diu.gachafight.quest.objectives.KillMobObjective;
+import me.diu.gachafight.quest.utils.QuestUtils;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 
@@ -18,26 +19,18 @@ public class QuestKillListener {
         this.questManager = questManager;
     }
 
-    public static void questKill(Player player, Entity entity) {
-        if (entity.getName().contains("Goblin Warrior")) {
-            // Increment quest progress for the "Kill Goblin Warriors" quest
-            Quest goblinQuest = questManager.getQuestById(1, player);
-
-            // Check if the player has this quest
-            Integer currentProgress = questManager.loadQuestProgress(player, goblinQuest.getId());
-            if (currentProgress == null) { // Player doesn't have the quest
-                return;
+    public static void questKillMob(Player player, Entity entity) {
+        // Loop through all active quests for the player
+        for (Quest quest : questManager.getActiveQuestsForPlayer(player)) {
+            if (quest.getObjective() instanceof KillMobObjective) {
+                KillMobObjective objective = (KillMobObjective) quest.getObjective();
+                System.out.println("" + entity.getName());
+                System.out.println("" + quest.getName());
+                if (entity.getName().contains(objective.getTarget())) {
+                    // Increment quest progress, passing "killMob" as the objective type
+                    QuestUtils.incrementQuestProgress(player, quest, "killMob", 1);
+                }
             }
-
-            if (goblinQuest != null) {
-                questManager.incrementQuestProgress(player, goblinQuest.getId());
-
-                // Get the required amount from the Quest's objective
-                int requiredAmount = goblinQuest.getObjective().getRequiredAmount();
-                player.sendMessage("§aGoblin Warrior killed! Progress: " +
-                        (currentProgress + 1) + "/" + requiredAmount);
-            }
-        } else {
         }
     }
 

@@ -5,6 +5,7 @@ import com.zaxxer.hikari.HikariDataSource;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class DatabaseManager {
@@ -61,8 +62,6 @@ public class DatabaseManager {
                 "player_uuid VARCHAR(36) NOT NULL," +
                 "quest_id INT NOT NULL," +
                 "progress INT DEFAULT 0," +
-                "start_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP," +
-                "slot INT NOT NULL," + // New slot column
                 "PRIMARY KEY (player_uuid, quest_id)" +
                 ")";
         try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -71,4 +70,5 @@ public class DatabaseManager {
             e.printStackTrace();
         }
     }
+
 }

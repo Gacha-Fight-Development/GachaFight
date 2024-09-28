@@ -56,8 +56,8 @@ public class BuyShopClickHandler {
             }
         }
         // Check if the item is priced with gems
-        else if (priceLine.contains("gem")) {
-            int gemPrice = Integer.parseInt(priceLine.replace(" gem", ""));
+        else if (priceLine.contains("Gems")) {
+            int gemPrice = Integer.parseInt(priceLine.replace(" Gems", ""));
             if (stats.getGem() >= gemPrice) {
                 stats.setGem(stats.getGem() - gemPrice);
 
@@ -69,7 +69,7 @@ public class BuyShopClickHandler {
 
                 // Add the item to the player's inventory
                 player.getInventory().addItem(purchasedItem);
-                player.sendMessage(MiniMessage.miniMessage().deserialize("<green>Purchased " + meta.getDisplayName() + " for " + gemPrice + " gems"));
+                player.sendMessage(ColorChat.chat("Purchased " + meta.getDisplayName() + " for " + gemPrice + " gems"));
             } else {
                 player.sendMessage(MiniMessage.miniMessage().deserialize("<red>You don't have enough gems!"));
             }

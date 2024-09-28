@@ -102,13 +102,24 @@ public class AutoSellGachaCommand implements CommandExecutor, Listener {
                     // Get the permission associated with the clicked rarity
                     String permission = rarityPermissions.get(rarity);
                     if (permission != null) {
-                        // Give the player the permission
                         User user = luckPerms.getUserManager().getUser(player.getUniqueId());
                         if (user != null) {
-                            user.data().add(Node.builder(permission).build());
-                            luckPerms.getUserManager().saveUser(user);
+                            // Check if the player already has the permission
+                            if (player.hasPermission(permission)) {
+                                // Remove the permission
+                                user.data().remove(Node.builder(permission).build());
+                                luckPerms.getUserManager().saveUser(user);
 
-                            player.sendMessage(ColorChat.chat("&aAuto-sell enabled for &e" + rarity));
+                                // Send message indicating that auto-sell is disabled
+                                player.sendMessage(ColorChat.chat("&cAuto-sell disabled for &e" + rarity));
+                            } else {
+                                // Grant the permission
+                                user.data().add(Node.builder(permission).build());
+                                luckPerms.getUserManager().saveUser(user);
+
+                                // Send message indicating that auto-sell is enabled
+                                player.sendMessage(ColorChat.chat("&aAuto-sell enabled for &e" + rarity));
+                            }
                         }
                     }
                 }

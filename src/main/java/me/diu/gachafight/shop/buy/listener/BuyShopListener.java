@@ -8,6 +8,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.inventory.EquipmentSlot;
 
 public class BuyShopListener implements Listener {
     private final GachaFight plugin;
@@ -30,8 +31,10 @@ public class BuyShopListener implements Listener {
     @EventHandler
     public void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
         // If the player interacts with a shop NPC (named "Buy Shop")
+        if (event.getHand() != EquipmentSlot.HAND) {
+            return; // Ignore offhand interactions
+        }
         if (event.getRightClicked().getName() != null && event.getRightClicked().getName().equalsIgnoreCase("Buy Shop")) {
-
             event.setCancelled(true);
             BuyShopSelectionGUI.open(event.getPlayer());  // Open the shop GUI for the player
         }

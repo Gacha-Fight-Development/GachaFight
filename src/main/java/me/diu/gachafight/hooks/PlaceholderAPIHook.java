@@ -53,7 +53,7 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
                     case "armor":
                         return String.format("%.1f", stats.getArmor() + stats.getGearStats().getTotalArmor() + stats.getWeaponStats().getArmor());
                     case "hp":
-                        return String.valueOf((stats.getMaxhp() + stats.getGearStats().getTotalMaxHp() + stats.getWeaponStats().getMaxHp()));
+                        return String.format("%.1f", (stats.getMaxhp() + stats.getGearStats().getTotalMaxHp() + stats.getWeaponStats().getMaxHp()));
                     case "money":
                         return String.format("%.2f", stats.getMoney());
                     case "gem":

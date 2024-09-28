@@ -5,6 +5,7 @@ import me.diu.gachafight.display.Blocks;
 import me.diu.gachafight.playerstats.PlayerDataManager;
 import me.diu.gachafight.playerstats.PlayerStats;
 import me.diu.gachafight.di.ServiceLocator;
+import me.diu.gachafight.quest.utils.QuestUtils;
 import me.diu.gachafight.scoreboard.Board;
 import me.diu.gachafight.utils.ColorChat;
 import org.bukkit.Bukkit;
@@ -54,7 +55,7 @@ public class Join implements Listener {
         playerDataManager.loadPlayerData(player);
         player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(playerDataManager.getPlayerStats(player.getUniqueId()).getSpeed()*0.1);
         for (int i = 1; i < 9; i++) {
-            plugin.getQuestManager().loadQuestProgress(player, i);
+            QuestUtils.loadQuestProgress(player, i);
         }
         // Other login tasks
         scoreboard.setScoreBoard(player);
