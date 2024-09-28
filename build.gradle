@@ -21,7 +21,7 @@ repositories {
     maven { url = 'https://repo.extendedclip.com/content/repositories/placeholderapi/' }
     maven { url = 'https://mvn.lumine.io/repository/maven-public/' }
     maven { url = 'https://repo.codemc.io/repository/maven-releases/' }
-    maven { url = 'https://maven.enginehub.org/repo/'}
+    maven { url = 'https://maven.enginehub.org/repo/' }
 }
 
 dependencies {
@@ -81,7 +81,7 @@ processResources {
 tasks.register('deployToServer', Copy) {
     dependsOn shadowJar // Ensure shadowJar task is completed first
     from tasks.shadowJar
-    into 'C:/Users/xiaol/OneDrive/Desktop/Server/plugins' // Update with your server's plugins directory
+    into 'C:/Users/hoot/Documents/gacha build' // Update with your server's plugins directory
     doLast {
         println "Deployed to server's plugin directory."
     }
