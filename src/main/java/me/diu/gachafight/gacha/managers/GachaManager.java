@@ -15,6 +15,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.luckperms.api.LuckPerms;
+import net.luckperms.api.node.Node;
 import net.luckperms.api.model.user.User;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -28,6 +29,8 @@ import org.bukkit.persistence.PersistentDataType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class GachaManager {
 
@@ -131,25 +134,39 @@ public class GachaManager {
                 String rarityPermission = "gacha.autosell." + plainRarityName.toLowerCase();
                 User user = luckPerms.getUserManager().getUser(player.getUniqueId());
 
-                if (player.hasPermission(rarityPermission) && !user.getPrimaryGroup().contains("owner")) {
-                    // Auto-sell the item
-                    if (player.hasPermission(rarityPermission+".50") && statMedium > 50) {
+                boolean itemSold = false;
+
+                // checks rarity (string) and the item percent -statMedium-  (double 0.0 to 1.0) against autoSellCutoff.  if autoSellCutoff is larger, sell the item
+                if(player.hasPermission("gacha.autosell")) {
+                    String autoSellPerms;
+                    autoSellPerms = user.getNodes().stream()
+                            .filter(node -> node.getKey().startsWith("gacha.autosell." + plainRarityName.toLowerCase()))
+                            .map(Node::getKey)
+                            .collect(Collectors.joining(", "));
+                    double autoSellCutoff = ((double) Integer.parseInt(autoSellPerms.split("\\.")[1])) / 100;
+                    if (autoSellCutoff >= statMedium) {
+                        // Auto-sell the item
                         double sellPrice = SellPriceCalculator.calculateSellPrice(customizedReward, rarityIndex);
                         player.sendMessage(MiniMessage.miniMessage().deserialize("<green>Auto-sold " + RaritySelectionGUI.RARITY_NAMES[rarityIndex] + " item for " + String.format("%.1f", sellPrice) + " money!"));
                         PlayerStats playerStats = PlayerStats.getPlayerStats(player);
                         playerStats.setMoney(playerStats.getMoney() + sellPrice);
+
+                        // Reduce keys by 1
+                        key.setAmount(key.getAmount() - 1);
+                        itemSold = true;
                     }
-                    double sellPrice = SellPriceCalculator.calculateSellPrice(customizedReward, rarityIndex);
-                    player.sendMessage(MiniMessage.miniMessage().deserialize("<green>Auto-sold " + RaritySelectionGUI.RARITY_NAMES[rarityIndex] + " item for " + String.format("%.1f", sellPrice) + " money!"));
-                    PlayerStats playerStats = PlayerStats.getPlayerStats(player);
-                    playerStats.setMoney(playerStats.getMoney() + sellPrice);
-                    key.setAmount(key.getAmount() - 1);
-                } else {
+                }
+                // If item was not sold this method will run
+                if(!itemSold) {
                     // Give the item to the player
                     player.getInventory().addItem(customizedReward);
-                    key.setAmount(key.getAmount() - 1);
                     player.sendMessage(MiniMessage.miniMessage().deserialize("<green>You received a " + RaritySelectionGUI.RARITY_NAMES[rarityIndex] + " item!"));
+
+                    // Reduce keys by 1
+                    key.setAmount(key.getAmount() - 1);
                 }
+
+
             }
         } else {
             Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "si give 991 1 " + player.getName());
