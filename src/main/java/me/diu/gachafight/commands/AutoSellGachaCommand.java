@@ -120,7 +120,7 @@ public class AutoSellGachaCommand implements CommandExecutor, Listener {
                     String rarity = splitString[0];
                     int itemPercentValue = Integer.parseInt(splitString[1]);
                     // Get the permission associated with the clicked rarity
-                    String permission = rarity + "." + itemPercentValue;
+                    String permission = "gacha.autosell." + rarity + "." + itemPercentValue;
                     User user = luckPerms.getUserManager().getUser(player.getUniqueId());
                     if (user != null) {
                                                 // Check if the player already has the permission
@@ -130,7 +130,7 @@ public class AutoSellGachaCommand implements CommandExecutor, Listener {
                             luckPerms.getUserManager().saveUser(user);
                             // Update itemPercentValue based on click type and rebuild permission string
                             itemPercentValue = updateItemPercent(itemPercentValue,event.getClick());
-                            permission = rarity + "." + itemPercentValue;
+                            permission = "gacha.autosell." + rarity + "." + itemPercentValue;
                             // Add new permission
                             user.data().add(Node.builder(permission).build());
                             luckPerms.getUserManager().saveUser(user);
