@@ -62,7 +62,7 @@ public class EquipmentSpecialistListener implements Listener {
 
             // Check if they clicked on "Reroll Stats"
             if (clickedItem.getType() == Material.GRINDSTONE && clickedItem.getItemMeta().getDisplayName().equals("§bReroll Stats")) {
-                if (player.hasPermission("gacha.dev")) return;
+                if (!player.hasPermission("gacha.dev")) return;
                 openRerollStatsMenu(player);  // Open the third GUI for Reroll Stats
             }
         }else if (event.getView().getTitle().equals("Reroll Stats")) { //Level: Stay | Percentage: Change
@@ -506,34 +506,19 @@ public class EquipmentSpecialistListener implements Listener {
 
         // List to hold percentages of stats
         List<Double> statPercentages = new ArrayList<>();
-
-        // Variables to store min/max stats from PersistentDataContainer (PDC)
-        double minStatDamagePDC = 0;
-        double maxStatDamagePDC = 0;
-        double minStatArmorPDC = 0;
-        double maxStatArmorPDC = 0;
-        double minStatHPPDC = 0;
-        double maxStatHPPDC = 0;
-
         // Loop through lore to calculate the percentages for each stat
         for (String line : lore) {
             if (line.contains("Damage:")) {
                 double minStat = ExtractLore.findMinStat(line, player, GachaManager.getRarityMultiplier(rarityIndex), true, level);
                 double maxStat = ExtractLore.findMaxStat(line, player, GachaManager.getRarityMultiplier(rarityIndex), true, level);
-                minStatDamagePDC = ExtractLore.findMinStat(line, player, GachaManager.getRarityMultiplier(rarityIndex), false, level);
-                maxStatDamagePDC = ExtractLore.findMaxStat(line, player, GachaManager.getRarityMultiplier(rarityIndex), false, level);
                 statPercentages.add(GachaManager.calculatePercentage(ExtractLore.getDamageFromLore(lore), minStat, maxStat));
             } else if (line.contains("Armor:")) {
                 double minStat = ExtractLore.findMinStat(line, player, GachaManager.getRarityMultiplier(rarityIndex), true, level);
                 double maxStat = ExtractLore.findMaxStat(line, player, GachaManager.getRarityMultiplier(rarityIndex), true, level);
-                minStatArmorPDC = ExtractLore.findMinStat(line, player, GachaManager.getRarityMultiplier(rarityIndex), false, level);
-                maxStatArmorPDC = ExtractLore.findMaxStat(line, player, GachaManager.getRarityMultiplier(rarityIndex), false, level);
                 statPercentages.add(GachaManager.calculatePercentage(ExtractLore.getArmorFromLore(lore), minStat, maxStat));
             } else if (line.contains("HP:")) {
                 double minStat = ExtractLore.findMinStat(line, player, GachaManager.getRarityMultiplier(rarityIndex), true, level);
                 double maxStat = ExtractLore.findMaxStat(line, player, GachaManager.getRarityMultiplier(rarityIndex), true, level);
-                minStatHPPDC = ExtractLore.findMinStat(line, player, GachaManager.getRarityMultiplier(rarityIndex), false, level);
-                maxStatHPPDC = ExtractLore.findMaxStat(line, player, GachaManager.getRarityMultiplier(rarityIndex), false, level);
                 statPercentages.add(GachaManager.calculatePercentage(ExtractLore.getMaxHpFromLore(lore), minStat, maxStat));
             }
         }
@@ -550,18 +535,9 @@ public class EquipmentSpecialistListener implements Listener {
         // Format the new percentage as a string to append to the display name
         String percentageDisplay = String.format("(%.0f%%)", averagePercentage);
 
-        // Extract the item's level from the name
-        String regex = "\\[(\\d+)]";
-        Pattern pattern = Pattern.compile(regex);
-        Matcher matcher = pattern.matcher(originalNameText);
-
         // Create the new display name with the rerolled percentage
-        if (matcher.find()) {
-            String updatedNameText = matcher.replaceFirst(matcher.group(0) + " " + percentageDisplay);
-            return MiniMessage.miniMessage().deserialize("<!i>" + updatedNameText);
-        }
-
-        // If no level is found, just append the percentage
-        return MiniMessage.miniMessage().deserialize("<!i>" + originalNameText + " " + percentageDisplay);
+        String levelPrefix = "<dark_gray>[<gold>" + level + "<dark_gray>] ";
+        String itemName = GachaManager.getRarityColor(rarityIndex) + ExtractLore.ExtractItemName(itemMeta.getItemName());
+        return MiniMessage.miniMessage().deserialize("<!i>" + levelPrefix + itemName + " " +  percentageDisplay);
     }
 }
