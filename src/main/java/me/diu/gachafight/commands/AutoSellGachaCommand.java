@@ -79,13 +79,13 @@ public class AutoSellGachaCommand implements CommandExecutor, Listener {
         // Create items for each rarity
         for (Map.Entry<String, Integer> entry : rarityPermissions.entrySet()) {
             String rarity = entry.getKey();
-
             User user = luckPerms.getUserManager().getUser(player.getUniqueId());
+            // Queries LuckyPerms for the user to check if they have the permissions set for determining if an item is sold
             String getCurrentPerm = user.getNodes().stream()
                     .filter(node -> node.getKey().startsWith("gacha.autosell." + rarity.toLowerCase() + "."))
                     .map(Node::getKey)
                     .collect(Collectors.joining(", "));
-
+            // If no permission is present, create it with default value of 0 and upload permission
             if(getCurrentPerm.isEmpty()){
                 getCurrentPerm = "gacha.autosell." + rarity.toLowerCase() + "." + entry.getValue();
                 user.data().add(Node.builder(getCurrentPerm).build());
@@ -135,7 +135,7 @@ public class AutoSellGachaCommand implements CommandExecutor, Listener {
                             user.data().add(Node.builder(permission).build());
                             luckPerms.getUserManager().saveUser(user);
 
-                            // Send message indicating that auto-sell is updated
+                            // Send message indicating that auto-sell is updated, and update the item in the gui to reflect this change
                             player.sendMessage(ColorChat.chat("&cAuto-sell for &e" + rarity + " now set to values of " + itemPercentValue + " or less"));
                             ItemMeta meta = clickedItem.getItemMeta();
                             meta.setDisplayName(ColorChat.chat("&aAuto-Sell &e" + rarity + " below " + itemPercentValue + "%"));
