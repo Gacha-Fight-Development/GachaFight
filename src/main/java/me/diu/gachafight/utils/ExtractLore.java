@@ -1,6 +1,7 @@
 package me.diu.gachafight.utils;
 
 import io.lumine.mythic.bukkit.utils.lib.lang3.tuple.Pair;
+import me.diu.gachafight.gacha.managers.GachaManager;
 import me.diu.gachafight.playerstats.PlayerStats;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
@@ -114,8 +115,6 @@ public class ExtractLore {
             }
 
         }
-
-
         return maxStat;
     }
 
@@ -166,6 +165,7 @@ public class ExtractLore {
 
 
     public static int extractLevelFromName(String itemName) {
+        String cleanedName = itemName.replaceAll("§[0-9A-FK-ORa-fk-or]", "");
         // Regular expression to match a number inside square brackets at the start of the string
         String regex = "\\[(\\d+)]";
 
@@ -173,7 +173,7 @@ public class ExtractLore {
         Pattern pattern = Pattern.compile(regex);
 
         // Create a Matcher object to find matches in the itemName
-        Matcher matcher = pattern.matcher(itemName);
+        Matcher matcher = pattern.matcher(cleanedName);
 
         // Check if a match is found
         if (matcher.find()) {
@@ -186,7 +186,6 @@ public class ExtractLore {
                 return 0;  // Return 0 if there's a parsing issue
             }
         }
-
         // Return 0 if no level is found in the item name
         return 0;
     }

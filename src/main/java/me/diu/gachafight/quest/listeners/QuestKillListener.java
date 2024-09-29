@@ -24,8 +24,6 @@ public class QuestKillListener {
         for (Quest quest : questManager.getActiveQuestsForPlayer(player)) {
             if (quest.getObjective() instanceof KillMobObjective) {
                 KillMobObjective objective = (KillMobObjective) quest.getObjective();
-                System.out.println("" + entity.getName());
-                System.out.println("" + quest.getName());
                 if (entity.getName().contains(objective.getTarget())) {
                     // Increment quest progress, passing "killMob" as the objective type
                     QuestUtils.incrementQuestProgress(player, quest, "killMob", 1);

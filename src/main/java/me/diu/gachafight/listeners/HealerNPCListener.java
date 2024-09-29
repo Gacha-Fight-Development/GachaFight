@@ -47,6 +47,7 @@ public class HealerNPCListener implements Listener {
                 // Deduct the cost and heal the player
                 stats.setMoney(playerMoney - healCost);
                 stats.setHp(maxHp);
+                stats.syncHealthWithHearts(player);
                 player.sendMessage(MiniMessage.miniMessage().deserialize("<green>Your HP has been fully restored, and $0.1 has been deducted from your balance."));
             } else {
                 // Not enough money, send a message to the player
