@@ -22,7 +22,7 @@ public class SideQuestScheduler {
                 SideQuestManager.clearSideQuests();
                 Bukkit.getLogger().info("Side quests cleared at specified time.");
             }
-        }, 0L, 60); // Run every hour (in ticks)
+        }, 0L, 20 * 60 * 60); // Run every hour (in ticks)
     }
 
     // Check if the current time matches the specified clear times (2 AM, 8 AM, 2 PM, 8 PM CST/CDT)

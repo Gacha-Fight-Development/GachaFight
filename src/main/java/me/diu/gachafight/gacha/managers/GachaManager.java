@@ -173,17 +173,10 @@ public class GachaManager {
     }
 
     public static double calculatePercentage(double actualStat, double minStat, double maxStat) {
-        if (actualStat == 0) {
-            return -1;
-        }
-        if (actualStat < minStat) {
-            return 0;
-        } else if (actualStat > maxStat) {
-            return 100;
-        }
-
-        // Calculate percentage within range
-        return ((actualStat - minStat) / (maxStat - minStat)) * 100;
+        if (actualStat == 0) return -1;
+        if (actualStat < minStat) return 0;
+        else if (actualStat > maxStat) return 100;
+        return ((actualStat - minStat) / (maxStat - minStat)) * 100; // Calculate percentage within range
     }
 
 
