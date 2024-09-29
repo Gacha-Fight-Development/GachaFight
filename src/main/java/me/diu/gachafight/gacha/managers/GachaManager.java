@@ -130,19 +130,21 @@ public class GachaManager {
                         MiniMessage.miniMessage().deserialize(RaritySelectionGUI.RARITY_NAMES[rarityIndex])
                 );
 
-                String rarityPermission = "gacha.autosell." + RaritySelectionGUI.RARITY_NAMES[rarityIndex].toLowerCase();
                 User user = luckPerms.getUserManager().getUser(player.getUniqueId());
 
                 boolean itemSold = false;
 
                 // checks rarity (string) and the item percent -statMedium-  (double 0.0 to 100.0) against autoSellCutoff.  if autoSellCutoff is larger, sell the item
                 if(player.hasPermission("gacha.autosell") || player.hasPermission("gacha.vip")) {
+                    // This checks to see what percent the player has set via the /autosellgacha interface
                     String autoSellPerms;
                     autoSellPerms = user.getNodes().stream()
-                            .filter(node -> node.getKey().startsWith("gacha.autosell." + RaritySelectionGUI.RARITY_NAMES[rarityIndex].toLowerCase() + "."))
+                            .filter(node -> node.getKey().startsWith("gacha.autosell." + plainRarityName.toLowerCase() + "."))
                             .map(Node::getKey)
                             .collect(Collectors.joining(", "));
+                    // Double value of what the player set.  gacha.autosell.rarity.X <<<
                     double autoSellCutoff = ((double)(Integer.parseInt(autoSellPerms.split("\\.")[3])));
+                    // If the items percent is less then or equal to the player set percent, autosell item
                     if (autoSellCutoff >= statMedium) {
                         // Auto-sell the item
                         double sellPrice = SellPriceCalculator.calculateSellPrice(customizedReward, rarityIndex);
