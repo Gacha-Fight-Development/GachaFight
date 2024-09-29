@@ -139,7 +139,7 @@ public class GachaManager {
                 if(player.hasPermission("gacha.autosell") || player.hasPermission("gacha.vip")) {
                     String autoSellPerms;
                     autoSellPerms = user.getNodes().stream()
-                            .filter(node -> node.getKey().startsWith("gacha.autosell." + RaritySelectionGUI.RARITY_NAMES[rarityIndex].toLowerCase() + "."))
+                            .filter(node -> node.getKey().startsWith("gacha.autosell." + plainRarityName.toLowerCase() + "."))
                             .map(Node::getKey)
                             .collect(Collectors.joining(", "));
                     double autoSellCutoff = ((double)(Integer.parseInt(autoSellPerms.split("\\.")[3])));
