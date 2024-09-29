@@ -21,7 +21,7 @@ public class AdminPlayerDataCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-        if (!sender.hasPermission("adminplayerdata.use")) {
+        if (!sender.hasPermission("gacha.dev")) {
             sender.sendMessage("You do not have permission to use this command.");
             return true;
         }

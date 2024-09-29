@@ -25,6 +25,7 @@ import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -32,8 +33,8 @@ import java.util.regex.Pattern;
 
 public class EquipmentSpecialistListener implements Listener {
     private final GachaFight plugin;
-    private double costForLevel;
-    private double costForReroll;
+    private static double costForLevel;
+    private static double costForReroll;
 
     public EquipmentSpecialistListener(GachaFight plugin) {
         this.plugin = plugin;
@@ -45,6 +46,8 @@ public class EquipmentSpecialistListener implements Listener {
         Player player = (Player) event.getWhoClicked();
         ItemStack clickedItem = event.getCurrentItem();
         Inventory inventory = event.getClickedInventory();
+        Inventory guiInventory = event.getView().getTopInventory();
+        PersistentDataContainer pdc;
         ItemStack chestArrow1 = createCustomItem(Material.PAPER, "§aSlot 1", 10123, "§cYou will need 2 of the same equipment to Level Up!");
         ItemStack chestArrow2 = createCustomItem(Material.PAPER, "§aSlot 2", 10123, "§cYou will need 2 of the same equipment to Level Up!");
         if (event.getView().getTitle().equals("Equipment Specialist")) {
@@ -59,18 +62,22 @@ public class EquipmentSpecialistListener implements Listener {
 
             // Check if they clicked on "Reroll Stats"
             if (clickedItem.getType() == Material.GRINDSTONE && clickedItem.getItemMeta().getDisplayName().equals("§bReroll Stats")) {
-                if (player.hasPermission("gachafight.admin")) return;
+                if (player.hasPermission("gacha.dev")) return;
                 openRerollStatsMenu(player);  // Open the third GUI for Reroll Stats
             }
-        }else if (event.getView().getTitle().equals("Reroll Stats")) {
+        }else if (event.getView().getTitle().equals("Reroll Stats")) { //Level: Stay | Percentage: Change
             event.setCancelled(true);  // Prevent moving items in the menu
-
             if (clickedItem == null || clickedItem.getType() == Material.AIR) return;
-
             // Slot 22: Confirm
             if (event.getSlot() == 22 && clickedItem.getType() == Material.PAPER && clickedItem.getItemMeta().getDisplayName().equals("§aConfirm")) {
                 ItemStack equipment = inventory.getItem(10);  // Equipment slot
                 ItemStack cloneItem = inventory.getItem(16);  // Clone item slot
+                int rarity = ExtractLore.extractRarityFromLore(equipment.getLore());
+
+                if (!isValidEquipmentPair(equipment, cloneItem)) {
+                    player.sendMessage("§cItems are not valid for rerolling.");
+                    return;  // Stop if the items are not valid
+                }
 
                 if (equipment != null && cloneItem != null) {
                     PlayerStats playerStats = PlayerStats.getPlayerStats(player);
@@ -81,21 +88,42 @@ public class EquipmentSpecialistListener implements Listener {
                         playerStats.setMoney(playerStats.getMoney() - costForReroll);
 
                         // Get the ItemMeta and PDC from the equipment
+                        ItemStack itemReroll;
                         ItemMeta itemMeta = equipment.getItemMeta();
-                        PersistentDataContainer pdc = itemMeta.getPersistentDataContainer();
+                        pdc = itemMeta.getPersistentDataContainer();
                         int itemLevel = ExtractLore.extractLevelFromName(itemMeta.getDisplayName());
 
-                        // Call upgradeStat for rerolling stats
-                        rerollStat(player, itemMeta, pdc, new NamespacedKey(plugin, "MinMaxDamage"), "Damage", itemLevel);
-                        rerollStat(player, itemMeta, pdc, new NamespacedKey(plugin, "MinMaxArmor"), "Armor", itemLevel);
-                        rerollStat(player, itemMeta, pdc, new NamespacedKey(plugin, "MinMaxHP"), "HP", itemLevel);
-
-                        // Update the item's meta
-                        equipment.setItemMeta(itemMeta);
-
-                        // Put the rerolled item in the middle slot (13)
-                        inventory.setItem(13, equipment);
-
+                        if (ExtractLore.extractLevelFromName(equipment.getItemMeta().getDisplayName()) >= ExtractLore.extractLevelFromName(cloneItem.getItemMeta().getDisplayName())) {
+                            itemReroll = guiInventory.getItem(10);
+                            ItemMeta RerollItemMeta = itemReroll.getItemMeta();
+                            if (RerollItemMeta != null) {
+                                pdc = RerollItemMeta.getPersistentDataContainer();
+                                rerollStat(player, itemMeta, pdc, new NamespacedKey(plugin, "MinMaxDamage"), "Damage", itemLevel);
+                                rerollStat(player, itemMeta, pdc, new NamespacedKey(plugin, "MinMaxArmor"), "Armor", itemLevel);
+                                rerollStat(player, itemMeta, pdc, new NamespacedKey(plugin, "MinMaxHP"), "HP", itemLevel);
+                                Component newName = rerollDisplayName(RerollItemMeta.displayName(), player, itemReroll);
+                                RerollItemMeta.displayName(newName);
+                                itemReroll.setItemMeta(RerollItemMeta);
+                                inventory.setItem(10, chestArrow1);
+                                inventory.setItem(16, chestArrow2);
+                                inventory.setItem(13, itemReroll);  // Place the leveled-up item in slot 13
+                            }
+                        } else {
+                            itemReroll = guiInventory.getItem(16);
+                            ItemMeta RerollItemMeta = itemReroll.getItemMeta();
+                            if (RerollItemMeta != null) {
+                                pdc = RerollItemMeta.getPersistentDataContainer();
+                                rerollStat(player, itemMeta, pdc, new NamespacedKey(plugin, "MinMaxDamage"), "Damage", itemLevel);
+                                rerollStat(player, itemMeta, pdc, new NamespacedKey(plugin, "MinMaxArmor"), "Armor", itemLevel);
+                                rerollStat(player, itemMeta, pdc, new NamespacedKey(plugin, "MinMaxHP"), "HP", itemLevel);
+                                Component newName = rerollDisplayName(RerollItemMeta.displayName(), player, itemReroll);
+                                RerollItemMeta.displayName(newName);
+                                itemReroll.setItemMeta(RerollItemMeta);
+                                inventory.setItem(10, chestArrow1);
+                                inventory.setItem(16, chestArrow2);
+                                inventory.setItem(13, itemReroll);  // Place the leveled-up item in slot 13
+                            }
+                        }
                         player.sendMessage("§aItem rerolled successfully!");
                     } else {
                         player.sendMessage("§cNot enough money.");
@@ -104,12 +132,12 @@ public class EquipmentSpecialistListener implements Listener {
                     player.sendMessage("§cYou must place items in both slots.");
                 }
             }
+            equipmentCheck(event, player, true);
 
-        } else if (event.getView().getTitle().equals("Level Up Equipment")) {
+        } else if (event.getView().getTitle().equals("Level Up Equipment")) { //Level: Change | Percentage: Stay
             event.setCancelled(true);  // Prevent moving items in the menu
 
             if (clickedItem == null || clickedItem.getType() == Material.AIR) return;
-            Inventory guiInventory = event.getView().getTopInventory();
             if (event.getSlot() == 13 && clickedItem.getType() != Material.BLUE_STAINED_GLASS_PANE) {
                 guiInventory.setItem(13, new ItemStack(Material.BLUE_STAINED_GLASS_PANE));
                 guiInventory.setItem(10, chestArrow1);
@@ -132,7 +160,11 @@ public class EquipmentSpecialistListener implements Listener {
                 ItemStack equipment = guiInventory.getItem(10);  // Equipment slot
                 ItemStack cloneItem = guiInventory.getItem(16);  // Clone item slot
                 int rarity = ExtractLore.extractRarityFromLore(equipment.getLore());
-
+                // Check if the two items are a valid pair for leveling up
+                if (!isValidEquipmentPair(equipment, cloneItem)) {
+                    player.sendMessage("§cItems are not valid for leveling up.");
+                    return;  // Stop if the items are not valid
+                }
                 if (equipment != null && cloneItem != null && equipment.getType() != Material.PAPER && cloneItem.getType() != Material.PAPER) {
                     PlayerStats playerStats = PlayerStats.getPlayerStats(player);
                     double levelMulti = Calculations.playerLevelMultiplier(playerStats.getLevel());
@@ -146,59 +178,10 @@ public class EquipmentSpecialistListener implements Listener {
                             itemLevelUp = guiInventory.getItem(10);
                             ItemMeta levelUpItemMeta = itemLevelUp.getItemMeta();
                             if (levelUpItemMeta != null) {
-                                PersistentDataContainer pdc = levelUpItemMeta.getPersistentDataContainer();
-                                NamespacedKey damageKey = new NamespacedKey(plugin, "MinMaxDamage");
-                                NamespacedKey armorKey = new NamespacedKey(plugin, "MinMaxArmor");
-                                NamespacedKey hpKey = new NamespacedKey(plugin, "MinMaxHP");
-                                if (pdc.has(damageKey, PersistentDataType.STRING)) {
-                                    List<String> minMax = ExtractLore.extractMinAndMaxFromPDC(pdc, damageKey);
-                                    double min = Double.parseDouble(minMax.get(0));  // Get the min value
-                                    double max = Double.parseDouble(minMax.get(1));  // Get the max value
-                                    player.sendMessage("Min: " + min + ", Max: " + max);
-                                    double newStat = levelUpItem(min, max, levelMulti, GachaManager.getRarityMultiplier(rarity), ExtractLore.extractPercentageFromName(levelUpItemMeta.getDisplayName()));
-
-                                    // Find the lore line containing the "Damage:" keyword and update it with newStat
-                                    List<String> loreString = levelUpItemMeta.getLore();
-                                    List<Component> lore = levelUpItemMeta.lore();
-                                    int damageLineIndex = ExtractLore.getLoreLine(loreString, "Damage:");
-                                    if (damageLineIndex != -1) {
-                                        lore.set(damageLineIndex, MiniMessage.miniMessage().deserialize(Prefix.getDamagePrefix() + String.format("%.2f", newStat)));  // Format the new stat
-                                        levelUpItemMeta.lore(lore);  // Set updated lore
-                                    }
-                                }
-
-                                if (pdc.has(armorKey, PersistentDataType.STRING)) {
-                                    List<String> minMax = ExtractLore.extractMinAndMaxFromPDC(pdc, armorKey);
-                                    double min = Double.parseDouble(minMax.get(0));  // Get the min value
-                                    double max = Double.parseDouble(minMax.get(1));  // Get the max value
-                                    player.sendMessage("Min: " + min + ", Max: " + max);
-                                    double newStat = levelUpItem(min, max, levelMulti, GachaManager.getRarityMultiplier(rarity), ExtractLore.extractPercentageFromName(levelUpItemMeta.getDisplayName()));
-
-                                    // Find the lore line containing the "Armor:" keyword and update it with newStat
-                                    List<String> loreString = levelUpItemMeta.getLore();
-                                    List<Component> lore = levelUpItemMeta.lore();
-                                    int armorLineIndex = ExtractLore.getLoreLine(loreString, "Armor:");
-                                    if (armorLineIndex != -1) {
-                                        lore.set(armorLineIndex, MiniMessage.miniMessage().deserialize(Prefix.getArmorPrefix()+ String.format("%.2f", newStat)));  // Format the new stat
-                                        levelUpItemMeta.lore(lore);  // Set updated lore
-                                    }
-                                }
-
-                                if (pdc.has(hpKey, PersistentDataType.STRING)) {
-                                    List<String> minMax = ExtractLore.extractMinAndMaxFromPDC(pdc, hpKey);
-                                    double min = Double.parseDouble(minMax.get(0));  // Get the min value
-                                    double max = Double.parseDouble(minMax.get(1));  // Get the max value
-                                    double newStat = levelUpItem(min, max, levelMulti, GachaManager.getRarityMultiplier(rarity), ExtractLore.extractPercentageFromName(levelUpItemMeta.getDisplayName()));
-
-                                    // Find the lore line containing the "HP:" keyword and update it with newStat
-                                    List<String> loreString = levelUpItemMeta.getLore();
-                                    List<Component> lore = levelUpItemMeta.lore();
-                                    int hpLineIndex = ExtractLore.getLoreLine(loreString, "HP:");
-                                    if (hpLineIndex != -1) {
-                                        lore.set(hpLineIndex, MiniMessage.miniMessage().deserialize(Prefix.getHealthPrefix()+ String.format("%.2f", newStat)));  // Format the new stat
-                                        levelUpItemMeta.lore(lore);  // Set updated lore
-                                    }
-                                }
+                                pdc = levelUpItemMeta.getPersistentDataContainer();
+                                upgradeStat(player, levelUpItemMeta, pdc, new NamespacedKey(plugin, "MinMaxDamage"), "Damage", levelMulti, rarity, false);
+                                upgradeStat(player, levelUpItemMeta, pdc, new NamespacedKey(plugin, "MinMaxArmor"), "Armor", levelMulti, rarity, false);
+                                upgradeStat(player, levelUpItemMeta, pdc, new NamespacedKey(plugin, "MinMaxHP"), "HP", levelMulti, rarity, false);
                                 Component newName = LevelUpDisplayName(levelUpItemMeta.displayName(), player, rarity);
                                 levelUpItemMeta.displayName(newName);
                                 itemLevelUp.setItemMeta(levelUpItemMeta);
@@ -210,7 +193,7 @@ public class EquipmentSpecialistListener implements Listener {
                             itemLevelUp = guiInventory.getItem(16);
                             ItemMeta levelUpItemMeta = itemLevelUp.getItemMeta();
                             if (levelUpItemMeta != null) {
-                                PersistentDataContainer pdc = levelUpItemMeta.getPersistentDataContainer();
+                                pdc = levelUpItemMeta.getPersistentDataContainer();
                                 upgradeStat(player, levelUpItemMeta, pdc, new NamespacedKey(plugin, "MinMaxDamage"), "Damage", levelMulti, rarity, false);
                                 upgradeStat(player, levelUpItemMeta, pdc, new NamespacedKey(plugin, "MinMaxArmor"), "Armor", levelMulti, rarity, false);
                                 upgradeStat(player, levelUpItemMeta, pdc, new NamespacedKey(plugin, "MinMaxHP"), "HP", levelMulti, rarity, false);
@@ -231,49 +214,7 @@ public class EquipmentSpecialistListener implements Listener {
                     player.sendMessage("§cYou must place items in both slots.");
                 }
             }
-            if (event.getClickedInventory() != guiInventory) {  // Prevent placing from menu itself
-                ItemStack slot10 = guiInventory.getItem(10);  // First chest arrow slot
-                ItemStack slot16 = guiInventory.getItem(16);  // Second chest arrow slot
-
-                if (slot10 == null || slot10.getType() == Material.PAPER) {
-                    if (clickedItem.getMaxStackSize() > 1) {
-                        player.sendMessage("§cThis Item Is Stackable!");
-                        return;
-                    }
-                    if (slot16.getType() != Material.PAPER) {
-                        player.sendMessage("§cRemove item from Slot 2!");
-                        return;
-                    }
-                    if (ExtractLore.extractLevelFromName(clickedItem.getItemMeta().getItemName()) >= PlayerStats.getPlayerStats(player).getLevel()) {
-                        player.sendMessage("§cThis Item is already your level!");
-                        return;
-                    }
-                    guiInventory.setItem(10, clickedItem);
-                    player.getInventory().setItem(event.getSlot(), null);  // Remove item from player's cursor
-                    int rarity = ExtractLore.extractRarityFromLore(clickedItem.getLore());
-                    costForLevel = 25 * Math.pow( PlayerStats.getPlayerStats(player).getLevel(), (1+(rarity*0.67)));
-                    ItemStack greenCheck = createCustomItem(Material.PAPER, "§aConfirm", 10109, "§aCost: §6" + String.format("%.2f",costForLevel));
-                    guiInventory.setItem(22, greenCheck);
-                    player.sendMessage("§aItem placed in slot 1");
-                } else if (slot16 == null || slot16.getType() == Material.PAPER) {
-                    if (clickedItem.getMaxStackSize() > 1) {
-                        player.sendMessage("§cThis Item Is Stackable!");
-                        return;
-                    }
-                    if (ExtractLore.ExtractItemName(guiInventory.getItem(10).getItemMeta().getDisplayName())
-                            .equals(ExtractLore.ExtractItemName(clickedItem.getItemMeta().getDisplayName())) &&  //same item name
-                            ExtractLore.extractRarityFromLore(guiInventory.getItem(10).getItemMeta().getLore()) ==
-                                    ExtractLore.extractRarityFromLore(clickedItem.getItemMeta().getLore())) { //same rarity
-                        guiInventory.setItem(16, clickedItem);
-                        player.getInventory().setItem(event.getSlot(), null);  // Remove item from player's cursor
-                        player.sendMessage("§aItem placed in slot 2");
-                    } else {
-                        player.sendMessage("§cNot the same item! (Wrong Rarity or Wrong Item Type!)");
-                    }
-                } else {
-                    player.sendMessage("§cBoth slots are already filled.");
-                }
-            }
+            equipmentCheck(event, player, false);
         }
     }
 
@@ -362,7 +303,7 @@ public class EquipmentSpecialistListener implements Listener {
 
     // Helper function to create items with custom model data
     @NotNull
-    private ItemStack createCustomItem(Material material, String name, int customModelData, String... lore) {
+    private static ItemStack createCustomItem(Material material, String name, int customModelData, String... lore) {
         ItemStack item = new ItemStack(material);
         ItemMeta meta = item.getItemMeta();
         if (name != null) {
@@ -462,9 +403,165 @@ public class EquipmentSpecialistListener implements Listener {
     }
 
     private boolean isValidEquipmentPair(ItemStack item1, ItemStack item2) {
-        return item1 != null && item2 != null &&
-                item1.getType() == item2.getType() &&
-                ExtractLore.extractRarityFromLore(item1.getLore()) == ExtractLore.extractRarityFromLore(item2.getLore()) &&
-                item1.getMaxStackSize() == 1 && item2.getMaxStackSize() == 1;
+        if (item1 == null || item2 == null) return false;
+
+        // Check if both items are non-stackable
+        if (item1.getMaxStackSize() > 1 || item2.getMaxStackSize() > 1) {
+            return false;
+        }
+
+        // Compare item types
+        if (item1.getType() != item2.getType()) {
+            return false;
+        }
+
+        // Compare item names
+        String itemName1 = ExtractLore.ExtractItemName(item1.getItemMeta().getDisplayName());
+        String itemName2 = ExtractLore.ExtractItemName(item2.getItemMeta().getDisplayName());
+        if (!itemName1.equals(itemName2)) {
+            return false;
+        }
+
+        // Compare item rarities from lore
+        int rarity1 = ExtractLore.extractRarityFromLore(item1.getLore());
+        int rarity2 = ExtractLore.extractRarityFromLore(item2.getLore());
+        if (rarity1 != rarity2) {
+            return false;
+        }
+
+        return true;  // If all checks pass, the items are valid for pairing
+    }
+
+    public static void equipmentCheck(InventoryClickEvent event, Player player, boolean reroll) {
+        Inventory guiInventory = event.getView().getTopInventory();
+        ItemStack clickedItem = event.getCurrentItem();
+        if (event.getClickedInventory() != guiInventory) {  // Prevent placing from menu itself
+            ItemStack slot10 = guiInventory.getItem(10);  // First chest arrow slot
+            ItemStack slot16 = guiInventory.getItem(16);  // Second chest arrow slot
+
+            if (slot10 == null || slot10.getType() == Material.PAPER) {
+                if (clickedItem.getMaxStackSize() > 1) {
+                    player.sendMessage("§cThis Item Is Stackable!");
+                    return;
+                }
+                if (slot16.getType() != Material.PAPER) {
+                    player.sendMessage("§cRemove item from Slot 2!");
+                    return;
+                }
+                if (ExtractLore.extractLevelFromName(clickedItem.getItemMeta().getItemName()) >= PlayerStats.getPlayerStats(player).getLevel() && !reroll) {
+                    player.sendMessage("§cThis Item is already your level!");
+                    return; //only applies to level up
+                }
+                guiInventory.setItem(10, clickedItem);
+                player.getInventory().setItem(event.getSlot(), null);  // Remove item from player's cursor
+                int rarity = ExtractLore.extractRarityFromLore(clickedItem.getLore());
+                ItemStack greenCheck;
+                if (reroll) {
+                    if (ExtractLore.extractLevelFromName(slot10.getItemMeta().getItemName()) >= ExtractLore.extractLevelFromName(slot16.getItemMeta().getItemName())) {
+                        costForReroll = 10 * Math.pow(ExtractLore.extractLevelFromName(slot10.getItemMeta().getItemName()), (1+(rarity*0.45)));
+                    } else {
+                        costForReroll = 10 * Math.pow(ExtractLore.extractLevelFromName(slot16.getItemMeta().getItemName()), (1+(rarity*0.45)));
+                    }
+                    greenCheck = createCustomItem(Material.PAPER, "§aConfirm", 10109, "§aCost: §6" + String.format("%.2f",costForReroll));
+                } else {
+                    costForLevel = 25 * Math.pow( PlayerStats.getPlayerStats(player).getLevel(), (1+(rarity*0.67)));
+                    greenCheck = createCustomItem(Material.PAPER, "§aConfirm", 10109, "§aCost: §6" + String.format("%.2f",costForLevel));
+                }
+                guiInventory.setItem(22, greenCheck);
+                player.sendMessage("§aItem placed in slot 1");
+            } else if (slot16 == null || slot16.getType() == Material.PAPER) {
+                if (clickedItem.getMaxStackSize() > 1) {
+                    player.sendMessage("§cThis Item Is Stackable!");
+                    return;
+                }
+                if (ExtractLore.ExtractItemName(guiInventory.getItem(10).getItemMeta().getDisplayName())
+                        .equals(ExtractLore.ExtractItemName(clickedItem.getItemMeta().getDisplayName())) &&  //same item name
+                        ExtractLore.extractRarityFromLore(guiInventory.getItem(10).getItemMeta().getLore()) ==
+                                ExtractLore.extractRarityFromLore(clickedItem.getItemMeta().getLore())) { //same rarity
+                    guiInventory.setItem(16, clickedItem);
+                    player.getInventory().setItem(event.getSlot(), null);  // Remove item from player's cursor
+                    player.sendMessage("§aItem placed in slot 2");
+                } else {
+                    player.sendMessage("§cNot the same item! (Wrong Rarity or Wrong Item Type!)");
+                }
+            } else {
+                player.sendMessage("§cBoth slots are already filled.");
+            }
+        }
+    }
+
+    public Component rerollDisplayName(Component originalName, Player player, ItemStack item) {
+        // Convert Component to plain text for easier manipulation
+        String originalNameText = PlainTextComponentSerializer.plainText().serialize(originalName);
+
+        // Extract lore from the item
+        ItemMeta itemMeta = item.getItemMeta();
+        List<String> lore = itemMeta.getLore();
+        int level = ExtractLore.extractLevelFromName(itemMeta.getItemName());
+        int rarityIndex = ExtractLore.extractRarityFromLore(lore);
+
+        if (lore == null || lore.isEmpty()) {
+            return originalName; // No lore to work with, return original name
+        }
+
+        // List to hold percentages of stats
+        List<Double> statPercentages = new ArrayList<>();
+
+        // Variables to store min/max stats from PersistentDataContainer (PDC)
+        double minStatDamagePDC = 0;
+        double maxStatDamagePDC = 0;
+        double minStatArmorPDC = 0;
+        double maxStatArmorPDC = 0;
+        double minStatHPPDC = 0;
+        double maxStatHPPDC = 0;
+
+        // Loop through lore to calculate the percentages for each stat
+        for (String line : lore) {
+            if (line.contains("Damage:")) {
+                double minStat = ExtractLore.findMinStat(line, player, GachaManager.getRarityMultiplier(rarityIndex), true, level);
+                double maxStat = ExtractLore.findMaxStat(line, player, GachaManager.getRarityMultiplier(rarityIndex), true, level);
+                minStatDamagePDC = ExtractLore.findMinStat(line, player, GachaManager.getRarityMultiplier(rarityIndex), false, level);
+                maxStatDamagePDC = ExtractLore.findMaxStat(line, player, GachaManager.getRarityMultiplier(rarityIndex), false, level);
+                statPercentages.add(GachaManager.calculatePercentage(ExtractLore.getDamageFromLore(lore), minStat, maxStat));
+            } else if (line.contains("Armor:")) {
+                double minStat = ExtractLore.findMinStat(line, player, GachaManager.getRarityMultiplier(rarityIndex), true, level);
+                double maxStat = ExtractLore.findMaxStat(line, player, GachaManager.getRarityMultiplier(rarityIndex), true, level);
+                minStatArmorPDC = ExtractLore.findMinStat(line, player, GachaManager.getRarityMultiplier(rarityIndex), false, level);
+                maxStatArmorPDC = ExtractLore.findMaxStat(line, player, GachaManager.getRarityMultiplier(rarityIndex), false, level);
+                statPercentages.add(GachaManager.calculatePercentage(ExtractLore.getArmorFromLore(lore), minStat, maxStat));
+            } else if (line.contains("HP:")) {
+                double minStat = ExtractLore.findMinStat(line, player, GachaManager.getRarityMultiplier(rarityIndex), true, level);
+                double maxStat = ExtractLore.findMaxStat(line, player, GachaManager.getRarityMultiplier(rarityIndex), true, level);
+                minStatHPPDC = ExtractLore.findMinStat(line, player, GachaManager.getRarityMultiplier(rarityIndex), false, level);
+                maxStatHPPDC = ExtractLore.findMaxStat(line, player, GachaManager.getRarityMultiplier(rarityIndex), false, level);
+                statPercentages.add(GachaManager.calculatePercentage(ExtractLore.getMaxHpFromLore(lore), minStat, maxStat));
+            }
+        }
+
+        // Calculate the average percentage of all stats
+        double averagePercentage = 0;
+        for (double percentage : statPercentages) {
+            averagePercentage += percentage;
+        }
+        if (!statPercentages.isEmpty()) {
+            averagePercentage /= statPercentages.size();
+        }
+
+        // Format the new percentage as a string to append to the display name
+        String percentageDisplay = String.format("(%.0f%%)", averagePercentage);
+
+        // Extract the item's level from the name
+        String regex = "\\[(\\d+)]";
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(originalNameText);
+
+        // Create the new display name with the rerolled percentage
+        if (matcher.find()) {
+            String updatedNameText = matcher.replaceFirst(matcher.group(0) + " " + percentageDisplay);
+            return MiniMessage.miniMessage().deserialize("<!i>" + updatedNameText);
+        }
+
+        // If no level is found, just append the percentage
+        return MiniMessage.miniMessage().deserialize("<!i>" + originalNameText + " " + percentageDisplay);
     }
 }

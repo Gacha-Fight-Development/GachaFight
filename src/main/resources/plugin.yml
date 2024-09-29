@@ -10,7 +10,7 @@ commands:
   adminplayerdata:
     description: Admin command to manage player data
     usage: /<command> <player> <action> [value]
-    permission: gacha.admin
+    permission: gacha.dev
   discord:
     usage: /discord
   gachareload:
