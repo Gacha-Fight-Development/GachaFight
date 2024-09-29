@@ -130,19 +130,19 @@ public class GachaManager {
                         MiniMessage.miniMessage().deserialize(RaritySelectionGUI.RARITY_NAMES[rarityIndex])
                 );
 
-                String rarityPermission = "gacha.autosell." + plainRarityName.toLowerCase();
+                String rarityPermission = "gacha.autosell." + RaritySelectionGUI.RARITY_NAMES[rarityIndex].toLowerCase();
                 User user = luckPerms.getUserManager().getUser(player.getUniqueId());
 
                 boolean itemSold = false;
 
-                // checks rarity (string) and the item percent -statMedium-  (double 0.0 to 1.0) against autoSellCutoff.  if autoSellCutoff is larger, sell the item
-                if(player.hasPermission("gacha.autosell")) {
+                // checks rarity (string) and the item percent -statMedium-  (double 0.0 to 100.0) against autoSellCutoff.  if autoSellCutoff is larger, sell the item
+                if(player.hasPermission("gacha.autosell") || player.hasPermission("gacha.vip")) {
                     String autoSellPerms;
                     autoSellPerms = user.getNodes().stream()
-                            .filter(node -> node.getKey().startsWith("gacha.autosell." + plainRarityName.toLowerCase()))
+                            .filter(node -> node.getKey().startsWith("gacha.autosell." + RaritySelectionGUI.RARITY_NAMES[rarityIndex].toLowerCase() + "."))
                             .map(Node::getKey)
                             .collect(Collectors.joining(", "));
-                    double autoSellCutoff = ((double) Integer.parseInt(autoSellPerms.split("\\.")[3])) / 100;
+                    double autoSellCutoff = ((double)(Integer.parseInt(autoSellPerms.split("\\.")[3])));
                     if (autoSellCutoff >= statMedium) {
                         // Auto-sell the item
                         double sellPrice = SellPriceCalculator.calculateSellPrice(customizedReward, rarityIndex);
