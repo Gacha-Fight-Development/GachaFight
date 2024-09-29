@@ -47,7 +47,7 @@ public class EquipmentSpecialistNPC implements Listener {
         // Creating the "Reroll Stats" Item (Grindstone)
         ItemStack rerollStats = new ItemStack(Material.GRINDSTONE);
         ItemMeta rerollStatsMeta = rerollStats.getItemMeta();
-        rerollStatsMeta.setDisplayName("§bReroll Stats §c(Coming Soon!)");
+        rerollStatsMeta.setDisplayName("§bReroll Stats");
         rerollStats.setItemMeta(rerollStatsMeta);
 
         // Adding cyan stained glass pane as the border

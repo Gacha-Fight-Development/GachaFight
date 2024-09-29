@@ -77,22 +77,22 @@ public class GachaManager {
                 customizedReward = customizeItem(customizedReward, player, rarityIndex);
                 for (String line : lore) {
                     if (line.contains("Damage:")) {
-                        double minStat = ExtractLore.findMinStat(line, player, getRarityMultiplier(rarityIndex), true);
-                        double maxStat = ExtractLore.findMaxStat(line, player, getRarityMultiplier(rarityIndex), true);
-                        minStatDamagePDC = ExtractLore.findMinStat(line, player, getRarityMultiplier(rarityIndex), false);
-                        maxStatDamagePDC = ExtractLore.findMaxStat(line, player, getRarityMultiplier(rarityIndex), false);
+                        double minStat = ExtractLore.findMinStat(line, player, getRarityMultiplier(rarityIndex), true, null);
+                        double maxStat = ExtractLore.findMaxStat(line, player, getRarityMultiplier(rarityIndex), true, null);
+                        minStatDamagePDC = ExtractLore.findMinStat(line, player, getRarityMultiplier(rarityIndex), false, null);
+                        maxStatDamagePDC = ExtractLore.findMaxStat(line, player, getRarityMultiplier(rarityIndex), false, null);
                         statPercentages.add(calculatePercentage(ExtractLore.getDamageFromLore(customizedReward.getLore()), minStat, maxStat));
                     } else if (line.contains("Armor:")) {
-                        double minStat = ExtractLore.findMinStat(line, player, getRarityMultiplier(rarityIndex), true);
-                        double maxStat = ExtractLore.findMaxStat(line, player, getRarityMultiplier(rarityIndex), true);
-                        minStatArmorPDC = ExtractLore.findMinStat(line, player, getRarityMultiplier(rarityIndex), false);
-                        maxStatArmorPDC = ExtractLore.findMaxStat(line, player, getRarityMultiplier(rarityIndex), false);
+                        double minStat = ExtractLore.findMinStat(line, player, getRarityMultiplier(rarityIndex), true, null);
+                        double maxStat = ExtractLore.findMaxStat(line, player, getRarityMultiplier(rarityIndex), true, null);
+                        minStatArmorPDC = ExtractLore.findMinStat(line, player, getRarityMultiplier(rarityIndex), false, null);
+                        maxStatArmorPDC = ExtractLore.findMaxStat(line, player, getRarityMultiplier(rarityIndex), false, null);
                         statPercentages.add(calculatePercentage(ExtractLore.getArmorFromLore(customizedReward.getLore()), minStat, maxStat));
                     } else if (line.contains("HP:")) {
-                        double minStat = ExtractLore.findMinStat(line, player, getRarityMultiplier(rarityIndex), true);
-                        double maxStat = ExtractLore.findMaxStat(line, player, getRarityMultiplier(rarityIndex), true);
-                        minStatHPPDC = ExtractLore.findMinStat(line, player, getRarityMultiplier(rarityIndex), false);
-                        maxStatHPPDC = ExtractLore.findMaxStat(line, player, getRarityMultiplier(rarityIndex), false);
+                        double minStat = ExtractLore.findMinStat(line, player, getRarityMultiplier(rarityIndex), true, null);
+                        double maxStat = ExtractLore.findMaxStat(line, player, getRarityMultiplier(rarityIndex), true, null);
+                        minStatHPPDC = ExtractLore.findMinStat(line, player, getRarityMultiplier(rarityIndex), false, null);
+                        maxStatHPPDC = ExtractLore.findMaxStat(line, player, getRarityMultiplier(rarityIndex), false, null);
                         statPercentages.add(calculatePercentage(ExtractLore.getMaxHpFromLore(customizedReward.getLore()), minStat, maxStat));
                     }
                 }
@@ -172,7 +172,7 @@ public class GachaManager {
         }
     }
 
-    private double calculatePercentage(double actualStat, double minStat, double maxStat) {
+    public static double calculatePercentage(double actualStat, double minStat, double maxStat) {
         if (actualStat == 0) {
             return -1;
         }

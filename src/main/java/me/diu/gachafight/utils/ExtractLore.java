@@ -81,7 +81,7 @@ public class ExtractLore {
     }
 
 
-    public static double findMaxStat(String lore, Player player, double rarityIndex, boolean withPlayerLevel) {
+    public static double findMaxStat(String lore, Player player, double rarityIndex, boolean withPlayerLevel, Integer level) {
         PlayerStats playerStats = PlayerStats.getPlayerStats(player);
         int playerLevel = playerStats.getLevel();
         double boostMultiplier = Calculations.playerLevelMultiplier(playerLevel);
@@ -92,9 +92,17 @@ public class ExtractLore {
             String[] parts = extractStatRangeFromLore(lore);
             if (parts != null && parts.length == 2) {
                 if (withPlayerLevel) {
-                    double currentMaxStat = Double.parseDouble(parts[1].trim()) * boostMultiplier * rarityIndex;
-                    if (currentMaxStat > maxStat) {
-                        maxStat = currentMaxStat;  // Update maxStat if the current one is larger
+                    if (level == null) { //for gachamanager
+                        double currentMaxStat = Double.parseDouble(parts[1].trim()) * boostMultiplier * rarityIndex;
+                        if (currentMaxStat > maxStat) {
+                            maxStat = currentMaxStat;  // Update maxStat if the current one is larger
+                        }
+                    } else { //for reroll
+                        boostMultiplier = Calculations.playerLevelMultiplier(level);
+                        double currentMaxStat = Double.parseDouble(parts[1].trim()) * boostMultiplier * rarityIndex;
+                        if (currentMaxStat > maxStat) {
+                            maxStat = currentMaxStat;  // Update maxStat if the current one is larger
+                        }
                     }
                 }
                 if (!withPlayerLevel) {
@@ -111,7 +119,7 @@ public class ExtractLore {
         return maxStat;
     }
 
-    public static double findMinStat(String lore, Player player, double rarityIndex, boolean withPlayerLevel) {
+    public static double findMinStat(String lore, Player player, double rarityIndex, boolean withPlayerLevel, Integer level) {
         PlayerStats playerStats = PlayerStats.getPlayerStats(player);
         int playerLevel = playerStats.getLevel();
         double boostMultiplier = Calculations.playerLevelMultiplier(playerLevel);
