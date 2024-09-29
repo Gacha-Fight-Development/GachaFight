@@ -14,6 +14,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
@@ -23,13 +24,16 @@ import org.bukkit.plugin.Plugin;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
+
 
 public class AutoSellGachaCommand implements CommandExecutor, Listener {
 
     private final GachaManager gachaManager;
     private final LuckPerms luckPerms;
     private final Plugin plugin;
-    private final Map<String, String> rarityPermissions;
+
+    private final Map<String, Integer> rarityPermissions;
 
     public AutoSellGachaCommand(GachaFight plugin, GachaManager gachaManager, LuckPerms luckPerms) {
         this.gachaManager = gachaManager;
@@ -39,15 +43,17 @@ public class AutoSellGachaCommand implements CommandExecutor, Listener {
         plugin.getCommand("autosellgacha").setExecutor(this);
         Bukkit.getPluginManager().registerEvents(this, plugin);
 
-        // Map rarities to permissions
+
+
+        // Map equipment percent to defaults
         rarityPermissions = new HashMap<>();
-        rarityPermissions.put("Common", "gacha.autosell.common");
-        rarityPermissions.put("Uncommon", "gacha.autosell.uncommon");
-        rarityPermissions.put("Rare", "gacha.autosell.rare");
-        rarityPermissions.put("Epic", "gacha.autosell.epic");
-        rarityPermissions.put("Unique", "gacha.autosell.unique");
-        rarityPermissions.put("Legendary", "gacha.autosell.legendary");
-        rarityPermissions.put("Mythic", "gacha.autosell.mythic");
+        rarityPermissions.put("Common", 0);
+        rarityPermissions.put("Uncommon", 0);
+        rarityPermissions.put("Rare", 0);
+        rarityPermissions.put("Epic", 0);
+        rarityPermissions.put("Unique", 0);
+        rarityPermissions.put("Legendary", 0);
+        rarityPermissions.put("Mythic", 0);
     }
 
     @Override
@@ -71,12 +77,25 @@ public class AutoSellGachaCommand implements CommandExecutor, Listener {
         Inventory gui = Bukkit.createInventory(null, 9, ColorChat.chat("&6Auto-Sell Gacha Rarities"));
 
         // Create items for each rarity
-        for (Map.Entry<String, String> entry : rarityPermissions.entrySet()) {
+        for (Map.Entry<String, Integer> entry : rarityPermissions.entrySet()) {
             String rarity = entry.getKey();
+
+            User user = luckPerms.getUserManager().getUser(player.getUniqueId());
+            String getCurrentPerm = user.getNodes().stream()
+                    .filter(node -> node.getKey().startsWith("gacha.autosell." + rarity.toLowerCase() + "."))
+                    .map(Node::getKey)
+                    .collect(Collectors.joining(", "));
+
+            if(getCurrentPerm.isEmpty()){
+                getCurrentPerm = "gacha.autosell." + rarity.toLowerCase() + "." + entry.getValue();
+                user.data().add(Node.builder(getCurrentPerm).build());
+                luckPerms.getUserManager().saveUser(user);
+            }
+            int damageValue =  Integer.parseInt(getCurrentPerm.split("\\.")[3]);
             ItemStack item = new ItemStack(Material.PAPER);  // Use PAPER as a placeholder item
             ItemMeta meta = item.getItemMeta();
             if (meta != null) {
-                meta.setDisplayName(ColorChat.chat("&aAuto-Sell &e" + rarity));
+                meta.setDisplayName(ColorChat.chat("&aAuto-Sell &e" + rarity + " below " + damageValue + "%"));
                 item.setItemMeta(meta);
             }
             gui.addItem(item);
@@ -97,29 +116,33 @@ public class AutoSellGachaCommand implements CommandExecutor, Listener {
 
                 if (clickedItem != null && clickedItem.hasItemMeta() && clickedItem.getItemMeta().hasDisplayName()) {
                     String itemName = clickedItem.getItemMeta().getDisplayName();
-                    String rarity = itemName.replace(ColorChat.chat("&aAuto-Sell &e"), "");
-
+                    String[] splitString = (itemName.replace(ColorChat.chat("&aAuto-Sell &e"), "").replace(" below", "").replace("%", "")).split(" ");
+                    String rarity = splitString[0];
+                    int itemPercentValue = Integer.parseInt(splitString[1]);
                     // Get the permission associated with the clicked rarity
-                    String permission = rarityPermissions.get(rarity);
-                    if (permission != null) {
-                        User user = luckPerms.getUserManager().getUser(player.getUniqueId());
-                        if (user != null) {
-                            // Check if the player already has the permission
-                            if (player.hasPermission(permission)) {
-                                // Remove the permission
-                                user.data().remove(Node.builder(permission).build());
-                                luckPerms.getUserManager().saveUser(user);
+                    String permission = "gacha.autosell." + rarity + "." + itemPercentValue;
+                    User user = luckPerms.getUserManager().getUser(player.getUniqueId());
+                    if (user != null) {
+                                                // Check if the player already has the permission
+                        if (player.hasPermission(permission)) {
+                            // Remove old permission
+                            user.data().remove(Node.builder(permission).build());
+                            luckPerms.getUserManager().saveUser(user);
+                            // Update itemPercentValue based on click type and rebuild permission string
+                            itemPercentValue = updateItemPercent(itemPercentValue,event.getClick());
+                            permission = "gacha.autosell." + rarity + "." + itemPercentValue;
+                            // Add new permission
+                            user.data().add(Node.builder(permission).build());
+                            luckPerms.getUserManager().saveUser(user);
 
-                                // Send message indicating that auto-sell is disabled
-                                player.sendMessage(ColorChat.chat("&cAuto-sell disabled for &e" + rarity));
-                            } else {
-                                // Grant the permission
-                                user.data().add(Node.builder(permission).build());
-                                luckPerms.getUserManager().saveUser(user);
+                            // Send message indicating that auto-sell is updated
+                            player.sendMessage(ColorChat.chat("&cAuto-sell for &e" + rarity + " now set to values of " + itemPercentValue + " or less"));
+                            ItemMeta meta = clickedItem.getItemMeta();
+                            meta.setDisplayName(ColorChat.chat("&aAuto-Sell &e" + rarity + " below " + itemPercentValue + "%"));
+                            clickedItem.setItemMeta(meta);
 
-                                // Send message indicating that auto-sell is enabled
-                                player.sendMessage(ColorChat.chat("&aAuto-sell enabled for &e" + rarity));
-                            }
+                        } else {
+                            player.sendMessage(ColorChat.chat("&cAuto-sell permission not found.  Please make a bug report! :)"));
                         }
                     }
                 }
@@ -133,5 +156,28 @@ public class AutoSellGachaCommand implements CommandExecutor, Listener {
         if (event.getView().getTitle().equals(ColorChat.chat("&6Auto-Sell Gacha Rarities"))) {
             event.getPlayer().sendMessage(ColorChat.chat("&eAuto-sell settings updated!"));
         }
+    }
+
+    // This method will change the damage value used to determine if an item is automatically sold
+    public int updateItemPercent(int percent, ClickType clickType){
+        switch (clickType){
+            case ClickType.LEFT:
+                percent += 5;
+                break;
+            case ClickType.SHIFT_LEFT:
+                percent += 25;
+                break;
+            case ClickType.RIGHT:
+                percent -= 5;
+                break;
+            case ClickType.SHIFT_RIGHT:
+                percent -= 25;
+                break;
+        }
+
+        if(percent > 100) percent = 100;
+        if(percent < 0) percent = 0;
+
+        return percent;
     }
 }
