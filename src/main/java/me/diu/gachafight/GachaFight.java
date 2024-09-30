@@ -50,7 +50,7 @@ import java.util.Map;
 
 @Getter
 public final class GachaFight extends JavaPlugin implements Listener {
-    @Getter //hiNOW
+    @Getter
     private static GachaFight instance;
     private DatabaseManager databaseManager;
     private DIContainer diContainer;

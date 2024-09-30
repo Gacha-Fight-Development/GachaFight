@@ -44,13 +44,13 @@ public class Join implements Listener {
                 public void run() {
                     Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "warp tutorial " + player.getName());
                 }
-            }.runTaskLater(plugin, 300L);
+            }.runTaskLater(plugin, 10L);
             new BukkitRunnable() {
                 public void run() {
                     Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "mm m kill GachaChestSmall");
                     Blocks.spawnTutorialGachaChest();
                 }
-            }.runTaskLater(plugin, 350L);
+            }.runTaskLater(plugin, 100L);
         }
         playerDataManager.loadPlayerData(player);
         player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(playerDataManager.getPlayerStats(player.getUniqueId()).getSpeed()*0.1);

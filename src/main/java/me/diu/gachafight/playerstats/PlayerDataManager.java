@@ -91,20 +91,22 @@ public class PlayerDataManager {
         UUID playerId = player.getUniqueId();
         PlayerStats stats = PlayerStats.playerStatsMap.get(playerId);
         if (stats != null) {
-            Document document = new Document();
-            document.put("uuid", player.getUniqueId().toString());
-            document.put("name", player.getName().toLowerCase());
-            document.put("level", stats.getLevel());
-            document.put("exp", stats.getExp());
-            document.put("damage", stats.getDamage());
-            document.put("armor", stats.getArmor());
-            document.put("hp", stats.getMaxhp());
-            document.put("luck", stats.getLuck());
-            document.put("money", stats.getMoney());
-            document.put("gem", stats.getGem());
-            document.put("speed", stats.getSpeed());
-            collection.replaceOne(Filters.eq("uuid", player.getUniqueId().toString()), document, new ReplaceOptions().upsert(true));
-            plugin.getLogger().info("Saved data for player: " + player.getName());
+            if (stats.getMoney() >= 1) {
+                Document document = new Document();
+                document.put("uuid", player.getUniqueId().toString());
+                document.put("name", player.getName().toLowerCase());
+                document.put("level", stats.getLevel());
+                document.put("exp", stats.getExp());
+                document.put("damage", stats.getDamage());
+                document.put("armor", stats.getArmor());
+                document.put("hp", stats.getMaxhp());
+                document.put("luck", stats.getLuck());
+                document.put("money", stats.getMoney());
+                document.put("gem", stats.getGem());
+                document.put("speed", stats.getSpeed());
+                collection.replaceOne(Filters.eq("uuid", player.getUniqueId().toString()), document, new ReplaceOptions().upsert(true));
+                plugin.getLogger().info("Saved data for player: " + player.getName());
+            }
         } else {
             plugin.getLogger().warning("Failed to save data: PlayerStats not found for player " + player.getName());
         }
