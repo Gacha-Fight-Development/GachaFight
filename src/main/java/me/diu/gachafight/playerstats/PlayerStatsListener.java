@@ -51,7 +51,6 @@ public class PlayerStatsListener implements Listener {
         }
     }
 
-
     // Handle armor changes
     @EventHandler
     public void onArmorChange(PlayerArmorChangeEvent event) {
@@ -66,7 +65,7 @@ public class PlayerStatsListener implements Listener {
     @EventHandler
     public void onItemDrop(PlayerDropItemEvent event) {
         event.setCancelled(true);
-        event.getPlayer().sendMessage(ColorChat.chat("&cUse /Disposal to trash items"));
+        event.getPlayer().sendMessage(ColorChat.chat("&cUse /Disposal to trash items. /Trade to trade."));
     }
 
     @EventHandler
@@ -150,6 +149,21 @@ public class PlayerStatsListener implements Listener {
                 double armorValue = ExtractLore.getArmorFromLore(meta.getLore());
                 double critValue = ExtractLore.getCritFromLore(meta.getLore());
                 double maxHpValue = ExtractLore.getMaxHpFromLore(meta.getLore());
+
+                int itemLevel = ExtractLore.extractLevelFromName(meta.getDisplayName());
+                int playerLevel = playerStats.getLevel();
+
+                if (playerLevel < itemLevel) {
+                    double levelDifference = itemLevel - playerLevel;
+                    double reductionFactor = 1 - (0.10 * levelDifference);  // Reduce by 10% per level
+
+                    // Apply reduction to stats
+                    damageValue *= reductionFactor;
+                    armorValue *= reductionFactor;
+                    critValue *= reductionFactor;
+                    maxHpValue *= reductionFactor;
+                }
+
                 playerStats.getWeaponStats().setDamage(damageValue);
                 playerStats.getWeaponStats().setArmor(armorValue);
                 playerStats.getWeaponStats().setCrit(critValue);
@@ -174,6 +188,20 @@ public class PlayerStatsListener implements Listener {
                 double armorValue = ExtractLore.getArmorFromLore(meta.getLore());
                 double critValue = ExtractLore.getCritFromLore(meta.getLore());
                 double maxHpValue = ExtractLore.getMaxHpFromLore(meta.getLore());
+
+                int itemLevel = ExtractLore.extractLevelFromName(meta.getDisplayName());
+                int playerLevel = playerStats.getLevel();
+
+                if (playerLevel < itemLevel) {
+                    double levelDifference = itemLevel - playerLevel;
+                    double reductionFactor = 1 - (0.10 * levelDifference);
+
+                    // Apply reduction
+                    damageValue *= reductionFactor;
+                    armorValue *= reductionFactor;
+                    critValue *= reductionFactor;
+                    maxHpValue *= reductionFactor;
+                }
                 playerStats.getGearStats().getOffhandStats().setDamage(damageValue);
                 playerStats.getGearStats().getOffhandStats().setArmor(armorValue);
                 playerStats.getGearStats().getOffhandStats().setCrit(critValue);
@@ -222,6 +250,20 @@ public class PlayerStatsListener implements Listener {
                 armorValue = ExtractLore.getArmorFromLore(meta.getLore());
                 critValue = ExtractLore.getCritFromLore(meta.getLore());
                 maxHpValue = ExtractLore.getMaxHpFromLore(meta.getLore());
+
+                int itemLevel = ExtractLore.extractLevelFromName(meta.getDisplayName());
+                int playerLevel = playerStats.getLevel();
+
+                if (playerLevel < itemLevel) {
+                    double levelDifference = itemLevel - playerLevel;
+                    double reductionFactor = 1 - (0.10 * levelDifference);
+
+                    // Apply reduction
+                    damageValue *= reductionFactor;
+                    armorValue *= reductionFactor;
+                    critValue *= reductionFactor;
+                    maxHpValue *= reductionFactor;
+                }
             }
         }
 
