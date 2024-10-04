@@ -155,23 +155,25 @@ public class EquipmentSpecialistListener implements Listener {
             event.setCancelled(true);  // Prevent moving items in the menu
 
             if (clickedItem == null || clickedItem.getType() == Material.AIR) return;
-            if (event.getSlot() == 13 && clickedItem.getType() != Material.BLUE_STAINED_GLASS_PANE && event.getClickedInventory().equals(event.getView().getTopInventory())) {
-                guiInventory.setItem(13, new ItemStack(Material.BLUE_STAINED_GLASS_PANE));
-                guiInventory.setItem(10, chestArrow1);
-                guiInventory.setItem(16, chestArrow2);
-                player.getInventory().addItem(clickedItem);
-            }
+            if (event.getClickedInventory().equals(event.getView().getTopInventory())) {
+                if (event.getSlot() == 13 && clickedItem.getType() != Material.BLUE_STAINED_GLASS_PANE) {
+                    guiInventory.setItem(13, new ItemStack(Material.BLUE_STAINED_GLASS_PANE));
+                    guiInventory.setItem(10, chestArrow1);
+                    guiInventory.setItem(16, chestArrow2);
+                    player.getInventory().addItem(clickedItem);
+                }
 
-            if (event.getSlot() == 10 && clickedItem.getType() != Material.PAPER) {
-                guiInventory.setItem(10, chestArrow1);
-                player.getInventory().addItem(clickedItem);
-            }
+                if (event.getSlot() == 10 && clickedItem.getType() != Material.PAPER) {
+                    guiInventory.setItem(10, chestArrow1);
+                    player.getInventory().addItem(clickedItem);
+                }
 
-            if (event.getSlot() == 16 && clickedItem.getType() != Material.PAPER) {
-                guiInventory.setItem(16, chestArrow2);
-                player.getInventory().addItem(clickedItem);
-            }
+                if (event.getSlot() == 16 && clickedItem.getType() != Material.PAPER) {
+                    guiInventory.setItem(16, chestArrow2);
+                    player.getInventory().addItem(clickedItem);
+                }
 
+            }
             // Slot 22: Confirm
             if (event.getSlot() == 22 && clickedItem.getType() == Material.PAPER && clickedItem.getItemMeta().getDisplayName().equals("§aConfirm")) {
                 ItemStack equipment = guiInventory.getItem(10);  // Equipment slot
@@ -232,13 +234,21 @@ public class EquipmentSpecialistListener implements Listener {
                 }
             }
             equipmentCheck(event, player, false);
+            player.updateInventory();
         }
     }
 
     @EventHandler
     public void onMenuClose(@NotNull InventoryCloseEvent event) {
+        Player player = (Player) event.getPlayer();
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                player.updateInventory();
+            }
+        }.runTaskLater(plugin, 1L);
         Inventory guiInventory = event.getView().getTopInventory();
-        if (event.getView().getTitle().equals("Level Up Equipment") || event.getView().getTitle().equals("Reroll Stats")) {
+        if (event.getView().getTitle().equals("Level Up Equipment")) {
             if (guiInventory.getItem(13).getType() != Material.BLUE_STAINED_GLASS_PANE) {
                 event.getPlayer().getInventory().addItem(guiInventory.getItem(13));
             }
@@ -248,8 +258,17 @@ public class EquipmentSpecialistListener implements Listener {
             if (guiInventory.getItem(10).getType() != Material.PAPER) {
                 event.getPlayer().getInventory().addItem(guiInventory.getItem(10));
             }
+        } else if (event.getView().getTitle().equals("Reroll Stats")) {
+            if (guiInventory.getItem(13).getType() != Material.LIGHT_BLUE_STAINED_GLASS_PANE) {
+                event.getPlayer().getInventory().addItem(guiInventory.getItem(13));
+            }
+            if (guiInventory.getItem(16).getType() != Material.PAPER) {
+                event.getPlayer().getInventory().addItem(guiInventory.getItem(16));
+            }
+            if (guiInventory.getItem(10).getType() != Material.PAPER) {
+                event.getPlayer().getInventory().addItem(guiInventory.getItem(10));
+            }
         }
-        Player player = (Player) event.getPlayer();
         new BukkitRunnable() {
             @Override
             public void run() {
