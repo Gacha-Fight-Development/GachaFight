@@ -120,13 +120,19 @@ public class DamageListener implements Listener {
 
         // Calculate the custom damage for PvP
         double totalDamage = attackerDamage - (targetArmor); // Adjust the armor effect as needed
+        //reduce damage for target if attacker level is above target's level
         if (attackerStats.getLevel() > targetStats.getLevel()) {
-            totalDamage = totalDamage*(1-((attackerStats.getLevel()-targetStats.getLevel())*0.1));
+            int levelDiff = attackerStats.getLevel() - targetStats.getLevel();
+            //sets a minimum of 10% damage
+            if (levelDiff*0.1 >= 0.9) {
+                levelDiff = 1;
+            }
+            totalDamage = totalDamage*(1-(levelDiff*0.1));
         }
+        //sets minimum damage of 0.5
         if (totalDamage < 0.5) {
             totalDamage = 0.5;
         }
-
         // Apply custom damage to the target
         event.setDamage(0); // Cancel the default damage
         if (attacker.hasPermission("gachafight.toggledamage")) {
