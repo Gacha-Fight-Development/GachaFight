@@ -1,6 +1,0 @@
-mongodb:
-  uri: mongodb+srv://gachafight:gachafight@gachafight.e7atl.mongodb.net/?retryWrites=true&w=majority&appName=GachaFight
-  database: Core
-mysql:
-  username: u66551_2jrzjahm4p
-  password: ZUkf4qWf9Cf9igcehGqHyClU
