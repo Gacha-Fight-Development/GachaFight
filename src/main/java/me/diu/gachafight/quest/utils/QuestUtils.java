@@ -272,12 +272,12 @@ public class QuestUtils {
 
         // Check if the quest is non-repeatable
         Quest quest = QuestManager.getQuestById(questId);
-        if (quest == null || quest.isRepeatable()) {
+        if (quest == null) {
             return false; // Repeatable quests can't be "completed" permanently
         }
 
         // Check if the quest exists in quest_progress
-        String sql = "SELECT 1 FROM quest_progress WHERE player_uuid = ? AND quest_id = ? LIMIT 1";
+        String sql = "SELECT 1 FROM quest_progress WHERE player_uuid = ? AND quest_id = ?";
 
         try (Connection conn = GachaFight.getInstance().getDatabaseManager().getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -291,7 +291,6 @@ public class QuestUtils {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
         return true; // Quest is not in quest_progress and is non-repeatable, meaning it's completed
     }
 
