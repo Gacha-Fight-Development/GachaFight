@@ -77,22 +77,24 @@ public class GachaManager {
                 customizedReward = customizeItem(customizedReward, player, rarityIndex);
                 for (String line : lore) {
                     if (line.contains("Damage:")) {
-                        double minStat = ExtractLore.findMinStat(line, player, getRarityMultiplier(rarityIndex), true, null);
-                        double maxStat = ExtractLore.findMaxStat(line, player, getRarityMultiplier(rarityIndex), true, null);
-                        minStatDamagePDC = ExtractLore.findMinStat(line, player, getRarityMultiplier(rarityIndex), false, null);
-                        maxStatDamagePDC = ExtractLore.findMaxStat(line, player, getRarityMultiplier(rarityIndex), false, null);
+                        double minStat = ExtractLore.findMinStat(line, player, true, true, getRarityMultiplier(rarityIndex));
+                        double maxStat = ExtractLore.findMaxStat(line, player, true, true, getRarityMultiplier(rarityIndex));
+                        minStatDamagePDC = ExtractLore.findMinStat(line, player, false, false, null);
+                        maxStatDamagePDC = ExtractLore.findMaxStat(line, player, false, false, null);
+                        System.out.println("Stats: " + minStat + " " + maxStat);
                         statPercentages.add(calculatePercentage(ExtractLore.getDamageFromLore(customizedReward.getLore()), minStat, maxStat));
                     } else if (line.contains("Armor:")) {
-                        double minStat = ExtractLore.findMinStat(line, player, getRarityMultiplier(rarityIndex), true, null);
-                        double maxStat = ExtractLore.findMaxStat(line, player, getRarityMultiplier(rarityIndex), true, null);
-                        minStatArmorPDC = ExtractLore.findMinStat(line, player, getRarityMultiplier(rarityIndex), false, null);
-                        maxStatArmorPDC = ExtractLore.findMaxStat(line, player, getRarityMultiplier(rarityIndex), false, null);
+                        double minStat = ExtractLore.findMinStat(line, player, true, true, getRarityMultiplier(rarityIndex));
+                        double maxStat = ExtractLore.findMaxStat(line, player,  true, true, getRarityMultiplier(rarityIndex));
+                        minStatArmorPDC = ExtractLore.findMinStat(line, player,  false, false, null);
+                        maxStatArmorPDC = ExtractLore.findMaxStat(line, player,  false, false, null);
+                        System.out.println("Stats: " + minStat + " " + maxStat);
                         statPercentages.add(calculatePercentage(ExtractLore.getArmorFromLore(customizedReward.getLore()), minStat, maxStat));
                     } else if (line.contains("HP:")) {
-                        double minStat = ExtractLore.findMinStat(line, player, getRarityMultiplier(rarityIndex), true, null);
-                        double maxStat = ExtractLore.findMaxStat(line, player, getRarityMultiplier(rarityIndex), true, null);
-                        minStatHPPDC = ExtractLore.findMinStat(line, player, getRarityMultiplier(rarityIndex), false, null);
-                        maxStatHPPDC = ExtractLore.findMaxStat(line, player, getRarityMultiplier(rarityIndex), false, null);
+                        double minStat = ExtractLore.findMinStat(line, player,  true, true, getRarityMultiplier(rarityIndex));
+                        double maxStat = ExtractLore.findMaxStat(line, player,  true, true, getRarityMultiplier(rarityIndex));
+                        minStatHPPDC = ExtractLore.findMinStat(line, player,  false, false, null);
+                        maxStatHPPDC = ExtractLore.findMaxStat(line, player,  false, false, null);
                         statPercentages.add(calculatePercentage(ExtractLore.getMaxHpFromLore(customizedReward.getLore()), minStat, maxStat));
                     }
                 }

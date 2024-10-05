@@ -30,6 +30,7 @@ import me.diu.gachafight.scoreboard.Board;
 import me.diu.gachafight.shop.buy.BuyItemManager;
 import me.diu.gachafight.shop.equipmentspecialist.EquipmentSpecialistListener;
 import me.diu.gachafight.shop.equipmentspecialist.EquipmentSpecialistNPC;
+import me.diu.gachafight.shop.overseer.OverseerManager;
 import me.diu.gachafight.shop.potion.listeners.PotionUseListener;
 import me.diu.gachafight.shop.sell.ShopManager;
 import me.diu.gachafight.shop.potion.listeners.PotionShopListener;
@@ -183,6 +184,7 @@ public final class GachaFight extends JavaPlugin implements Listener {
         new ShopCommand(this);
         new ShopTabCompleter(this);
         new RefreshQuestCommand(this);
+        new KickCommand(this);
     }
 
     private void registerEvents() {
@@ -205,6 +207,7 @@ public final class GachaFight extends JavaPlugin implements Listener {
         new QuestNPCListener(this, questManager);
         new DamageListener(this);
         new QuestClickListener(this);
+        new OverseerManager(this);
     }
 
     public void cancelPlayerTasks(Player player) {

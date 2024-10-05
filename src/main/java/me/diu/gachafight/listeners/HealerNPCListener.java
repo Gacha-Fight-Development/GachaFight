@@ -2,6 +2,7 @@ package me.diu.gachafight.listeners;
 
 import me.diu.gachafight.GachaFight;
 import me.diu.gachafight.playerstats.PlayerStats;
+import me.diu.gachafight.utils.Calculations;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
@@ -35,7 +36,7 @@ public class HealerNPCListener implements Listener {
             double currentHp = stats.getHp();
             double maxHp = stats.getMaxhp();
             double playerMoney = stats.getMoney();
-            double healCost = (stats.getMaxhp()*0.1) - 0.8;
+            double healCost = Calculations.healerCost(maxHp);
 
             // Check if the player is already at max HP
             if (currentHp >= maxHp) {
@@ -48,10 +49,12 @@ public class HealerNPCListener implements Listener {
                 stats.setMoney(playerMoney - healCost);
                 stats.setHp(maxHp);
                 stats.syncHealthWithHearts(player);
-                player.sendMessage(MiniMessage.miniMessage().deserialize("<green>Your HP has been fully restored, and $0.1 has been deducted from your balance."));
+                String cost = String.format("%.1f", healCost);
+                player.sendMessage(MiniMessage.miniMessage().deserialize("<green>Your HP has been fully restored, and $" + cost + " has been deducted from your balance."));
             } else {
                 // Not enough money, send a message to the player
-                player.sendMessage(MiniMessage.miniMessage().deserialize("<red>You need at least $0.1 to heal yourself!"));
+                String cost = String.format("%.1f", healCost);
+                player.sendMessage(MiniMessage.miniMessage().deserialize("<red>You need at least $" + cost + " to heal yourself!"));
             }
         }
     }

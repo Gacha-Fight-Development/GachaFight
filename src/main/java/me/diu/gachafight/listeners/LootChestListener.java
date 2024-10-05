@@ -164,7 +164,7 @@ public class LootChestListener implements Listener {
                 new Location(location.getWorld(), -949, 5, 452),
                 new Location(location.getWorld(), -851, 5, 439),
                 new Location(location.getWorld(), -851, 5, 447),
-                new Location(location.getWorld(), -850, 5, 385),
+                new Location(location.getWorld(), -950, 5, 385),
                 new Location(location.getWorld(), -867, 5, 306),
                 new Location(location.getWorld(), -913, 5, 290),
                 new Location(location.getWorld(), -864, 5, 295),
