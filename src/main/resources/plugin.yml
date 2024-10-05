@@ -50,6 +50,8 @@ commands:
   refreshquest:
     usage: /refreshquest
     aliases: rq
+  kick:
+    usage: /kick <player> <reason>
 
 libraries:
   - org.mongodb:mongodb-driver-sync:5.1.2

@@ -82,7 +82,7 @@ public class ExtractLore {
     }
 
 
-    public static double findMaxStat(String lore, Player player, double rarityIndex, boolean withPlayerLevel, Integer level) {
+    public static double findMaxStat(String lore, Player player, boolean withPlayerLevel, Boolean withRarity, Double rarity) {
         PlayerStats playerStats = PlayerStats.getPlayerStats(player);
         int playerLevel = playerStats.getLevel();
         double boostMultiplier = Calculations.playerLevelMultiplier(playerLevel);
@@ -93,32 +93,36 @@ public class ExtractLore {
             String[] parts = extractStatRangeFromLore(lore);
             if (parts != null && parts.length == 2) {
                 if (withPlayerLevel) {
-                    if (level == null) { //for gachamanager
-                        double currentMaxStat = Double.parseDouble(parts[1].trim()) * boostMultiplier * rarityIndex;
+                    if (withRarity) {
+                        double currentMaxStat = Double.parseDouble(parts[1].trim()) * boostMultiplier * rarity;
                         if (currentMaxStat > maxStat) {
                             maxStat = currentMaxStat;  // Update maxStat if the current one is larger
                         }
-                    } else { //for reroll
-                        boostMultiplier = Calculations.playerLevelMultiplier(level);
-                        double currentMaxStat = Double.parseDouble(parts[1].trim()) * boostMultiplier * rarityIndex;
+                    } else {
+                        double currentMaxStat = Double.parseDouble(parts[1].trim()) * boostMultiplier;
                         if (currentMaxStat > maxStat) {
                             maxStat = currentMaxStat;  // Update maxStat if the current one is larger
                         }
                     }
-                }
-                if (!withPlayerLevel) {
-                    double currentMaxStat = Double.parseDouble(parts[1].trim()) * rarityIndex;
-                    if (currentMaxStat > maxStat) {
-                        maxStat = currentMaxStat;  // Update maxStat if the current one is larger
+                } else { //without level boost
+                    if (withRarity) {
+                        double currentMaxStat = Double.parseDouble(parts[1].trim()) * rarity;
+                        if (currentMaxStat > maxStat) {
+                            maxStat = currentMaxStat;  // Update maxStat if the current one is larger
+                        }
+                    } else {
+                        double currentMaxStat = Double.parseDouble(parts[1].trim());
+                        if (currentMaxStat > maxStat) {
+                            maxStat = currentMaxStat;  // Update maxStat if the current one is larger
+                        }
                     }
                 }
             }
-
         }
         return maxStat;
     }
 
-    public static double findMinStat(String lore, Player player, double rarityIndex, boolean withPlayerLevel, Integer level) {
+    public static double findMinStat(String lore, Player player, boolean withPlayerLevel, Boolean withRarity, Double rarity) {
         PlayerStats playerStats = PlayerStats.getPlayerStats(player);
         int playerLevel = playerStats.getLevel();
         double boostMultiplier = Calculations.playerLevelMultiplier(playerLevel);
@@ -130,14 +134,28 @@ public class ExtractLore {
             String[] parts = extractStatRangeFromLore(lore);
             if (parts != null && parts.length == 2) {
                 if (withPlayerLevel) {
-                    double currentMinStat = Double.parseDouble(parts[0].trim()) * boostMultiplier * rarityIndex;
-                    if (currentMinStat > minStat) {
-                        minStat = currentMinStat;  // Update minStat if the current one is smaller
+                    if (withRarity) {
+                        double currentMinStat = Double.parseDouble(parts[0].trim()) * boostMultiplier * rarity;
+                        if (currentMinStat > minStat) {
+                            minStat = currentMinStat;  // Update minStat if the current one is smaller
+                        }
+                    } else {
+                        double currentMinStat = Double.parseDouble(parts[0].trim()) * boostMultiplier;
+                        if (currentMinStat > minStat) {
+                            minStat = currentMinStat;  // Update minStat if the current one is smaller
+                        }
                     }
-                } else if (!withPlayerLevel) {
-                    double currentMinStat = Double.parseDouble(parts[0].trim()) * rarityIndex;
-                    if (currentMinStat > minStat) {
-                        minStat = currentMinStat;  // Update minStat if the current one is smaller
+                } else {
+                    if (withRarity) {
+                        double currentMinStat = Double.parseDouble(parts[0].trim()) * rarity;
+                        if (currentMinStat > minStat) {
+                            minStat = currentMinStat;  // Update minStat if the current one is smaller
+                        }
+                    } else {
+                        double currentMinStat = Double.parseDouble(parts[0].trim());
+                        if (currentMinStat > minStat) {
+                            minStat = currentMinStat;  // Update minStat if the current one is smaller
+                        }
                     }
                 }
             }
