@@ -102,23 +102,30 @@ public class PlayerDataManager {
         Document document = collection.find(Filters.eq("uuid", playerUUID.toString())).first();
         PlayerStats stats = null;
 
-        if (document != null && PlayerStats.playerStatsMap.containsKey(playerUUID)) {
-            stats = PlayerStats.playerStatsMap.get(playerUUID);
+        if (document != null) {
+            stats = PlayerStats.playerStatsMap.computeIfAbsent(playerUUID, k -> new PlayerStats(playerUUID));
             stats.setLevel(document.getInteger("level", 1));
             stats.setExp(document.getDouble("exp"));
             stats.setDamage(document.getDouble("damage"));
             stats.setArmor(document.getDouble("armor"));
             stats.setMaxhp(document.getDouble("hp"));
-            stats.setLuck(document.getInteger("luck", 5));
             stats.setMoney(document.getDouble("money"));
             stats.setGem(document.getInteger("gem", 0));
             if (document.getDouble("speed") != null) {
                 stats.setSpeed(document.getDouble("speed"));
-            };
-
-
-
-
+            }
+            if (document.getDouble("critchance") != null) {
+                stats.setCritChance(document.getDouble("critchance"));
+            }
+            if (document.getDouble("critdmg")!= null) {
+                stats.setCritDmg(document.getDouble("critdmg"));
+            }
+            if (document.getDouble("dodge") != null) {
+                stats.setDodge(document.getDouble("dodge"));
+            }
+            if (document.getDouble("luck") != null) {
+                stats.setDodge(document.getDouble("luck"));
+            }
             plugin.getLogger().info("Loaded data for offline player: " + playerName);
         }
         return stats;
@@ -153,13 +160,13 @@ public class PlayerDataManager {
         }
     }
 
-    /*
-    public void saveOfflinePlayerData(UUID playerUUID, PlayerStats stats) {
+
+    public void saveOfflinePlayerData(UUID playerUUID, String playerName, PlayerStats stats) {
         if (stats != null) {
             if (stats.getMoney() >= 1) {
                 Document document = new Document();
-                document.put("uuid", player.getUniqueId().toString());
-                document.put("name", player.getName().toLowerCase());
+                document.put("uuid", playerUUID.toString());
+                document.put("name", playerName.toLowerCase());
                 document.put("level", stats.getLevel());
                 document.put("exp", stats.getExp());
                 document.put("damage", stats.getDamage());
@@ -169,13 +176,13 @@ public class PlayerDataManager {
                 document.put("money", stats.getMoney());
                 document.put("gem", stats.getGem());
                 document.put("speed", stats.getSpeed());
-                collection.replaceOne(Filters.eq("uuid", player.getUniqueId().toString()), document, new ReplaceOptions().upsert(true));
-                plugin.getLogger().info("Saved data for player: " + player.getName());
+                collection.replaceOne(Filters.eq("uuid", playerUUID.toString()), document, new ReplaceOptions().upsert(true));
+                plugin.getLogger().info("Saved data for player: " + playerName);
             }
         } else {
-            plugin.getLogger().warning("Failed to save data: PlayerStats not found for player " + player.getName());
+            plugin.getLogger().warning("Failed to save data: PlayerStats not found for player " + playerName);
         }
-    }*/
+    }
 
     public PlayerStats getPlayerStats(UUID uuid) {
         return PlayerStats.playerStatsMap.get(uuid);

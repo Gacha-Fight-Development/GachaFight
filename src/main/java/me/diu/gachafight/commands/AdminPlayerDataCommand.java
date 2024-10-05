@@ -1,6 +1,7 @@
 package me.diu.gachafight.commands;
 
 import me.diu.gachafight.GachaFight;
+import me.diu.gachafight.playerstats.PlayerDataManager;
 import me.diu.gachafight.playerstats.PlayerStats;
 import me.diu.gachafight.di.ServiceLocator;
 import me.diu.gachafight.services.MongoService;
@@ -15,8 +16,10 @@ import java.util.UUID;
 
 public class AdminPlayerDataCommand implements CommandExecutor {
     private final MongoService mongoService;
+    private final GachaFight plugin;
 
     public AdminPlayerDataCommand(GachaFight plugin, ServiceLocator serviceLocator) {
+        this.plugin = plugin;
         plugin.getCommand("adminplayerdata").setExecutor(this);
         this.mongoService = serviceLocator.getService(MongoService.class);
     }
@@ -58,12 +61,12 @@ public class AdminPlayerDataCommand implements CommandExecutor {
                 throw new RuntimeException(e);
             }
 
-            stats = PlayerStats.getPlayerStats(playerUUID);
+            stats = plugin.getPlayerDataManager().loadOfflinePlayerData(args[0], playerUUID);
             sender.sendMessage("Player: " + args[0] + "'s uuid: "+ playerUUID);
-            sender.sendMessage("Current Luck: " + stats.getLuck());
 
         } else { // If the player is online (targetPlayer != null) get the player stats via this method
             stats = PlayerStats.getPlayerStats(targetPlayer);
+            sender.sendMessage("Player: " + args[0] + "'s uuid: "+ targetPlayer.getUniqueId().toString());
         }
 
 
@@ -118,9 +121,7 @@ public class AdminPlayerDataCommand implements CommandExecutor {
                             stats.setMoney(stats.getMoney() + doubleValue);
                             break;
                         case "gem":
-                            sender.sendMessage("Current: " + stats.getGem());
                             stats.setGem(stats.getGem() + intValue);
-                            sender.sendMessage("Updated: " + stats.getGem());
                             break;
                         default:
                             sender.sendMessage("Unknown stat.");
@@ -181,6 +182,9 @@ public class AdminPlayerDataCommand implements CommandExecutor {
             default:
                 sender.sendMessage("Unknown action. Use 'view' or 'set'.");
                 break;
+        }
+        if(targetPlayer == null) {
+            plugin.getPlayerDataManager().saveOfflinePlayerData(playerUUID, args[0], stats);
         }
         return true;
     }
