@@ -25,13 +25,15 @@ public class PlayerStats {
     private UUID playerUUID;
     private int level;
     private double exp;
-    private double damage;
-    private double armor;
     private double maxhp;
     private double hp;
-    private double crit;
+    private double damage;
+    private double armor;
+    private double critChance;
+    private double critDmg;
+    private double dodge;
     private double speed;
-    private int luck;
+    private double luck;
     private double money;
     private int gem;
 
@@ -45,9 +47,9 @@ public class PlayerStats {
         this.maxhp = 20;
         this.hp = this.getMaxhp();
         this.armor = 0.2;
-        this.crit = 1;
-//        this.intelligence = 10;
-//        this.wisdom = 10;
+        this.critChance = 0.01;
+        this.critDmg = 1.5;
+        this.dodge = 0.01;
         this.luck = 5;
         this.money = 0;
         this.gem = 0;
@@ -85,11 +87,12 @@ public class PlayerStats {
         return ColorChat.chat("&aStats:\n" +
                 "&eLevel: " + getPlayerStats(player).getLevel() + "\n" +
                 "&eExp: " + String.format("%.2f", getPlayerStats(player).getExp()) + "/" + getPlayerStats(player).getRequiredExp() + "\n" +
+                "&eHP: " + getPlayerStats(player).getMaxhp() + " (+" + String.format("%.1f", getPlayerStats(player).getGearStats().getTotalMaxHp()) + ")\n" +
                 "&eStrength: " + String.format("%.1f", getPlayerStats(player).getDamage()) + " (+" + String.format("%.1f", getPlayerStats(player).getWeaponStats().getDamage()) + ")\n" +
                 "&eArmor: " + String.format("%.1f", getPlayerStats(player).getArmor()) + " (+" + String.format("%.1f", getPlayerStats(player).getGearStats().getTotalArmor()) + ")\n" +
-                "&eHP: " + getPlayerStats(player).getMaxhp() + " (+" + String.format("%.1f", getPlayerStats(player).getGearStats().getTotalMaxHp()) + ")\n" +
                 "&eOffhand Stats: " + getPlayerStats(player).getGearStats().getOffhandStats().getDamage() + " damage, " +
                 getPlayerStats(player).getGearStats().getOffhandStats().getArmor() + " armor\n" +
+                "&#FFFFEA" + " Crit Chance\n" +
                 "&eSpeed: " + getPlayerStats(player).getSpeed() + "\n" +
                 "&eLuck: " + getPlayerStats(player).getLuck() + "\n");
     }

@@ -36,14 +36,12 @@ public class DamageListener implements Listener {
 
     @EventHandler
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
-        // when arrow hits player
-
         if (isSafezone(event.getEntity().getLocation())) {
             event.setCancelled(true);
             event.getDamager().sendMessage(ColorChat.chat("&aSafezone. &cPvP only in Dungeon."));
             return;
         }
-
+        // when arrow hits player
         if (event.getDamager() instanceof Arrow && event.getEntity() instanceof Player) {
             PlayerStats stats = PlayerStats.getPlayerStats(((Player) event.getEntity()));
             event.setDamage(0);
@@ -69,33 +67,29 @@ public class DamageListener implements Listener {
     // Handle Player vs Entity (PvE)
     private void handlePlayerVsEntity(EntityDamageByEntityEvent event, Player player, LivingEntity entity) {
         PlayerStats stats = PlayerStats.getPlayerStats(player);
-
         // Retrieve player's damage stat
         double playerDamage = stats.getDamage() + stats.getWeaponStats().getDamage() + stats.getGearStats().getTotalDamage();
-
         // Get the mob's armor using MythicMobs API
         double mobArmor = getMobArmor(entity);
-
         // Calculate the custom total damage
         double totalDamage = playerDamage - mobArmor; // Calc PvE
         if (totalDamage < 0.5) {
             totalDamage = 0.5;
         }
-
+        if (Math.random() < stats.getCritChance()) {
+            totalDamage *= stats.getCritDmg();
+        }
         if (isCritical(player)) {
             totalDamage = totalDamage*1.2;
         }
-
         // Check if the mob will die from this hit
         if (entity.getHealth() - totalDamage <= 0) {
             handleMobDeath(player, entity);  // Handle mob death, rewards, etc.
             QuestKillListener.questKillMob(player, entity); //handle quest
         }
-
         if (player.hasPermission("gachafight.toggledamage")) {
             player.sendMessage(ColorChat.chat("&cFinal Damage: &f" + String.format("%.1f",totalDamage)));
         }
-
         // Cancel the default damage and apply custom damage
         event.setDamage(0);
         double newHealth = entity.getHealth() - totalDamage;
@@ -120,13 +114,19 @@ public class DamageListener implements Listener {
 
         // Calculate the custom damage for PvP
         double totalDamage = attackerDamage - (targetArmor); // Adjust the armor effect as needed
+        //reduce damage for target if attacker level is above target's level
         if (attackerStats.getLevel() > targetStats.getLevel()) {
-            totalDamage = totalDamage*(1-((attackerStats.getLevel()-targetStats.getLevel())*0.1));
+            int levelDiff = attackerStats.getLevel() - targetStats.getLevel();
+            //sets a minimum of 10% damage
+            if (levelDiff*0.1 >= 0.9) {
+                levelDiff = 1;
+            }
+            totalDamage = totalDamage*(1-(levelDiff*0.1));
         }
+        //sets minimum damage of 0.5
         if (totalDamage < 0.5) {
             totalDamage = 0.5;
         }
-
         // Apply custom damage to the target
         event.setDamage(0); // Cancel the default damage
         if (attacker.hasPermission("gachafight.toggledamage")) {
@@ -142,35 +142,9 @@ public class DamageListener implements Listener {
         }
     }
 
-
-    // New method to handle mob death and give rewards
-    private void handleMobDeath(Player player, Entity entity) {
-        if (entity instanceof LivingEntity) {
-            double mobHp = ((LivingEntity) entity).getMaxHealth();
-            double expGained = mobHp / 7.5;
-            double moneyGained = mobHp / 20;
-
-            // Add experience to the player
-            PlayerStats playerStats = PlayerStats.getPlayerStats(player);
-            playerStats.addExp((int) expGained, player);
-
-            // Add money to the player
-            playerStats.setMoney(playerStats.getMoney() + moneyGained);
-            if (entity.getName().contains("Goblin")) {
-                GoblinDeathReward.MobDeath(entity.getName(), player);
-            } else if (entity.getName().contains("rpg")) {
-                RPGDeathReward.MobDeath(entity.getName(), player);
-            }
-
-            // Notify the player of the exp and money gained
-            player.sendActionBar(MiniMessage.miniMessage().deserialize("<green>+ <dark_aqua>Exp: <aqua>" + String.format("%.2f", expGained) + "<black> | <gold> Money: <yellow>" + String.format("%.2f", moneyGained) + "</green>"));
-        }
-    }
-
-
+    //Handles EvP Interactions | When Entity Hits Player. Only Applies to MythicMobs
     @EventHandler
     public void onMobDamage(MythicDamageEvent event) { //damage by mob
-        // Handle when MythicMob attacks a player
         if (event.getCaster() instanceof ActiveMob && event.getTarget() instanceof BukkitEntity) {
             if (event.getTarget().getBukkitEntity() instanceof Player) {
                 Player player = ((BukkitEntity) event.getTarget()).getEntityAsPlayer();
@@ -185,7 +159,7 @@ public class DamageListener implements Listener {
                     double playerArmor = stats.getArmor() + stats.getGearStats().getTotalArmor();
 
                     // Calculate the total damage received by the player
-                    double totalDamage = mobDamage - (playerArmor * 0.5); // Calc EvP
+                    double totalDamage = mobDamage - (playerArmor * 0.4); // Calc EvP
 
                     if (totalDamage < 0) {
                         totalDamage = 0.05;
@@ -209,6 +183,30 @@ public class DamageListener implements Listener {
             }
         } else {
             event.setDamage(0);
+        }
+    }
+
+    // New method to handle mob death and give rewards
+    private void handleMobDeath(Player player, Entity entity) {
+        if (entity instanceof LivingEntity) {
+            double mobHp = ((LivingEntity) entity).getMaxHealth();
+            double expGained = mobHp / 7.5;
+            double moneyGained = mobHp / 20;
+
+            // Add experience to the player
+            PlayerStats playerStats = PlayerStats.getPlayerStats(player);
+            playerStats.addExp((int) expGained, player);
+
+            // Add money to the player
+            playerStats.setMoney(playerStats.getMoney() + moneyGained);
+            if (entity.getName().contains("Goblin")) {
+                GoblinDeathReward.MobDeath(entity.getName(), player);
+            } else if (entity.getName().contains("rpg")) {
+                RPGDeathReward.MobDeath(entity.getName(), player);
+            }
+
+            // Notify the player of the exp and money gained
+            player.sendActionBar(MiniMessage.miniMessage().deserialize("<green>+ <dark_aqua>Exp: <aqua>" + String.format("%.2f", expGained) + "<black> | <gold> Money: <yellow>" + String.format("%.2f", moneyGained) + "</green>"));
         }
     }
 

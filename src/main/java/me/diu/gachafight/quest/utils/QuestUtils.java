@@ -1,6 +1,7 @@
 package me.diu.gachafight.quest.utils;
 
 import me.diu.gachafight.GachaFight;
+import me.diu.gachafight.playerstats.PlayerStats;
 import me.diu.gachafight.quest.Quest;
 import me.diu.gachafight.quest.managers.DailyQuestManager;
 import me.diu.gachafight.quest.managers.QuestManager;
@@ -103,14 +104,17 @@ public class QuestUtils {
     // Helper method to apply quest rewards to the player
     public static void applyRewards(Player player, Quest quest) {
         // Logic to apply rewards (money, items, etc.) from the quest's rewards map
+        PlayerStats stats = PlayerStats.getPlayerStats(player);
         if (quest.getRewards().containsKey("money")) {
             int money = (int) quest.getRewards().get("money");
+            stats.setMoney(stats.getMoney() + money);
             player.sendMessage("§aYou received " + money + " coins!");
             // Update player's money balance (this would depend on your economy system)
         }
 
         if (quest.getRewards().containsKey("gems")) {
             int gems = (int) quest.getRewards().get("gems");
+            stats.setGem(stats.getGem()+gems);
             player.sendMessage("§aYou received " + gems + " gems!");
             // Update player's gem balance
         }
@@ -118,6 +122,7 @@ public class QuestUtils {
         if (quest.getRewards().containsKey("suffix_tag")) {
             String tagName = (String) quest.getRewards().get("suffix_tag");
             givePlayerTagPermission(player, tagName);
+            player.sendMessage("§aYou received " + tagName + " suffix!");
         }
     }
 
@@ -267,12 +272,12 @@ public class QuestUtils {
 
         // Check if the quest is non-repeatable
         Quest quest = QuestManager.getQuestById(questId);
-        if (quest == null || quest.isRepeatable()) {
+        if (quest == null) {
             return false; // Repeatable quests can't be "completed" permanently
         }
 
         // Check if the quest exists in quest_progress
-        String sql = "SELECT 1 FROM quest_progress WHERE player_uuid = ? AND quest_id = ? LIMIT 1";
+        String sql = "SELECT 1 FROM quest_progress WHERE player_uuid = ? AND quest_id = ?";
 
         try (Connection conn = GachaFight.getInstance().getDatabaseManager().getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -286,7 +291,6 @@ public class QuestUtils {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
         return true; // Quest is not in quest_progress and is non-repeatable, meaning it's completed
     }
 

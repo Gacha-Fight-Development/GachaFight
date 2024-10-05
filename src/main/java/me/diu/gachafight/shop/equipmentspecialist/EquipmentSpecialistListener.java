@@ -48,8 +48,8 @@ public class EquipmentSpecialistListener implements Listener {
         Inventory inventory = event.getClickedInventory();
         Inventory guiInventory = event.getView().getTopInventory();
         PersistentDataContainer pdc;
-        ItemStack chestArrow1 = createCustomItem(Material.PAPER, "§aSlot 1", 10123, "§cYou will need 2 of the same equipment to Level Up!");
-        ItemStack chestArrow2 = createCustomItem(Material.PAPER, "§aSlot 2", 10123, "§cYou will need 2 of the same equipment to Level Up!");
+        ItemStack chestArrow1 = createCustomItem(Material.PAPER, "§aArrow Check", 10123, "§cYou will need 2 of the same equipment to Level Up!");
+        ItemStack chestArrow2 = createCustomItem(Material.PAPER, "§aArrow Check", 10123, "§cYou will need 2 of the same equipment to Level Up!");
         if (event.getView().getTitle().equals("Equipment Specialist")) {
             event.setCancelled(true);  // Prevent moving items in the menu
 
@@ -73,11 +73,11 @@ public class EquipmentSpecialistListener implements Listener {
                 guiInventory.setItem(16, chestArrow2);
                 player.getInventory().addItem(clickedItem);
             }
-            if (event.getSlot() == 10 && clickedItem.getType() != Material.PAPER) {
+            if (event.getSlot() == 10 && !clickedItem.getItemMeta().getDisplayName().contains("Arrow Check")) {
                 guiInventory.setItem(10, chestArrow1);
                 player.getInventory().addItem(clickedItem);
             }
-            if (event.getSlot() == 16 && clickedItem.getType() != Material.PAPER) {
+            if (event.getSlot() == 16 && !clickedItem.getItemMeta().getDisplayName().contains("Arrow Check")) {
                 guiInventory.setItem(16, chestArrow2);
                 player.getInventory().addItem(clickedItem);
             }
@@ -155,23 +155,25 @@ public class EquipmentSpecialistListener implements Listener {
             event.setCancelled(true);  // Prevent moving items in the menu
 
             if (clickedItem == null || clickedItem.getType() == Material.AIR) return;
-            if (event.getSlot() == 13 && clickedItem.getType() != Material.BLUE_STAINED_GLASS_PANE && event.getClickedInventory().equals(event.getView().getTopInventory())) {
-                guiInventory.setItem(13, new ItemStack(Material.BLUE_STAINED_GLASS_PANE));
-                guiInventory.setItem(10, chestArrow1);
-                guiInventory.setItem(16, chestArrow2);
-                player.getInventory().addItem(clickedItem);
-            }
+            if (event.getClickedInventory().equals(event.getView().getTopInventory())) {
+                if (event.getSlot() == 13 && clickedItem.getType() != Material.BLUE_STAINED_GLASS_PANE) {
+                    guiInventory.setItem(13, new ItemStack(Material.BLUE_STAINED_GLASS_PANE));
+                    guiInventory.setItem(10, chestArrow1);
+                    guiInventory.setItem(16, chestArrow2);
+                    player.getInventory().addItem(clickedItem);
+                }
 
-            if (event.getSlot() == 10 && clickedItem.getType() != Material.PAPER) {
-                guiInventory.setItem(10, chestArrow1);
-                player.getInventory().addItem(clickedItem);
-            }
+                if (event.getSlot() == 10 && clickedItem.getType() != Material.PAPER) {
+                    guiInventory.setItem(10, chestArrow1);
+                    player.getInventory().addItem(clickedItem);
+                }
 
-            if (event.getSlot() == 16 && clickedItem.getType() != Material.PAPER) {
-                guiInventory.setItem(16, chestArrow2);
-                player.getInventory().addItem(clickedItem);
-            }
+                if (event.getSlot() == 16 && clickedItem.getType() != Material.PAPER) {
+                    guiInventory.setItem(16, chestArrow2);
+                    player.getInventory().addItem(clickedItem);
+                }
 
+            }
             // Slot 22: Confirm
             if (event.getSlot() == 22 && clickedItem.getType() == Material.PAPER && clickedItem.getItemMeta().getDisplayName().equals("§aConfirm")) {
                 ItemStack equipment = guiInventory.getItem(10);  // Equipment slot
@@ -232,13 +234,21 @@ public class EquipmentSpecialistListener implements Listener {
                 }
             }
             equipmentCheck(event, player, false);
+            player.updateInventory();
         }
     }
 
     @EventHandler
     public void onMenuClose(@NotNull InventoryCloseEvent event) {
+        Player player = (Player) event.getPlayer();
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                player.updateInventory();
+            }
+        }.runTaskLater(plugin, 1L);
         Inventory guiInventory = event.getView().getTopInventory();
-        if (event.getView().getTitle().equals("Level Up Equipment") || event.getView().getTitle().equals("Reroll Stats")) {
+        if (event.getView().getTitle().equals("Level Up Equipment")) {
             if (guiInventory.getItem(13).getType() != Material.BLUE_STAINED_GLASS_PANE) {
                 event.getPlayer().getInventory().addItem(guiInventory.getItem(13));
             }
@@ -248,8 +258,17 @@ public class EquipmentSpecialistListener implements Listener {
             if (guiInventory.getItem(10).getType() != Material.PAPER) {
                 event.getPlayer().getInventory().addItem(guiInventory.getItem(10));
             }
+        } else if (event.getView().getTitle().equals("Reroll Stats")) {
+            if (guiInventory.getItem(13).getType() != Material.LIGHT_BLUE_STAINED_GLASS_PANE) {
+                event.getPlayer().getInventory().addItem(guiInventory.getItem(13));
+            }
+            if (guiInventory.getItem(16).getType() != Material.PAPER) {
+                event.getPlayer().getInventory().addItem(guiInventory.getItem(16));
+            }
+            if (guiInventory.getItem(10).getType() != Material.PAPER) {
+                event.getPlayer().getInventory().addItem(guiInventory.getItem(10));
+            }
         }
-        Player player = (Player) event.getPlayer();
         new BukkitRunnable() {
             @Override
             public void run() {
@@ -265,7 +284,7 @@ public class EquipmentSpecialistListener implements Listener {
         ItemStack rightArrow = createCustomItem(Material.PAPER, null, 10099);  // No tooltip
         ItemStack leftArrow = createCustomItem(Material.PAPER, null, 10097);   // No tooltip
         ItemStack greenCheck = createCustomItem(Material.PAPER, "§aConfirm", 10109, "§aCost: §6" + costForLevel);
-        ItemStack chestArrow1 = createCustomItem(Material.PAPER, "§aClick on your equipment", 10123, "§6This is a slot for your equipment");
+        ItemStack chestArrow1 = createCustomItem(Material.PAPER, "§aArrow Check", 10123, "§6This is a slot for your equipment");
         ItemStack chestArrow2 = createCustomItem(Material.PAPER, "§aArrow Check", 10123, "§6This is a slot for your clone item");
         ItemStack guide = createCustomItem(Material.COMPASS, "§dLevel Up Equipment Guide", 1, "§6Leveling up equipment means that you have a", "§6equipment that is lower level than your current", "§6level, then leveled up item will be your level", "§6Example: [2] Sword -> [your level] Sword");
         // Cyan glass border for GUI
@@ -320,7 +339,7 @@ public class EquipmentSpecialistListener implements Listener {
 
     // Helper function to create items with custom model data
     @NotNull
-    private static ItemStack createCustomItem(Material material, String name, int customModelData, String... lore) {
+    public static ItemStack createCustomItem(Material material, String name, int customModelData, String... lore) {
         ItemStack item = new ItemStack(material);
         ItemMeta meta = item.getItemMeta();
         if (name != null) {
@@ -400,12 +419,17 @@ public class EquipmentSpecialistListener implements Listener {
 
     public static double rerollItem(double min, double max, double levelmulti, double rarity) {
         // Calculate the difference between the max and min values, both scaled by rarity
+        System.out.println("MIN MAX:" + min +" "+ max);
         double scaledMin = min * rarity;
         double scaledMax = max * rarity;
+        System.out.println(scaledMax + " " + scaledMin);
         // Calculate the new stat based on the percentage between the min and max
         double newStat = scaledMin + (Math.random() * (scaledMax - scaledMin));
+        System.out.println(newStat);
         // Apply the level multiplier
+        System.out.println("Level multi " + levelmulti);
         newStat *= levelmulti;
+        System.out.println(newStat);
 
         // Return the final new stat value
         return newStat;
@@ -448,12 +472,12 @@ public class EquipmentSpecialistListener implements Listener {
             ItemStack slot10 = guiInventory.getItem(10);  // First chest arrow slot
             ItemStack slot16 = guiInventory.getItem(16);  // Second chest arrow slot
 
-            if (slot10 == null || slot10.getType() == Material.PAPER) {
+            if (slot10 == null || slot10.getItemMeta().getDisplayName().contains("Arrow Check")) {
                 if (clickedItem.getMaxStackSize() > 1) {
                     player.sendMessage("§cThis Item Is Stackable!");
                     return;
                 }
-                if (slot16.getType() != Material.PAPER) {
+                if (!slot16.getItemMeta().getDisplayName().contains("Arrow Check")) {
                     player.sendMessage("§cRemove item from Slot 2!");
                     return;
                 }
@@ -484,7 +508,7 @@ public class EquipmentSpecialistListener implements Listener {
                 }
                 guiInventory.setItem(22, greenCheck);
                 player.sendMessage("§aItem placed in slot 1");
-            } else if (slot16 == null || slot16.getType() == Material.PAPER) {
+            } else if (slot16 == null || slot16.getItemMeta().getDisplayName().contains("Arrow Check")) {
                 if (clickedItem.getMaxStackSize() > 1) {
                     player.sendMessage("§cThis Item Is Stackable!");
                     return;

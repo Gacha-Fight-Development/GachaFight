@@ -156,9 +156,18 @@ public class LootChestListener implements Listener {
                 new Location(location.getWorld(), -855, 5, 303),
                 new Location(location.getWorld(), -853, 5, 368),
                 new Location(location.getWorld(), -945, 5, 323),
-                new Location(location.getWorld(), -910, 5, 304), // RPG end
+                new Location(location.getWorld(), -910, 5, 304),
                 new Location(location.getWorld(), -916, 5, 419),
-                new Location(location.getWorld(), -877, 5, 431)
+                new Location(location.getWorld(), -877, 5, 431),
+                new Location(location.getWorld(), -922, 5, 292),
+                new Location(location.getWorld(), -960, 5, 356),
+                new Location(location.getWorld(), -949, 5, 452),
+                new Location(location.getWorld(), -851, 5, 439),
+                new Location(location.getWorld(), -851, 5, 447),
+                new Location(location.getWorld(), -950, 5, 385),
+                new Location(location.getWorld(), -867, 5, 306),
+                new Location(location.getWorld(), -913, 5, 290),
+                new Location(location.getWorld(), -864, 5, 295),
         };
 
         for (Location chestLocation : rpgLootChestLocations) {
