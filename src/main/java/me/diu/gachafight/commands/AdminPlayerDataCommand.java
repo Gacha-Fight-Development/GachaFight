@@ -11,6 +11,8 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.UUID;
+
 public class AdminPlayerDataCommand implements CommandExecutor {
     private final MongoService mongoService;
 
@@ -35,6 +37,7 @@ public class AdminPlayerDataCommand implements CommandExecutor {
         String action = args[1];
         String value = args.length > 2 ? args[2] : null;
 
+        // Get the player if they are online.  If they are offline, targetPlayer remains null
         Player targetPlayer = null;
         for (Player p : Bukkit.getOnlinePlayers()) {
             if (p.getName().equalsIgnoreCase(targetPlayerName)) {
@@ -43,16 +46,43 @@ public class AdminPlayerDataCommand implements CommandExecutor {
             }
         }
 
+        // If the player is offline (when targetPlayer == null), attempt to get the players UUID via the mojang api
+        // If successful, playerUUID will be set to the players uuid, and
+        PlayerStats stats;
+        UUID playerUUID = null;
         if (targetPlayer == null) {
-            sender.sendMessage("Player not found online: " + targetPlayerName);
+            sender.sendMessage("Player: " + args[0] + " is offline, trying something...");
+            try {
+                playerUUID = PlayerStats.getUUIDFromUsername(args[0]);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+
+            stats = PlayerStats.getPlayerStats(playerUUID);
+            sender.sendMessage("Player: " + args[0] + "'s uuid: "+ playerUUID);
+            sender.sendMessage("Current Luck: " + stats.getLuck());
+
+        } else { // If the player is online (targetPlayer != null) get the player stats via this method
+            stats = PlayerStats.getPlayerStats(targetPlayer);
+        }
+
+
+        // If player is offline and the offline player stat is not retrieved, end method, and output message
+        if (stats == null) {
+            sender.sendMessage("Player not found: " + targetPlayerName);
             return true;
         }
 
-        PlayerStats stats = PlayerStats.getPlayerStats(targetPlayer);
+
 
         switch (action.toLowerCase()) {
             case "view":
-                sender.sendMessage(stats.showStats(targetPlayer));
+                // if player is offline, use UUID method instead of player method
+                if (targetPlayer == null){
+                    sender.sendMessage(stats.showStats(playerUUID));
+                } else{
+                    sender.sendMessage(stats.showStats(targetPlayer));
+                }
                 sender.sendMessage(String.valueOf(stats.getGearStats().getTotalArmor()));
                 sender.sendMessage(String.valueOf(stats.getWeaponStats().getDamage()));
                 break;
@@ -88,7 +118,9 @@ public class AdminPlayerDataCommand implements CommandExecutor {
                             stats.setMoney(stats.getMoney() + doubleValue);
                             break;
                         case "gem":
+                            sender.sendMessage("Current: " + stats.getGem());
                             stats.setGem(stats.getGem() + intValue);
+                            sender.sendMessage("Updated: " + stats.getGem());
                             break;
                         default:
                             sender.sendMessage("Unknown stat.");

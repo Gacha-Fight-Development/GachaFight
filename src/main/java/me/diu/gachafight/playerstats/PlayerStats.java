@@ -1,14 +1,22 @@
 package me.diu.gachafight.playerstats;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import lombok.Getter;
 import lombok.Setter;
 import me.diu.gachafight.utils.ColorChat;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+
+
 
 @Getter
 @Setter
@@ -51,6 +59,9 @@ public class PlayerStats {
     public static PlayerStats getPlayerStats(Player player) {
         return playerStatsMap.computeIfAbsent(player.getUniqueId(), k -> new PlayerStats(player.getUniqueId()));
     }
+    public static PlayerStats getPlayerStats(UUID uuid) {
+        return playerStatsMap.get(uuid);
+    }
 
     public void addStat(String stat, Player player) {
         if (player.isOnline()) {
@@ -81,6 +92,19 @@ public class PlayerStats {
                 getPlayerStats(player).getGearStats().getOffhandStats().getArmor() + " armor\n" +
                 "&eSpeed: " + getPlayerStats(player).getSpeed() + "\n" +
                 "&eLuck: " + getPlayerStats(player).getLuck() + "\n");
+    }
+
+    public String showStats(UUID uuid) {
+        return ColorChat.chat("&aStats:\n" +
+                "&eLevel: " + getPlayerStats(uuid).getLevel() + "\n" +
+                "&eExp: " + String.format("%.2f", getPlayerStats(uuid).getExp()) + "/" + getPlayerStats(uuid).getRequiredExp() + "\n" +
+                "&eStrength: " + String.format("%.1f", getPlayerStats(uuid).getDamage()) + " (+" + String.format("%.1f", getPlayerStats(uuid).getWeaponStats().getDamage()) + ")\n" +
+                "&eArmor: " + String.format("%.1f", getPlayerStats(uuid).getArmor()) + " (+" + String.format("%.1f", getPlayerStats(uuid).getGearStats().getTotalArmor()) + ")\n" +
+                "&eHP: " + getPlayerStats(uuid).getMaxhp() + " (+" + String.format("%.1f", getPlayerStats(uuid).getGearStats().getTotalMaxHp()) + ")\n" +
+                "&eOffhand Stats: " + getPlayerStats(uuid).getGearStats().getOffhandStats().getDamage() + " damage, " +
+                getPlayerStats(uuid).getGearStats().getOffhandStats().getArmor() + " armor\n" +
+                "&eSpeed: " + getPlayerStats(uuid).getSpeed() + "\n" +
+                "&eLuck: " + getPlayerStats(uuid).getLuck() + "\n");
     }
 
     public void addExp(double amount, Player player) {
@@ -129,6 +153,50 @@ public class PlayerStats {
         }
         float expProgress = (float) (this.exp / getRequiredExp());  // Calculate progress as a float between 0 and 1
         player.setExp(expProgress);  // Set Minecraft experience bar
+    }
+
+    public static UUID getUUIDFromUsername(String username) throws Exception {
+        String MOJANG_API_URL = "https://api.mojang.com/users/profiles/minecraft/";
+        // Build the URL
+        URL url = new URL(MOJANG_API_URL + username);
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("GET");
+
+        // Check the response code
+        if (connection.getResponseCode() != 200) {
+            throw new Exception("Error: Could not find player with username " + username);
+        }
+
+        // Read the response
+        BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+        String inputLine;
+        StringBuilder content = new StringBuilder();
+
+        while ((inputLine = in.readLine()) != null) {
+            content.append(inputLine);
+        }
+
+        // Close connections
+        in.close();
+        connection.disconnect();
+
+        // Parse the JSON response
+        JsonObject json = JsonParser.parseString(content.toString()).getAsJsonObject();
+        String uuidString = json.get("id").getAsString();
+
+        // Format the UUID (Mojang's API returns a non-hyphenated UUID)
+        return formatUUID(uuidString);
+    }
+
+    // Helper method to format the UUID correctly with hyphens
+    private static UUID formatUUID(String uuid) {
+        return UUID.fromString(
+                uuid.substring(0, 8) + "-" +
+                        uuid.substring(8, 12) + "-" +
+                        uuid.substring(12, 16) + "-" +
+                        uuid.substring(16, 20) + "-" +
+                        uuid.substring(20, 32)
+        );
     }
 
 }
