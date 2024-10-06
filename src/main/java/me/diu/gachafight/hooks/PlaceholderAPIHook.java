@@ -61,11 +61,11 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
                     case "speed":
                         return String.format("%.1f", stats.getSpeed());
                     case "critchance":
-                        return String.format("%.1f", stats.getCritChance());
+                        return (stats.getCritChance()*100) + "%";
                     case "critdmg":
-                        return String.format("%.1f", stats.getCritDmg());
+                        return (stats.getCritDmg()*100) + "%";
                     case "dodge":
-                        return String.format("%.1f", stats.getDodge());
+                        return (stats.getDodge()*100) + "%";
 
                     // Placeholder for leaderboard rank of the player
                     case "money_rank":
