@@ -21,8 +21,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.Plugin;
-
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -33,7 +32,7 @@ public class AutoSellGachaCommand implements CommandExecutor, Listener {
     private final LuckPerms luckPerms;
     private final Plugin plugin;
 
-    private final Map<String, Integer> rarityPermissions;
+    private final LinkedHashMap<String, Integer> rarityPermissions;
 
     public AutoSellGachaCommand(GachaFight plugin, GachaManager gachaManager, LuckPerms luckPerms) {
         this.gachaManager = gachaManager;
@@ -46,7 +45,7 @@ public class AutoSellGachaCommand implements CommandExecutor, Listener {
 
 
         // Map equipment percent to defaults
-        rarityPermissions = new HashMap<>();
+        rarityPermissions = new LinkedHashMap<>();
         rarityPermissions.put("Common", 0);
         rarityPermissions.put("Uncommon", 0);
         rarityPermissions.put("Rare", 0);
