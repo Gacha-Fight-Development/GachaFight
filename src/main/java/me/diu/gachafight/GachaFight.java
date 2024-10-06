@@ -28,6 +28,7 @@ import me.diu.gachafight.quest.utils.QuestUtils;
 import me.diu.gachafight.quest.utils.SideQuestScheduler;
 import me.diu.gachafight.scoreboard.Board;
 import me.diu.gachafight.shop.buy.BuyItemManager;
+import me.diu.gachafight.shop.buy.listener.ShopItemUseListener;
 import me.diu.gachafight.shop.equipmentspecialist.EquipmentSpecialistListener;
 import me.diu.gachafight.shop.equipmentspecialist.EquipmentSpecialistNPC;
 import me.diu.gachafight.shop.overseer.OverseerManager;
@@ -208,6 +209,7 @@ public final class GachaFight extends JavaPlugin implements Listener {
         new DamageListener(this);
         new QuestClickListener(this);
         new OverseerManager(this);
+        new ShopItemUseListener(this);
     }
 
     public void cancelPlayerTasks(Player player) {

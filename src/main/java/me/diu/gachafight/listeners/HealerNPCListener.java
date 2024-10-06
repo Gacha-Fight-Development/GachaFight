@@ -5,6 +5,7 @@ import me.diu.gachafight.playerstats.PlayerStats;
 import me.diu.gachafight.utils.Calculations;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
+import org.bukkit.Particle;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -50,6 +51,9 @@ public class HealerNPCListener implements Listener {
                 stats.setHp(maxHp);
                 stats.syncHealthWithHearts(player);
                 String cost = String.format("%.1f", healCost);
+                player.getWorld().spawnParticle(Particle.HEART, player.getLocation().add(0, 1, 0), 10, 0.5, 0.5, 0.5, 0.1);
+                player.getWorld().spawnParticle(Particle.HAPPY_VILLAGER, player.getLocation().add(0, 1, 0), 15, 0.5, 0.5, 0.5, 0.1);
+
                 player.sendMessage(MiniMessage.miniMessage().deserialize("<green>Your HP has been fully restored, and $" + cost + " has been deducted from your balance."));
             } else {
                 // Not enough money, send a message to the player

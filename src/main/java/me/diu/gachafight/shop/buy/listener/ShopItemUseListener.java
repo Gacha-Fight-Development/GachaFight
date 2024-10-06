@@ -22,7 +22,7 @@ public class ShopItemUseListener implements Listener {
         ItemStack item = event.getItem();
         if (item.getType().equals(Material.IRON_INGOT) && item.getItemMeta().getCustomModelData() == 10003) {
             event.setCancelled(true);
-            if (item.getItemMeta().getDisplayName().contains("/AutoSellGacha")) {
+            if (item.getItemMeta().getDisplayName().contains(ColorChat.chat("&e/AutoSellGacha"))) {
                 Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(),"lp user " + player.getName() + " permission set " + "gacha.autosell");
                 item.setAmount(item.getAmount() - 1);
                 player.sendMessage(ColorChat.chat("&aUnlocked /AutoSellGacha"));

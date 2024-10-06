@@ -18,6 +18,7 @@ public class SideQuestScheduler {
     public static void scheduleQuestClearTask(JavaPlugin plugin) {
         Bukkit.getScheduler().runTaskTimer(plugin, () -> {
             if (isCentralTimeForClear()) {
+                SideQuestManager.clearSideQuests();
                 clearSideQuestsFromProgress();
                 SideQuestManager.clearSideQuests();
                 Bukkit.getLogger().info("Side quests cleared at specified time.");
