@@ -27,6 +27,7 @@ public class Leave implements Listener {
     public void onLeave(PlayerQuitEvent event) {
         Player player = event.getPlayer();
         playerDataManager.savePlayerData(player);
+        PlayerStats.playerStatsMap.remove(player.getUniqueId());
         GachaFight.getInstance().cancelPlayerTasks(player);
     }
 
@@ -34,6 +35,7 @@ public class Leave implements Listener {
     public void onKick(PlayerKickEvent event) {
         Player player = event.getPlayer();
         playerDataManager.savePlayerData(player);
+        PlayerStats.playerStatsMap.remove(player.getUniqueId());
         GachaFight.getInstance().cancelPlayerTasks(player);
     }
 }

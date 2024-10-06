@@ -1,5 +1,6 @@
 package me.diu.gachafight.commands;
 
+import me.diu.gachafight.GachaFight;
 import me.diu.gachafight.guides.TutorialGuideSystem;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
@@ -10,10 +11,11 @@ import org.jetbrains.annotations.NotNull;
 
 public class GuideCommand implements CommandExecutor {
 
-    private final TutorialGuideSystem guideSystem;
+    private final GachaFight plugin;
 
-    public GuideCommand(TutorialGuideSystem guideSystem) {
-        this.guideSystem = guideSystem;
+    public GuideCommand(GachaFight plugin) {
+        this.plugin = plugin;
+        plugin.getCommand("guide").setExecutor(this);
     }
 
     @Override
@@ -41,8 +43,8 @@ public class GuideCommand implements CommandExecutor {
             }
         }
 
-        // Start guiding the player to the destination
-        guideSystem.guidePlayerToLocation(player, destination);
+        // Start guiding the player     to the destination
+        plugin.getGuideSystem().guidePlayerToLocation(player, destination);
         player.sendMessage("Starting guide to: " + destination.toString());
         return true;
     }

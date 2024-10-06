@@ -92,8 +92,10 @@ public class PlayerStats {
                 "&eArmor: " + String.format("%.1f", getPlayerStats(player).getArmor()) + " (+" + String.format("%.1f", getPlayerStats(player).getGearStats().getTotalArmor()) + ")\n" +
                 "&eOffhand Stats: " + getPlayerStats(player).getGearStats().getOffhandStats().getDamage() + " damage, " +
                 getPlayerStats(player).getGearStats().getOffhandStats().getArmor() + " armor\n" +
-                "&#FFFFEA" + " Crit Chance\n" +
+                "Crit Chance: " + getPlayerStats(player).getCritChance() + "\n" +
+                "Crit Damage: " + getPlayerStats(player).getCritDmg() + "\n" +
                 "&eSpeed: " + getPlayerStats(player).getSpeed() + "\n" +
+                "Dodge: " + getPlayerStats(player).getDodge() + "\n" +
                 "&eLuck: " + getPlayerStats(player).getLuck() + "\n");
     }
 
@@ -106,7 +108,10 @@ public class PlayerStats {
                 "&eHP: " + getPlayerStats(uuid).getMaxhp() + " (+" + String.format("%.1f", getPlayerStats(uuid).getGearStats().getTotalMaxHp()) + ")\n" +
                 "&eOffhand Stats: " + getPlayerStats(uuid).getGearStats().getOffhandStats().getDamage() + " damage, " +
                 getPlayerStats(uuid).getGearStats().getOffhandStats().getArmor() + " armor\n" +
+                "Crit Chance: " + getPlayerStats(uuid).getCritChance() + "\n" +
+                "Crit Damage: " + getPlayerStats(uuid).getCritDmg() + "\n" +
                 "&eSpeed: " + getPlayerStats(uuid).getSpeed() + "\n" +
+                "Dodge: " + getPlayerStats(uuid).getDodge() + "\n" +
                 "&eLuck: " + getPlayerStats(uuid).getLuck() + "\n");
     }
 

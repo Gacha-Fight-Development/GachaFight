@@ -61,9 +61,9 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
                     case "speed":
                         return String.format("%.1f", stats.getSpeed());
                     case "critchance":
-                        return (stats.getCritChance()*100) + "%";
+                        return String.format("%.1f", stats.getCritChance()*100) + "%";
                     case "critdmg":
-                        return (stats.getCritDmg()*100) + "%";
+                        return String.format("%.0f", (stats.getCritDmg()*100)) + "%";
                     case "dodge":
                         return (stats.getDodge()*100) + "%";
 

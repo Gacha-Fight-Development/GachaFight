@@ -34,7 +34,9 @@ public class PlayerDataManager {
         PlayerStats stats;
 
         if (document != null) {
+            //Gets Default PlayerData and puts into playerStatsMap (Memory Storage)
             stats = PlayerStats.playerStatsMap.computeIfAbsent(playerId, k -> new PlayerStats(player.getUniqueId()));
+            //Overriding Default PlayerData With MongoDB Data
             stats.setLevel(document.getInteger("level", 1));
             stats.setExp(document.getDouble("exp"));
             stats.setDamage(document.getDouble("damage"));
@@ -55,9 +57,8 @@ public class PlayerDataManager {
                 stats.setDodge(document.getDouble("dodge"));
             }
             if (document.getDouble("luck") != null) {
-                stats.setDodge(document.getDouble("luck"));
+                stats.setLuck(document.getDouble("luck"));
             }
-
 
             PlayerStatsListener.updateSpecificGearStats(stats, player.getInventory().getHelmet(), PlayerArmorChangeEvent.SlotType.HEAD);
             PlayerStatsListener.updateSpecificGearStats(stats, player.getInventory().getChestplate(), PlayerArmorChangeEvent.SlotType.CHEST);
@@ -121,7 +122,11 @@ public class PlayerDataManager {
                 stats.setCritDmg(document.getDouble("critdmg"));
             }
             if (document.getDouble("dodge") != null) {
-                stats.setDodge(document.getDouble("dodge"));
+                if (document.getDouble("dodge") > 1) {
+                    stats.setDodge(0.01);
+                } else {
+                    stats.setDodge(document.getDouble("dodge"));
+                }
             }
             if (document.getDouble("luck") != null) {
                 stats.setDodge(document.getDouble("luck"));
@@ -149,14 +154,17 @@ public class PlayerDataManager {
                 document.put("critdmg", stats.getCritDmg());
                 document.put("luck", stats.getLuck());
                 document.put("speed", stats.getSpeed());
-                document.put("dodge", stats.getSpeed());
+                document.put("dodge", stats.getDodge());
                 document.put("money", stats.getMoney());
                 document.put("gem", stats.getGem());
-                collection.replaceOne(Filters.eq("uuid", player.getUniqueId().toString()), document, new ReplaceOptions().upsert(true));
+                collection.replaceOne(Filters.eq("uuid", player.getUniqueId().toString()),
+                        document, new ReplaceOptions().upsert(true));
                 plugin.getLogger().info("Saved data for player: " + player.getName());
+                // data inside playerStatMap will be deleted when player leaves
+                // via Leave.java (package: gachafight.listeners)
             }
         } else {
-            plugin.getLogger().warning("Failed to save data: PlayerStats not found for player " + player.getName());
+            System.out.println("Saved data for player: " + player.getName());
         }
     }
 
@@ -169,13 +177,16 @@ public class PlayerDataManager {
                 document.put("name", playerName.toLowerCase());
                 document.put("level", stats.getLevel());
                 document.put("exp", stats.getExp());
+                document.put("hp", stats.getMaxhp());
                 document.put("damage", stats.getDamage());
                 document.put("armor", stats.getArmor());
-                document.put("hp", stats.getMaxhp());
+                document.put("critchance", stats.getCritChance());
+                document.put("critdmg", stats.getCritDmg());
                 document.put("luck", stats.getLuck());
+                document.put("speed", stats.getSpeed());
+                document.put("dodge", stats.getDodge());
                 document.put("money", stats.getMoney());
                 document.put("gem", stats.getGem());
-                document.put("speed", stats.getSpeed());
                 collection.replaceOne(Filters.eq("uuid", playerUUID.toString()), document, new ReplaceOptions().upsert(true));
                 plugin.getLogger().info("Saved data for player: " + playerName);
             }

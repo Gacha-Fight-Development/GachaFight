@@ -1,16 +1,22 @@
 package me.diu.gachafight.shop.overseer.listeners;
 
+import lombok.NonNull;
 import me.diu.gachafight.playerstats.PlayerStats;
 import me.diu.gachafight.shop.overseer.gui.OverseerShopGUI;
 import me.diu.gachafight.utils.Calculations;
 import me.diu.gachafight.utils.ColorChat;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.checkerframework.checker.nullness.qual.RequiresNonNull;
+import org.jetbrains.annotations.NotNull;
 
 public class OverseerShopClickListener implements Listener {
 
@@ -53,10 +59,6 @@ public class OverseerShopClickListener implements Listener {
                     increaseCritDamage(player);
                     break;
                 case SUGAR:
-                    if (!player.hasPermission("gachafight.glowstone")) {
-                        player.sendMessage("Not Implemented yet");
-                        return;
-                    }
                     increaseSpeed(player);
                     break;
                 case LIGHT_GRAY_DYE:
@@ -77,11 +79,11 @@ public class OverseerShopClickListener implements Listener {
     // Stub methods for increasing stats
     private void increaseHP(Player player) {
         PlayerStats stats = PlayerStats.getPlayerStats(player);
-        double cost = Calculations.overseerHPCost(stats.getHp());
+        double cost = Calculations.overseerHPCost(stats.getMaxhp());
         if (stats.getMoney() >= cost) {
             stats.setMoney(stats.getMoney() - cost);
             stats.setMaxhp(stats.getMaxhp()+0.1);
-            player.sendMessage("HP increased!");
+            player.sendMessage(MiniMessage.miniMessage().deserialize("<!i><green>+ <gold>0.1 <color:#FB035F>❤"));
         } else {
             player.sendMessage(ColorChat.chat("&eNot Enough Money"));
         }
@@ -93,7 +95,7 @@ public class OverseerShopClickListener implements Listener {
         if (stats.getMoney() >= cost) {
             stats.setMoney(stats.getMoney() - cost);
             stats.setDamage(stats.getDamage()+0.1);
-            player.sendMessage(ColorChat.chat("&a+ &&cDamage"));
+            player.sendMessage(MiniMessage.miniMessage().deserialize("<!i><green>+ <gold>0.1 <red>🗡"));
         } else {
             player.sendMessage(ColorChat.chat("&eNot Enough Money"));
         }
@@ -107,7 +109,7 @@ public class OverseerShopClickListener implements Listener {
         if (stats.getMoney() >= cost) {
             stats.setMoney(stats.getMoney() - cost);
             stats.setArmor(stats.getArmor()+0.1);
-            player.sendMessage("Armor increased!");
+            player.sendMessage(MiniMessage.miniMessage().deserialize("<!i><green>+ <gold>0.1 <green>🛡"));
         } else {
             player.sendMessage(ColorChat.chat("&eNot Enough Money"));
         }
@@ -118,8 +120,8 @@ public class OverseerShopClickListener implements Listener {
         double cost = Calculations.overseerCritChanceCost(stats.getCritChance());
         if (stats.getMoney() >= cost) {
             stats.setMoney(stats.getMoney() - cost);
-            stats.setArmor(stats.getArmor()+0.1);
-            player.sendMessage("Crit Rate increased!");
+            stats.setCritChance(stats.getCritChance()+0.001);
+            player.sendMessage(MiniMessage.miniMessage().deserialize("<!i><green>+ <gold>1% <color:#FFA500>🌠"));
         } else {
             player.sendMessage(ColorChat.chat("&eNot Enough Money"));
         }
@@ -127,11 +129,11 @@ public class OverseerShopClickListener implements Listener {
 
     private void increaseCritDamage(Player player) {
         PlayerStats stats = PlayerStats.getPlayerStats(player);
-        double cost = Calculations.overseerCritChanceCost(stats.getCritDmg());
+        double cost = Calculations.overseerCritDmgCost(stats.getCritDmg());
         if (stats.getMoney() >= cost) {
             stats.setMoney(stats.getMoney() - cost);
-            stats.setArmor(stats.getArmor()+0.1);
-            player.sendMessage("Crit Damage increased!");
+            stats.setCritDmg(stats.getCritDmg()+0.01);
+            player.sendMessage(MiniMessage.miniMessage().deserialize("<!i><green>+ <gold>0.1% <color:#9B870C>💥"));
         } else {
             player.sendMessage(ColorChat.chat("&eNot Enough Money"));
         }
@@ -139,11 +141,12 @@ public class OverseerShopClickListener implements Listener {
 
     private void increaseSpeed(Player player) {
         PlayerStats stats = PlayerStats.getPlayerStats(player);
-        double cost = Calculations.overseerCritChanceCost(stats.getSpeed());
+        double cost = Calculations.overseerSpeedCost(stats.getSpeed());
         if (stats.getMoney() >= cost) {
             stats.setMoney(stats.getMoney() - cost);
-            stats.setArmor(stats.getSpeed()+0.1);
-            player.sendMessage("Speed increased!");
+            stats.setSpeed(stats.getSpeed()+0.1);
+            player.sendMessage(MiniMessage.miniMessage().deserialize("<!i><green>+ <gold>0.1 <white>⏩"));
+            player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(stats.getSpeed()*0.1);
         } else {
             player.sendMessage(ColorChat.chat("&eNot Enough Money"));
         }
@@ -151,11 +154,15 @@ public class OverseerShopClickListener implements Listener {
 
     private void increaseDodgeChance(Player player) {
         PlayerStats stats = PlayerStats.getPlayerStats(player);
-        double cost = Calculations.overseerCritChanceCost(stats.getDodge());
+        double cost = Calculations.overseerDodgeCost(stats.getDodge());
+        if (stats.getDodge() >= 0.3) {
+            player.sendMessage(ColorChat.chat("&6Dodge Maxed (30%)"));
+            return;
+        }
         if (stats.getMoney() >= cost) {
             stats.setMoney(stats.getMoney() - cost);
-            stats.setArmor(stats.getArmor()+0.1);
-            player.sendMessage("Crit Rate increased!");
+            stats.setDodge(stats.getDodge()+0.01);
+            player.sendMessage(MiniMessage.miniMessage().deserialize("<!i><green>+ <gold>1% <gray>👻"));
         } else {
             player.sendMessage(ColorChat.chat("&eNot Enough Money"));
         }

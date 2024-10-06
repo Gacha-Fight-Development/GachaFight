@@ -108,6 +108,18 @@ public class AdminPlayerDataCommand implements CommandExecutor {
                         case "hp":
                             stats.setMaxhp(stats.getMaxhp() + doubleValue);
                             break;
+                        case "speed":
+                            stats.setSpeed(stats.getSpeed() + doubleValue);
+                            break;
+                        case "critchance":
+                            stats.setCritChance(stats.getCritChance() + doubleValue);
+                            break;
+                        case "critdmg":
+                            stats.setCritDmg(stats.getCritDmg() + doubleValue);
+                            break;
+                        case "dodge":
+                            stats.setDodge(stats.getDodge() + doubleValue);
+                            break;
                         case "luck":
                             stats.setLuck(stats.getLuck() + intValue);
                             break;
@@ -152,6 +164,18 @@ public class AdminPlayerDataCommand implements CommandExecutor {
                             break;
                         case "hp":
                             stats.setMaxhp(intValue);
+                            break;
+                        case "speed":
+                            stats.setSpeed(doubleValue);
+                            break;
+                        case "critchance":
+                            stats.setCritChance(doubleValue);
+                            break;
+                        case "critdmg":
+                            stats.setCritDmg(doubleValue);
+                            break;
+                        case "dodge":
+                            stats.setDodge(doubleValue);
                             break;
                         case "luck":
                             stats.setLuck(intValue);

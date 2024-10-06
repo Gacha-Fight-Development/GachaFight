@@ -527,7 +527,6 @@ public class EquipmentSpecialistListener implements Listener {
                         } else {
                             costForReroll = 10 * Math.pow(ExtractLore.extractLevelFromName(slot10.getItemMeta().getDisplayName()), (1+(rarity*0.45)));
                         }
-                        costForReroll *= 0.5;
                         greenCheck = createCustomItem(Material.PAPER, "§aConfirm", 10109, "§aCost: §6" + String.format("%.2f",costForReroll));
                     } else {
                         costForLevel = 25 * Math.pow( PlayerStats.getPlayerStats(player).getLevel(), (1+(rarity*0.67)));

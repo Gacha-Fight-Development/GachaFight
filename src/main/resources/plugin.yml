@@ -52,6 +52,8 @@ commands:
     aliases: rq
   kick:
     usage: /kick <player> <reason>
+  guide:
+    usage: /guide <player> <x> <y> <z>
 
 libraries:
   - org.mongodb:mongodb-driver-sync:5.1.2
