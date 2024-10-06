@@ -6,6 +6,7 @@ import me.diu.gachafight.commands.tabs.AdminPlayerDataTabCompleter;
 import me.diu.gachafight.combat.DamageListener;
 import me.diu.gachafight.commands.tabs.ShopTabCompleter;
 import me.diu.gachafight.dungeon.DungeonGUI;
+import me.diu.gachafight.guides.TutorialGuideSystem;
 import me.diu.gachafight.listeners.*;
 import me.diu.gachafight.playerstats.PlayerDataManager;
 import me.diu.gachafight.playerstats.PlayerStats;
@@ -69,6 +70,7 @@ public final class GachaFight extends JavaPlugin implements Listener {
     private QuestManager questManager;
     private QuestGUI questGUI;
     private BuyItemManager buyItemManager;
+    private TutorialGuideSystem guideSystem;
     @Override
     public void onEnable() {
         this.instance = this;
@@ -93,6 +95,7 @@ public final class GachaFight extends JavaPlugin implements Listener {
         this.furnitureDataManager = new FurnitureDataManager(this);
         this.questGUI = new QuestGUI(questManager);
         this.buyItemManager = new BuyItemManager(this);
+        this.guideSystem = new TutorialGuideSystem(this);
         registerEvents();
         registerCommands();
         loadAllPlayerData(diContainer);
@@ -137,9 +140,6 @@ public final class GachaFight extends JavaPlugin implements Listener {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-    }
-    public void onLoad() {
-
     }
     private void removeAllDisplay() {
         if (Blocks.gachaChest != null) {
@@ -186,6 +186,7 @@ public final class GachaFight extends JavaPlugin implements Listener {
         new ShopTabCompleter(this);
         new RefreshQuestCommand(this);
         new KickCommand(this);
+        new GuideCommand(this);
     }
 
     private void registerEvents() {

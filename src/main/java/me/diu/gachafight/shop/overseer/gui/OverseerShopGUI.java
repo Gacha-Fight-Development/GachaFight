@@ -35,7 +35,7 @@ public class OverseerShopGUI {
         }
 
         // Create the items with the cost in the lore
-        inv.setItem(0+10, createStatItem(Material.RED_DYE, "<!i><red>HP", Calculations.overseerHPCost(stats.getHp())));
+        inv.setItem(0+10, createStatItem(Material.RED_DYE, "<!i><red>HP", Calculations.overseerHPCost(stats.getMaxhp())));
         inv.setItem(1+10, createStatItem(Material.ORANGE_DYE, "<!i><gold>Damage", Calculations.overseerDamageCost(stats.getDamage())));
         inv.setItem(2+10, createStatItem(Material.LIME_DYE, "<!i><green>Armor", Calculations.overseerArmorCost(stats.getArmor())));
         inv.setItem(3+10, createStatItem(Material.YELLOW_DYE, "<!i><yellow>Crit Rate", Calculations.overseerCritChanceCost(stats.getCritChance())));
