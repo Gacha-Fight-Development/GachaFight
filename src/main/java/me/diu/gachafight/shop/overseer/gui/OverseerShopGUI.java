@@ -44,7 +44,7 @@ public class OverseerShopGUI {
         inv.setItem(6+10, createStatItem(Material.LIGHT_GRAY_DYE, "<gray><!i>Dodge Chance", Calculations.overseerDodgeCost(stats.getDodge())));
 
         // Optional: Add a 'back' button or other options in other slots (e.g., a compass)
-        inv.setItem(2+20, EquipmentSpecialistListener.createCustomItem(Material.COMPASS, "§dOverseer Guide", 1, "§6Increase Stats Here.")); // No cost for back
+        inv.setItem(2+20, EquipmentSpecialistListener.createCustomItem(Material.COMPASS, "§dOverseer Guide", 1, "§6Increase Stats Here.", "§6No Charge Backs.")); // No cost for back
 
         // Open the GUI for the player
         player.openInventory(inv);

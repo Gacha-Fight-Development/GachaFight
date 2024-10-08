@@ -45,27 +45,15 @@ public class OverseerShopClickListener implements Listener {
                     increaseArmor(player);
                     break;
                 case YELLOW_DYE:
-                    if (!player.hasPermission("gachafight.glowstone")) {
-                        player.sendMessage("Not Implemented yet");
-                        return;
-                    }
                     increaseCritChance(player);
                     break;
                 case GLOWSTONE_DUST:
-                    if (!player.hasPermission("gachafight.glowstone")) {
-                        player.sendMessage("Not Implemented yet");
-                        return;
-                    }
                     increaseCritDamage(player);
                     break;
                 case SUGAR:
                     increaseSpeed(player);
                     break;
                 case LIGHT_GRAY_DYE:
-                    if (!player.hasPermission("gachafight.glowstone")) {
-                        player.sendMessage("Not Implemented yet");
-                        return;
-                    }
                     increaseDodgeChance(player);
                     break;
                 case COMPASS:
@@ -121,7 +109,7 @@ public class OverseerShopClickListener implements Listener {
         if (stats.getMoney() >= cost) {
             stats.setMoney(stats.getMoney() - cost);
             stats.setCritChance(stats.getCritChance()+0.001);
-            player.sendMessage(MiniMessage.miniMessage().deserialize("<!i><green>+ <gold>1% <color:#FFA500>🌠"));
+            player.sendMessage(MiniMessage.miniMessage().deserialize("<!i><green>+ <gold>0.1% <color:#FFA500>🌠"));
         } else {
             player.sendMessage(ColorChat.chat("&eNot Enough Money"));
         }
@@ -133,7 +121,7 @@ public class OverseerShopClickListener implements Listener {
         if (stats.getMoney() >= cost) {
             stats.setMoney(stats.getMoney() - cost);
             stats.setCritDmg(stats.getCritDmg()+0.01);
-            player.sendMessage(MiniMessage.miniMessage().deserialize("<!i><green>+ <gold>0.1% <color:#9B870C>💥"));
+            player.sendMessage(MiniMessage.miniMessage().deserialize("<!i><green>+ <gold>1% <color:#9B870C>💥"));
         } else {
             player.sendMessage(ColorChat.chat("&eNot Enough Money"));
         }
@@ -144,8 +132,8 @@ public class OverseerShopClickListener implements Listener {
         double cost = Calculations.overseerSpeedCost(stats.getSpeed());
         if (stats.getMoney() >= cost) {
             stats.setMoney(stats.getMoney() - cost);
-            stats.setSpeed(stats.getSpeed()+0.1);
-            player.sendMessage(MiniMessage.miniMessage().deserialize("<!i><green>+ <gold>0.1 <white>⏩"));
+            stats.setSpeed(stats.getSpeed()+0.01);
+            player.sendMessage(MiniMessage.miniMessage().deserialize("<!i><green>+ <gold>1% <white>⏩"));
             player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(stats.getSpeed()*0.1);
         } else {
             player.sendMessage(ColorChat.chat("&eNot Enough Money"));
@@ -161,8 +149,8 @@ public class OverseerShopClickListener implements Listener {
         }
         if (stats.getMoney() >= cost) {
             stats.setMoney(stats.getMoney() - cost);
-            stats.setDodge(stats.getDodge()+0.01);
-            player.sendMessage(MiniMessage.miniMessage().deserialize("<!i><green>+ <gold>1% <gray>👻"));
+            stats.setDodge(stats.getDodge()+0.001);
+            player.sendMessage(MiniMessage.miniMessage().deserialize("<!i><green>+ <gold>0.1% <gray>👻"));
         } else {
             player.sendMessage(ColorChat.chat("&eNot Enough Money"));
         }

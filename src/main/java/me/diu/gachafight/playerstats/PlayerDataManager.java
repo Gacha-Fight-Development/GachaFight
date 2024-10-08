@@ -10,6 +10,7 @@ import me.diu.gachafight.di.ServiceLocator;
 import me.diu.gachafight.services.MongoService;
 import org.bson.Document;
 import org.bukkit.Bukkit;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -66,7 +67,8 @@ public class PlayerDataManager {
             PlayerStatsListener.updateSpecificGearStats(stats, player.getInventory().getBoots(), PlayerArmorChangeEvent.SlotType.FEET);
             PlayerStatsListener.updateOffhandStats(stats, player.getInventory().getItemInOffHand());
             PlayerStatsListener.updateWeaponStats(stats, player.getInventory().getItemInMainHand());
-
+            stats.setHp(stats.getMaxhp() + stats.getGearStats().getTotalMaxHp());
+            player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(stats.getSpeed()*0.1);
             plugin.getLogger().info("Loaded data for player: " + player.getName());
         } else {
             stats = new PlayerStats(player.getUniqueId());
@@ -141,7 +143,7 @@ public class PlayerDataManager {
         UUID playerId = player.getUniqueId();
         PlayerStats stats = PlayerStats.playerStatsMap.get(playerId);
         if (stats != null) {
-            if (stats.getMoney() >= 1) {
+            if (stats.getMoney() >= 1 || stats.getGem() >= 1) {
                 Document document = new Document();
                 document.put("uuid", player.getUniqueId().toString());
                 document.put("name", player.getName().toLowerCase());
@@ -171,7 +173,7 @@ public class PlayerDataManager {
 
     public void saveOfflinePlayerData(UUID playerUUID, String playerName, PlayerStats stats) {
         if (stats != null) {
-            if (stats.getMoney() >= 1) {
+            if (stats.getMoney() >= 1 || stats.getGem() >= 1) {
                 Document document = new Document();
                 document.put("uuid", playerUUID.toString());
                 document.put("name", playerName.toLowerCase());

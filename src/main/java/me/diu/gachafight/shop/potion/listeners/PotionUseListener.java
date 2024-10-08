@@ -27,7 +27,7 @@ public class PotionUseListener implements Listener {
             Player player = event.getPlayer();
 
             // Check if the item is a potion and has the name "Small HP Potion"
-            if (item.getType() == Material.LEATHER_HORSE_ARMOR && item.hasItemMeta()) {
+            if (item.getType() == Material.LEATHER_HORSE_ARMOR && item.hasItemMeta() && player.getCooldown(Material.LEATHER_HORSE_ARMOR) == 0) {
                 ItemMeta meta = item.getItemMeta();
                 if (meta.hasDisplayName() && meta.getDisplayName().contains("Small HP Potion")) {
                     useHPPotion(player, 6);
@@ -48,6 +48,9 @@ public class PotionUseListener implements Listener {
     public void useHPPotion(Player player, int heal) {
         PlayerStats playerStats = PlayerStats.getPlayerStats(player);
         double newHp = Math.min(playerStats.getHp() + heal, playerStats.getMaxhp());
+        if (newHp > playerStats.getMaxhp()+playerStats.getGearStats().getTotalMaxHp()) {
+            playerStats.setHp(playerStats.getMaxhp()+playerStats.getGearStats().getTotalMaxHp());
+        }
         playerStats.setHp(newHp);  // Sync health with hearts
         playerStats.updateActionbar(player);  // Update actionbar with current health
         player.sendMessage(ColorChat.chat("&a+ &c"+ heal+"❤"));

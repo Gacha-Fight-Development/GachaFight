@@ -1,16 +1,15 @@
 package me.diu.gachafight.gacha.managers;
 
 import me.diu.gachafight.GachaFight;
+import me.diu.gachafight.commands.GuideCommand;
+import me.diu.gachafight.guides.TutorialGuideSystem;
 import me.diu.gachafight.playerstats.PlayerStats;
 import me.diu.gachafight.gacha.gui.RaritySelectionGUI;
 import me.diu.gachafight.quest.Quest;
 import me.diu.gachafight.quest.managers.QuestManager;
 import me.diu.gachafight.quest.objectives.KeyOpenObjective;
 import me.diu.gachafight.quest.utils.QuestUtils;
-import me.diu.gachafight.utils.Calculations;
-import me.diu.gachafight.utils.ColorChat;
-import me.diu.gachafight.utils.ExtractLore;
-import me.diu.gachafight.utils.SellPriceCalculator;
+import me.diu.gachafight.utils.*;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
@@ -20,11 +19,13 @@ import net.luckperms.api.model.user.User;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -60,12 +61,12 @@ public class GachaManager {
         if (reward != null) {
             // Clone the item to avoid modifying the loot table
             ItemStack customizedReward = reward.clone();
-            if (isCrystal(customizedReward)) {
+            if (isCrystal(customizedReward)) { //check for crystal
                 applyCrystalBoost(player, customizedReward);
-            } else if (isPotion(customizedReward)) {
+            } else if (isPotion(customizedReward)) { //check for potion
                 player.getInventory().addItem(customizedReward);
                 player.sendMessage(ColorChat.chat("&a+ &6Potion"));
-            } else {
+            } else { //Equipment
                 List<String> lore = customizedReward.getItemMeta().getLore();
                 List<Double> statPercentages = new ArrayList<>();
                 double minStatDamagePDC = 0;
@@ -81,14 +82,12 @@ public class GachaManager {
                         double maxStat = ExtractLore.findMaxStat(line, player, true, true, getRarityMultiplier(rarityIndex));
                         minStatDamagePDC = ExtractLore.findMinStat(line, player, false, false, null);
                         maxStatDamagePDC = ExtractLore.findMaxStat(line, player, false, false, null);
-                        System.out.println("Stats: " + minStat + " " + maxStat);
                         statPercentages.add(calculatePercentage(ExtractLore.getDamageFromLore(customizedReward.getLore()), minStat, maxStat));
                     } else if (line.contains("Armor:")) {
                         double minStat = ExtractLore.findMinStat(line, player, true, true, getRarityMultiplier(rarityIndex));
                         double maxStat = ExtractLore.findMaxStat(line, player,  true, true, getRarityMultiplier(rarityIndex));
                         minStatArmorPDC = ExtractLore.findMinStat(line, player,  false, false, null);
                         maxStatArmorPDC = ExtractLore.findMaxStat(line, player,  false, false, null);
-                        System.out.println("Stats: " + minStat + " " + maxStat);
                         statPercentages.add(calculatePercentage(ExtractLore.getArmorFromLore(customizedReward.getLore()), minStat, maxStat));
                     } else if (line.contains("HP:")) {
                         double minStat = ExtractLore.findMinStat(line, player,  true, true, getRarityMultiplier(rarityIndex));
@@ -173,6 +172,20 @@ public class GachaManager {
             }
         } else {
             Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "si give 991 1 " + player.getName());
+        }
+        // ==========TUTORIAL============
+        if (player.hasPermission("gacha.tutorial")) {
+            player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
+            Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "lp user " + player.getName() + " permission unset gacha.tutorial");
+            Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "lp user " + player.getName() + " permission set gacha.tutorial.1");
+            TutorialBossBar.showPostGachaChestBossBar(player);
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    plugin.getGuideSystem().guidePlayerToLocation(player, GuideCommand.preSetLocations.get("tutorialmushroom"));
+                    player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
+                }
+            }.runTaskLater(plugin, 85L*2);
         }
     }
 

@@ -308,5 +308,33 @@ public class ExtractLore {
         return cleanedDisplayName;
     }
 
+    public static String[] extractHealingAndDuration(String lore) {
+        // Remove Minecraft color codes, like §7
+        String cleanedLore = lore.replaceAll("§[0-9a-fk-or]", "");
+
+        // Use regular expressions to capture the healing amount and duration
+        String healingAmount = "";
+        String duration = "";
+
+        // Pattern to match the healing amount (e.g., 0.5)
+        Pattern healingPattern = java.util.regex.Pattern.compile("([0-9]*\\.?[0-9]+)HP/s");
+        Matcher healingMatcher = healingPattern.matcher(cleanedLore);
+
+        // Pattern to match the duration (e.g., 5)
+        Pattern durationPattern = java.util.regex.Pattern.compile("\\((\\d+)s\\)");
+        Matcher durationMatcher = durationPattern.matcher(cleanedLore);
+
+        // If matches are found, extract values
+        if (healingMatcher.find()) {
+            healingAmount = healingMatcher.group(1);  // Get the first group (0.5)
+        }
+        if (durationMatcher.find()) {
+            duration = durationMatcher.group(1);  // Get the first group (5)
+        }
+
+        // Return the result as a string array [healingAmount, duration]
+        return new String[]{healingAmount, duration};
+    }
+
 
 }

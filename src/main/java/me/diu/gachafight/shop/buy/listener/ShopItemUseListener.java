@@ -9,6 +9,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.NotNull;
 
 public class ShopItemUseListener implements Listener {
 
@@ -20,7 +21,7 @@ public class ShopItemUseListener implements Listener {
     public void onItemUse(PlayerInteractEvent event) {
         Player player = event.getPlayer();
         ItemStack item = event.getItem();
-        if (item.getType().equals(Material.IRON_INGOT) && item.getItemMeta().getCustomModelData() == 10003) {
+        if (item != null && item.getType().equals(Material.IRON_INGOT) && item.getItemMeta().getCustomModelData() == 10003) {
             event.setCancelled(true);
             if (item.getItemMeta().getDisplayName().contains(ColorChat.chat("&e/AutoSellGacha"))) {
                 Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(),"lp user " + player.getName() + " permission set " + "gacha.autosell");

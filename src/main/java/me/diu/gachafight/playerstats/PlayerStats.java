@@ -65,54 +65,40 @@ public class PlayerStats {
         return playerStatsMap.get(uuid);
     }
 
-    public void addStat(String stat, Player player) {
-        if (player.isOnline()) {
-            if (stat.equalsIgnoreCase("damage")) {
-                this.damage++;
-            } else if (stat.equalsIgnoreCase("hp")) {
-                this.maxhp++;
-            } else if (stat.equalsIgnoreCase("armor")) {
-                this.armor++;
-            } else if (stat.equalsIgnoreCase("level")) {
-                this.level++;
-            } else if (stat.equalsIgnoreCase("luck")) {
-                this.luck++;
-//            } else if (stat.equalsIgnoreCase("wisdom")) {
-//                this.wisdom++;
-            }
-        }
-    }
-
     public String showStats(Player player) {
+        PlayerStats stats = getPlayerStats(player);
         return ColorChat.chat("&aStats:\n" +
-                "&eLevel: " + getPlayerStats(player).getLevel() + "\n" +
-                "&eExp: " + String.format("%.2f", getPlayerStats(player).getExp()) + "/" + getPlayerStats(player).getRequiredExp() + "\n" +
-                "&eHP: " + getPlayerStats(player).getMaxhp() + " (+" + String.format("%.1f", getPlayerStats(player).getGearStats().getTotalMaxHp()) + ")\n" +
-                "&eStrength: " + String.format("%.1f", getPlayerStats(player).getDamage()) + " (+" + String.format("%.1f", getPlayerStats(player).getWeaponStats().getDamage()) + ")\n" +
-                "&eArmor: " + String.format("%.1f", getPlayerStats(player).getArmor()) + " (+" + String.format("%.1f", getPlayerStats(player).getGearStats().getTotalArmor()) + ")\n" +
-                "&eOffhand Stats: " + getPlayerStats(player).getGearStats().getOffhandStats().getDamage() + " damage, " +
-                getPlayerStats(player).getGearStats().getOffhandStats().getArmor() + " armor\n" +
-                "Crit Chance: " + getPlayerStats(player).getCritChance() + "\n" +
-                "Crit Damage: " + getPlayerStats(player).getCritDmg() + "\n" +
-                "&eSpeed: " + getPlayerStats(player).getSpeed() + "\n" +
-                "Dodge: " + getPlayerStats(player).getDodge() + "\n" +
-                "&eLuck: " + getPlayerStats(player).getLuck() + "\n");
+                "&eLevel: " + stats.getLevel() + "\n" +
+                "&eExp: " + String.format("%.2f", stats.getExp()) + "/" + stats.getRequiredExp() + "\n" +
+                "&eHP: " + String.format("%.0f", stats.getMaxhp()) + " (+" + String.format("%.1f", stats.getGearStats().getTotalMaxHp()) + ")\n" +
+                "&eStrength: " + String.format("%.1f", stats.getDamage()) + " (+" + String.format("%.1f", stats.getWeaponStats().getDamage()) + ")\n" +
+                "&eArmor: " + String.format("%.1f", stats.getArmor()) + " (+" + String.format("%.1f", stats.getGearStats().getTotalArmor()) + ")\n" +
+                "&eOffhand Stats: " + stats.getGearStats().getOffhandStats().getDamage() + " damage, " +
+                stats.getGearStats().getOffhandStats().getArmor() + " armor\n" +
+                "Crit Chance: " + stats.getCritChance() + "\n" +
+                "Crit Damage: " + stats.getCritDmg() + "\n" +
+                "&eSpeed: " + String.format("%.2f", stats.getSpeed()) + "\n" +
+                "Dodge: " + stats.getDodge() + "\n" +
+                "&eLuck: " + stats.getLuck() + "\n" +
+                "Money: " + String.format("%.2f", stats.getMoney()) + " Gem: " + stats.getGem());
     }
 
     public String showStats(UUID uuid) {
+        PlayerStats stats = getPlayerStats(uuid);
         return ColorChat.chat("&aStats:\n" +
-                "&eLevel: " + getPlayerStats(uuid).getLevel() + "\n" +
-                "&eExp: " + String.format("%.2f", getPlayerStats(uuid).getExp()) + "/" + getPlayerStats(uuid).getRequiredExp() + "\n" +
-                "&eStrength: " + String.format("%.1f", getPlayerStats(uuid).getDamage()) + " (+" + String.format("%.1f", getPlayerStats(uuid).getWeaponStats().getDamage()) + ")\n" +
-                "&eArmor: " + String.format("%.1f", getPlayerStats(uuid).getArmor()) + " (+" + String.format("%.1f", getPlayerStats(uuid).getGearStats().getTotalArmor()) + ")\n" +
-                "&eHP: " + getPlayerStats(uuid).getMaxhp() + " (+" + String.format("%.1f", getPlayerStats(uuid).getGearStats().getTotalMaxHp()) + ")\n" +
-                "&eOffhand Stats: " + getPlayerStats(uuid).getGearStats().getOffhandStats().getDamage() + " damage, " +
-                getPlayerStats(uuid).getGearStats().getOffhandStats().getArmor() + " armor\n" +
-                "Crit Chance: " + getPlayerStats(uuid).getCritChance() + "\n" +
-                "Crit Damage: " + getPlayerStats(uuid).getCritDmg() + "\n" +
-                "&eSpeed: " + getPlayerStats(uuid).getSpeed() + "\n" +
-                "Dodge: " + getPlayerStats(uuid).getDodge() + "\n" +
-                "&eLuck: " + getPlayerStats(uuid).getLuck() + "\n");
+                "&eLevel: " + stats.getLevel() + "\n" +
+                "&eExp: " + String.format("%.2f", stats.getExp()) + "/" + stats.getRequiredExp() + "\n" +
+                "&eStrength: " + String.format("%.1f", stats.getDamage()) + " (+" + String.format("%.1f", stats.getWeaponStats().getDamage()) + ")\n" +
+                "&eArmor: " + String.format("%.1f", stats.getArmor()) + " (+" + String.format("%.1f", stats.getGearStats().getTotalArmor()) + ")\n" +
+                "&eHP: " + stats.getMaxhp() + " (+" + String.format("%.1f", stats.getGearStats().getTotalMaxHp()) + ")\n" +
+                "&eOffhand Stats: " + stats.getGearStats().getOffhandStats().getDamage() + " damage, " +
+                stats.getGearStats().getOffhandStats().getArmor() + " armor\n" +
+                "Crit Chance: " + stats.getCritChance() + "\n" +
+                "Crit Damage: " + stats.getCritDmg() + "\n" +
+                "&eSpeed: " + stats.getSpeed() + "\n" +
+                "Dodge: " + stats.getDodge() + "\n" +
+                "&eLuck: " + stats.getLuck() + "\n" +
+                "Money: " + String.format("%.2f", stats.getMoney()) + " Gem: " + stats.getGem());
     }
 
     public void addExp(double amount, Player player) {

@@ -184,8 +184,9 @@ public class QuestGUI {
         if (meta != null) {
             meta.setDisplayName("§eQuest Info");
             meta.setLore(List.of(
-                    "§7Navigate to quests",
-                    "§7or check your progress."
+                    "§7Quests automatically starts when you open this GUI.",
+                    "§7Quest Progress will be displayed in chat.",
+                    "§7Daily Quests Gives Gems!"
             ));
             compass.setItemMeta(meta);
         }

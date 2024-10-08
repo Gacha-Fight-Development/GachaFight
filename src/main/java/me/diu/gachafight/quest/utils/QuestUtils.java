@@ -186,11 +186,10 @@ public class QuestUtils {
         int questId = quest.getId();
         Integer progress = QuestManager.loadQuestProgress(player, questId); // Load the player's current progress
 
-        if (progress == null || progress == 0) {
-            return "Not started"; // The player hasn't started the quest yet
-        }
-
         int requiredAmount = quest.getObjective().getAmount(); // Get the required amount for completion
+        if (progress == null || progress == 0) {
+            return "0/" + requiredAmount; // The player hasn't started the quest yet
+        }
 
         // Return progress in the format "currentProgress/requiredAmount"
         return progress + "/" + requiredAmount;
