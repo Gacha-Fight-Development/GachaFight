@@ -4,6 +4,7 @@ import lombok.Getter;
 import me.diu.gachafight.commands.*;
 import me.diu.gachafight.commands.tabs.AdminPlayerDataTabCompleter;
 import me.diu.gachafight.combat.DamageListener;
+import me.diu.gachafight.commands.tabs.GuideTabCompleter;
 import me.diu.gachafight.commands.tabs.ShopTabCompleter;
 import me.diu.gachafight.dungeon.DungeonGUI;
 import me.diu.gachafight.guides.TutorialGuideSystem;
@@ -39,6 +40,7 @@ import me.diu.gachafight.shop.potion.listeners.PotionShopListener;
 import me.diu.gachafight.shop.potion.managers.PotionItemManager;
 import me.diu.gachafight.utils.ColorChat;
 import me.diu.gachafight.utils.FurnitureDataManager;
+import me.diu.gachafight.utils.TextDisplayUtils;
 import net.luckperms.api.LuckPerms;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -101,6 +103,8 @@ public final class GachaFight extends JavaPlugin implements Listener {
         loadAllPlayerData(diContainer);
         Blocks.spawnGachaChest();
         Blocks.spawnTutorialGachaChest();
+        Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), "minecraft:kill @e[type=minecraft:text_display]");
+        Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), "citizens reload");
         furnitureDataManager.loadMissingFurniture();
         if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
             PlaceholderAPIHook.registerHook();
@@ -112,6 +116,7 @@ public final class GachaFight extends JavaPlugin implements Listener {
                     Blocks.gachaChest.remove();
                 }
                 Blocks.spawnGachaChest();
+                guideSystem.cleanupAll();
             }
         }.runTaskTimer(this, 6000, 4000);
         new BukkitRunnable() {
@@ -123,18 +128,22 @@ public final class GachaFight extends JavaPlugin implements Listener {
                 }
             }
         }.runTaskTimerAsynchronously(this, 0L, 20L);
+        Bukkit.broadcastMessage(ColorChat.chat("&b&lReload Complete"));
+        Bukkit.broadcastMessage(ColorChat.chat("&aFull Heal from Reload"));
     }
 
     @Override
     public void onDisable() {
         // Plugin shutdown logic
+        Bukkit.broadcastMessage(ColorChat.chat("&b&lGachaFight Reloading..."));
         removeAllDisplay();
         playerDataManager.saveAll();
         playerDataManager.deleteCache();
+        guideSystem.cleanupAll();
+        TextDisplayUtils.removeAllDisplays();
         cancelAllPlayerTasks();
         diContainer.shutdown();
         saveConfig();
-        Bukkit.broadcastMessage(ColorChat.chat("&b&lGachaFight Reloading..."));
         try {
             databaseManager.disconnect();
         } catch (SQLException e) {
@@ -160,6 +169,7 @@ public final class GachaFight extends JavaPlugin implements Listener {
             PlayerStats stats = playerDataManager.getPlayerStats(player.getUniqueId());
             int scoreboardTask = Bukkit.getScheduler().runTaskTimer(GachaFight.getInstance(), () -> scoreboard.setScoreBoard(player), 20, 60).getTaskId();
             ((GachaFight) Bukkit.getPluginManager().getPlugin("GachaFight")).getScoreboardTasks().put(player, scoreboardTask);
+            PlayerZoneListener.startRewardingPlayer(player);
         }
     }
 
@@ -187,6 +197,8 @@ public final class GachaFight extends JavaPlugin implements Listener {
         new RefreshQuestCommand(this);
         new KickCommand(this);
         new GuideCommand(this);
+        new GuideTabCompleter(this);
+        new AFKCommand(this);
     }
 
     private void registerEvents() {
@@ -211,6 +223,8 @@ public final class GachaFight extends JavaPlugin implements Listener {
         new QuestClickListener(this);
         new OverseerManager(this);
         new ShopItemUseListener(this);
+        new FoodConsumeListener(this);
+        new PlayerZoneListener(this);
     }
 
     public void cancelPlayerTasks(Player player) {

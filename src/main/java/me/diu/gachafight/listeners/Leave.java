@@ -1,6 +1,7 @@
 package me.diu.gachafight.listeners;
 
 import me.diu.gachafight.GachaFight;
+import me.diu.gachafight.guides.TutorialGuideSystem;
 import me.diu.gachafight.playerstats.PlayerDataManager;
 import me.diu.gachafight.playerstats.PlayerStats;
 import me.diu.gachafight.di.ServiceLocator;
@@ -17,8 +18,9 @@ import org.bukkit.inventory.meta.ItemMeta;
 public class Leave implements Listener {
 
     private final PlayerDataManager playerDataManager;
-
+    private final GachaFight plugin;
     public Leave(GachaFight plugin, ServiceLocator serviceLocator) {
+        this.plugin = plugin;
         this.playerDataManager = serviceLocator.getService(PlayerDataManager.class);
         Bukkit.getPluginManager().registerEvents(this, GachaFight.getInstance());
     }
@@ -28,6 +30,7 @@ public class Leave implements Listener {
         Player player = event.getPlayer();
         playerDataManager.savePlayerData(player);
         PlayerStats.playerStatsMap.remove(player.getUniqueId());
+        plugin.getGuideSystem().removeGuideForPlayer(player);
         GachaFight.getInstance().cancelPlayerTasks(player);
     }
 
@@ -36,6 +39,7 @@ public class Leave implements Listener {
         Player player = event.getPlayer();
         playerDataManager.savePlayerData(player);
         PlayerStats.playerStatsMap.remove(player.getUniqueId());
+        plugin.getGuideSystem().removeGuideForPlayer(player);
         GachaFight.getInstance().cancelPlayerTasks(player);
     }
 }

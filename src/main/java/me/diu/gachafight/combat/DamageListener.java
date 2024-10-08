@@ -10,6 +10,7 @@ import me.diu.gachafight.combat.mobdrops.RPGDeathReward;
 import me.diu.gachafight.playerstats.PlayerStats;
 import me.diu.gachafight.quest.listeners.QuestKillListener;
 import me.diu.gachafight.utils.ColorChat;
+import me.diu.gachafight.utils.TextDisplayUtils;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -76,12 +77,15 @@ public class DamageListener implements Listener {
         if (totalDamage < 0.5) {
             totalDamage = 0.5;
         }
-        if (Math.random() < stats.getCritChance()) {
+        double random = Math.random();
+        if (random < stats.getCritChance()) {
             totalDamage *= stats.getCritDmg();
         }
         if (isCritical(player)) {
             totalDamage = totalDamage*1.2;
         }
+        boolean isCrit = random < stats.getCritChance();
+        TextDisplayUtils.summonDamageTextDisplay(entity, totalDamage, isCrit);
         // Check if the mob will die from this hit
         if (entity.getHealth() - totalDamage <= 0) {
             handleMobDeath(player, entity);  // Handle mob death, rewards, etc.
@@ -114,18 +118,34 @@ public class DamageListener implements Listener {
 
         // Calculate the custom damage for PvP
         double totalDamage = attackerDamage - (targetArmor); // Adjust the armor effect as needed
-        //reduce damage for target if attacker level is above target's level
-        if (attackerStats.getLevel() > targetStats.getLevel()) {
-            int levelDiff = attackerStats.getLevel() - targetStats.getLevel();
-            //sets a minimum of 10% damage
-            if (levelDiff*0.1 >= 0.9) {
-                levelDiff = 1;
+
+        //Check for if player dodged
+        if (Math.random() > targetStats.getDodge()) { //below triggers if not dodged
+            //reduce damage for target if attacker level is above target's level
+            if (attackerStats.getLevel() > targetStats.getLevel()) {
+                int levelDiff = attackerStats.getLevel() - targetStats.getLevel();
+                //sets a minimum of 10% damage
+                if (levelDiff*0.1 >= 0.9) {
+                    levelDiff = 1;
+                }
+                totalDamage = totalDamage*(1-(levelDiff*0.1));
             }
-            totalDamage = totalDamage*(1-(levelDiff*0.1));
-        }
-        //sets minimum damage of 0.5
-        if (totalDamage < 0.5) {
-            totalDamage = 0.5;
+            //sets minimum damage of 0.5
+            if (totalDamage < 0.5) {
+                totalDamage = 0.5;
+            }
+            double random = Math.random();
+            if (random < attackerStats.getCritChance()) {
+                totalDamage *= attackerStats.getCritDmg();
+            }
+            if (isCritical(attacker)) {
+                totalDamage = totalDamage*1.2;
+            }
+            boolean isCrit = random < attackerStats.getCritChance();
+            TextDisplayUtils.summonDamageTextDisplay(target, totalDamage, isCrit);
+        } else { //below triggers when attack dodged
+            totalDamage = 0;
+            target.sendMessage(ColorChat.chat("&aDodged!"));
         }
         // Apply custom damage to the target
         event.setDamage(0); // Cancel the default damage
@@ -136,13 +156,13 @@ public class DamageListener implements Listener {
         targetStats.syncHealthWithHearts(target);
 
         // Check if the target will die from this hit
-        if (targetStats.getHp() <= 0) {
+        if (targetStats.getHp()+targetStats.getGearStats().getTotalMaxHp() <= 0) {
             target.setHealth(0); // Trigger death event
             target.sendMessage(ColorChat.chat("&4You have Died to " + attacker.getName()));
         }
     }
 
-    //Handles EvP Interactions | When Entity Hits Player. Only Applies to MythicMobs
+    //Handles EvP Interactions | When Entity Hits Player. (Only Applies to MythicMobs)
     @EventHandler
     public void onMobDamage(MythicDamageEvent event) { //damage by mob
         if (event.getCaster() instanceof ActiveMob && event.getTarget() instanceof BukkitEntity) {
@@ -161,15 +181,29 @@ public class DamageListener implements Listener {
                     // Calculate the total damage received by the player
                     double totalDamage = mobDamage - (playerArmor * 0.4); // Calc EvP
 
-                    if (totalDamage < 0) {
-                        totalDamage = 0.05;
+                    //Check for if player dodged
+                    if (Math.random() > stats.getDodge()) { //below triggers if not dodged
+                        //sets minimum damage of 0.5
+                        if (totalDamage < 0.5) {
+                            totalDamage = 0.5;
+                        }
+                        double random = Math.random();
+                        if (random < 0.15) {
+                            totalDamage *= 1.5;
+                        }
+                        boolean isCrit = random < 0.15;
+                        TextDisplayUtils.summonDamageTextDisplay(player, totalDamage, isCrit);
+                    } else { //below triggers when attack dodged
+                        totalDamage = 0;
+                        player.sendMessage(ColorChat.chat("&aDodged!"));
                     }
+
 
                     // Cancel the default damage and apply custom damage
                     event.setDamage(0);
                     stats.setHp(stats.getHp() - totalDamage);
                     stats.syncHealthWithHearts(player);
-                    if (stats.getHp() <= 0) {
+                    if (stats.getHp()+stats.getGearStats().getTotalMaxHp() <= 0) {
                         player.setHealth(0); // This will trigger the death event
                         stats.syncHealthWithHearts(player);
                         stats.updateActionbar(player);
@@ -250,7 +284,7 @@ public class DamageListener implements Listener {
         event.setCancelled(true);
         Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "spawn " + player.getName());
     }
-
+    // ===============Grabs Mythic Mobs Armor Value================
     private double getMobArmor(Entity entity) {
         ActiveMob mythicMob = MythicBukkit.inst().getMobManager().getMythicMobInstance(entity);
         if (mythicMob == null) {
@@ -262,6 +296,7 @@ public class DamageListener implements Listener {
             return 1.0; // Default armor value if not using MythicMobs or no armor stat found
         }
     }
+    // ===============Check For Vanilla Crit===============
     private boolean isCritical(Player player)
     {
         return
@@ -274,7 +309,12 @@ public class DamageListener implements Listener {
     }
 
     public static boolean isSafezone(Location location) {
+        // ===================Spawn==================
         if (location.getX() > -259 && location.getX() < 220 && location.getZ() >-419 && location.getZ() < 502) {
+            return true;
+        }
+        // ==================Tutorial=================
+        if (location.getX() > -766 && location.getX() < -597 && location.getZ() >-30 && location.getZ() < 101) {
             return true;
         }
         return false;

@@ -25,6 +25,10 @@ public class Board {
         obj.setDisplaySlot(DisplaySlot.SIDEBAR);
 
         PlayerStats stats = playerDataManager.getPlayerStats(player.getUniqueId());
+        if (stats == null) {
+            playerDataManager.loadPlayerData(player);
+            stats = playerDataManager.getPlayerStats(player.getUniqueId());
+        }
         Score moneyScore = obj.getScore(ColorChat.chat("&a$" + String.format("%.1f", PlayerStats.getPlayerStats(player).getMoney())));
         moneyScore.setScore(5);
 

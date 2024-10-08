@@ -1,6 +1,7 @@
 package me.diu.gachafight.listeners;
 
 import me.diu.gachafight.GachaFight;
+import me.diu.gachafight.commands.GuideCommand;
 import me.diu.gachafight.display.Blocks;
 import me.diu.gachafight.playerstats.PlayerDataManager;
 import me.diu.gachafight.playerstats.PlayerStats;
@@ -8,7 +9,9 @@ import me.diu.gachafight.di.ServiceLocator;
 import me.diu.gachafight.quest.utils.QuestUtils;
 import me.diu.gachafight.scoreboard.Board;
 import me.diu.gachafight.utils.ColorChat;
+import me.diu.gachafight.utils.TutorialBossBar;
 import org.bukkit.Bukkit;
+import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.entity.Player;
@@ -38,11 +41,16 @@ public class Join implements Listener {
     public void onJoin(PlayerJoinEvent event) {
 
         Player player = event.getPlayer();
-        if (!player.hasPlayedBefore()) {
+        // ============PLAYER STATS=============
+        playerDataManager.loadPlayerData(player);
+        PlayerStats stats = playerDataManager.getPlayerStats(player.getUniqueId());
+        // ============NEW PLAYERS===============
+        if (!player.hasPlayedBefore() || stats.getMoney() < 0.1) {
             new BukkitRunnable() {
                 @Override
                 public void run() {
                     Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "warp tutorial " + player.getName());
+                    Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "lp user " + player.getName() + " permission set gacha.tutorial");
                 }
             }.runTaskLater(plugin, 10L);
             new BukkitRunnable() {
@@ -51,13 +59,28 @@ public class Join implements Listener {
                     Blocks.spawnTutorialGachaChest();
                 }
             }.runTaskLater(plugin, 100L);
+        } else {
+            Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "lp user " + player.getName() + " permission unset gacha.tutorial");
+            Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "lp user " + player.getName() + " permission unset gacha.tutorial.1");
+            Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "lp user " + player.getName() + " permission unset gacha.tutorial.2");
+
         }
-        playerDataManager.loadPlayerData(player);
-        player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(playerDataManager.getPlayerStats(player.getUniqueId()).getSpeed()*0.1);
+        // ===========TUTORIAL=============
+        if (player.hasPermission("gacha.tutorial") && !player.hasPermission("op")) {
+            TutorialBossBar.showTutorialBossBar(player);
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    plugin.getGuideSystem().guidePlayerToLocation(player, GuideCommand.preSetLocations.get("tutorialgacha"));
+                    player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
+                }
+            }.runTaskLater(plugin, 60L);
+        }
+        // ===========QUEST===============
         for (int i = 1; i < 9; i++) {
             QuestUtils.loadQuestProgress(player, i);
         }
-        // Other login tasks
+        // =========Scoreboard===========
         scoreboard.setScoreBoard(player);
         Bukkit.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, () -> scoreboard.setScoreBoard(player), 20, 60);
     }

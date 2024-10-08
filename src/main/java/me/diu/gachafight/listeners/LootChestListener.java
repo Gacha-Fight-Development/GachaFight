@@ -151,34 +151,8 @@ public class LootChestListener implements Listener {
 
     // Check if the chest location is one of the designated RPG Loot Chest locations
     private boolean isRPGLootChest(Location location) {
-        Location[] rpgLootChestLocations = {
-                new Location(location.getWorld(), -927, 8, 430), // RPG start
-                new Location(location.getWorld(), -855, 5, 303),
-                new Location(location.getWorld(), -853, 5, 368),
-                new Location(location.getWorld(), -945, 5, 323),
-                new Location(location.getWorld(), -910, 5, 304),
-                new Location(location.getWorld(), -916, 5, 419),
-                new Location(location.getWorld(), -877, 5, 431),
-                new Location(location.getWorld(), -922, 5, 292),
-                new Location(location.getWorld(), -960, 5, 356),
-                new Location(location.getWorld(), -949, 5, 452),
-                new Location(location.getWorld(), -851, 5, 439),
-                new Location(location.getWorld(), -851, 5, 447),
-                new Location(location.getWorld(), -950, 5, 385),
-                new Location(location.getWorld(), -867, 5, 306),
-                new Location(location.getWorld(), -913, 5, 290),
-                new Location(location.getWorld(), -864, 5, 295),
-        };
-
-        for (Location chestLocation : rpgLootChestLocations) {
-            if (location.getWorld().equals(chestLocation.getWorld())
-                    && location.getBlockX() == chestLocation.getBlockX()
-                    && location.getBlockY() == chestLocation.getBlockY()
-                    && location.getBlockZ() == chestLocation.getBlockZ()) {
-                return true;
-            }
-        }
-        return false;
+        //MinX, MaxX, MinZ, MaxZ
+        return location.getX() > -969 && location.getX() < -838 && location.getZ() > -263 && location.getZ() < 469;
     }
 
     public void saveFurnitureState(Location location, String furnitureID) {
