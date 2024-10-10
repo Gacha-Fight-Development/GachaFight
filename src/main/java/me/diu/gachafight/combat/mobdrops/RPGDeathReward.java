@@ -3,6 +3,7 @@ package me.diu.gachafight.combat.mobdrops;
 import me.diu.gachafight.GachaFight;
 import me.diu.gachafight.commands.GuideCommand;
 import me.diu.gachafight.playerstats.PlayerStats;
+import me.diu.gachafight.utils.GiveItemUtils;
 import me.diu.gachafight.utils.TutorialBossBar;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
@@ -16,17 +17,15 @@ public class RPGDeathReward {
         if (mobName.contains("rpg_slime_cube") || mobName.contains("rpg_mushroom") || mobName.contains("rpg_mushroom_red") || mobName.contains("rpg_rat") || mobName.contains("rpg_bat") || mobName.contains("rpg_zombie_head")) {
             //tier 1 loot
             if (Math.random() < (0.15 + (stats.getLuck() * 0.001))) {
-                Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "si give 991 1 " + player.getName() + " true");
-                player.sendMessage(MiniMessage.miniMessage().deserialize("<green>+ <white>Common Gacha Key"));
+                GiveItemUtils.giveCommonKey(player, 1);
             }
             if (Math.random() < (0.01 + (stats.getLuck() * 0.001))) {
-                Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "si give 992 1 " + player.getName() + " true");
-                player.sendMessage(MiniMessage.miniMessage().deserialize("<green>+ <gray>Uncommon Gacha Key"));
+                GiveItemUtils.giveUncommonKey(player, 1);
             }
             if (player.hasPermission("gacha.tutorial.1")) {
                 Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "lp user " + player.getName() + " permission unset gacha.tutorial.1");
                 Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "lp user " + player.getName() + " permission set gacha.tutorial.2");
-                player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1,1);
+                player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
                 TutorialBossBar.showDungeonExitBossBar(player);
                 new BukkitRunnable() {
                     @Override
@@ -38,11 +37,11 @@ public class RPGDeathReward {
             }
         }
         if (mobName.contains("rpg_zombie") || mobName.contains("rpg_rat_undead") || mobName.contains("rpg_poison_slime_cube")) {
-            if (Math.random() < (0.17 + (stats.getLuck() * 0.001))) {
+            if (Math.random() < (0.15 + (stats.getLuck() * 0.001))) {
                 Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "si give 991 1 " + player.getName() + " true");
                 player.sendMessage(MiniMessage.miniMessage().deserialize("<green>+ <white>Common Gacha Key"));
             }
-            if (Math.random() < (0.02 + (stats.getLuck() * 0.001))) {
+            if (Math.random() < (0.01 + (stats.getLuck() * 0.001))) {
                 Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "si give 992 1 " + player.getName() + " true");
                 player.sendMessage(MiniMessage.miniMessage().deserialize("<green>+ <gray>Uncommon Gacha Key"));
             }

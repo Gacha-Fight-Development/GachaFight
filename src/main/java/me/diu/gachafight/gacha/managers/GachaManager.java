@@ -136,7 +136,7 @@ public class GachaManager {
                 boolean itemSold = false;
 
                 // checks rarity (string) and the item percent -statMedium-  (double 0.0 to 100.0) against autoSellCutoff.  if autoSellCutoff is larger, sell the item
-                if(player.hasPermission("gacha.autosell") || player.hasPermission("gacha.vip")) {
+                if (player.hasPermission("gacha.autosell") || player.hasPermission("gacha.vip")) {
                     // This checks to see what percent the player has set via the /autosellgacha interface
                     String autoSellPerms;
                     autoSellPerms = user.getNodes().stream()
@@ -174,7 +174,7 @@ public class GachaManager {
             Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "si give 991 1 " + player.getName());
         }
         // ==========TUTORIAL============
-        if (player.hasPermission("gacha.tutorial")) {
+        if (player.hasPermission("gacha.tutorial") && !player.hasPermission("op")) {
             player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
             Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "lp user " + player.getName() + " permission unset gacha.tutorial");
             Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "lp user " + player.getName() + " permission set gacha.tutorial.1");
@@ -267,8 +267,8 @@ public class GachaManager {
             case 0: return "<!i><white>"; // Common
             case 1: return "<!i><gray>";  // Uncommon
             case 2: return "<!i><green>"; // Rare
-            case 3: return "<!i><blue>";  // Epic
-            case 4: return "<!i><purple>"; // Unique
+            case 3: return "<!i><aqua>";  // Epic
+            case 4: return "<!i><light_purple>"; // Unique
             case 5: return "<!i><gold>"; // Legendary
             case 6: return "<!i><red>";  // Mythic
             case 7: return "<!i><rainbow>"; // Event/Custom
@@ -424,8 +424,8 @@ public class GachaManager {
     private final double[] commonKeyProbabilities = {
             89, // common
             10.4, // uncommon
-            0.5, // rare
-            0.1,  // epic
+            0.6, // rare
+            0,  // epic
             0,  // unique
             0,  // legendary
             0,  // mythic

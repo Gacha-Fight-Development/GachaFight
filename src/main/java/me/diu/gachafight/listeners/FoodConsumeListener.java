@@ -43,8 +43,6 @@ public class FoodConsumeListener implements Listener {
 
                     double healingPerSecond = Double.parseDouble(healingData[0]);
                     int durationSeconds = Integer.parseInt(healingData[1]);
-                    System.out.println(healingPerSecond);
-                    System.out.println(durationSeconds);
 
                     // Start healing the player
                     startHealing(player, healingPerSecond, durationSeconds);

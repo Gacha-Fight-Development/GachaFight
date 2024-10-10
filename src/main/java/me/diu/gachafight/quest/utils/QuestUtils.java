@@ -240,7 +240,7 @@ public class QuestUtils {
             stmt.setString(1, playerUUID.toString());
             stmt.setInt(2, questId);
             stmt.executeUpdate();
-            Bukkit.getLogger().info("Quest " + questId + " removed from quest_progress for player " + player.getName());
+            GachaFight.getInstance().getLogger().info("Quest " + questId + " removed from quest_progress for player " + player.getName());
         } catch (SQLException e) {
             e.printStackTrace();
         }

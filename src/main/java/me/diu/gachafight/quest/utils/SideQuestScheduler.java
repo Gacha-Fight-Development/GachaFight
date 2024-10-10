@@ -21,7 +21,7 @@ public class SideQuestScheduler {
                 SideQuestManager.clearSideQuests();
                 clearSideQuestsFromProgress();
                 SideQuestManager.clearSideQuests();
-                Bukkit.getLogger().info("Side quests cleared at specified time.");
+                plugin.getLogger().info("Side quests cleared at specified time.");
             }
         }, 0L, 20 * 60 * 60); // Run every hour (in ticks)
     }
@@ -43,7 +43,7 @@ public class SideQuestScheduler {
         try (Connection conn = GachaFight.getInstance().getDatabaseManager().getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.executeUpdate();
-            Bukkit.getLogger().info("All side quests have been cleared from quest_progress.");
+            GachaFight.getInstance().getLogger().info("All side quests have been cleared from quest_progress.");
         } catch (SQLException e) {
             e.printStackTrace();
         }

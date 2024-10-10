@@ -19,6 +19,7 @@ import me.diu.gachafight.gacha.managers.GachaManager;
 import me.diu.gachafight.gacha.managers.GachaLootTableManager;
 import me.diu.gachafight.hooks.PlaceholderAPIHook;
 import me.diu.gachafight.playerstats.PlayerStatsListener;
+import me.diu.gachafight.playerstats.leaderboard.LevelLeaderboard;
 import me.diu.gachafight.playerstats.leaderboard.MoneyLeaderboard;
 import me.diu.gachafight.quest.DatabaseManager;
 import me.diu.gachafight.quest.listeners.QuestClickListener;
@@ -68,6 +69,7 @@ public final class GachaFight extends JavaPlugin implements Listener {
     private final Map<Player, Integer> scoreboardTasks = new HashMap<>();
     private final Map<Player, Integer> saveTasks = new HashMap<>();
     private MoneyLeaderboard moneyLeaderboard;
+    private LevelLeaderboard levelLeaderboard;
     private FurnitureDataManager furnitureDataManager;
     private QuestManager questManager;
     private QuestGUI questGUI;
@@ -89,6 +91,7 @@ public final class GachaFight extends JavaPlugin implements Listener {
         this.GachaLootTableManager = new GachaLootTableManager(this);
         this.potionItemManager = new PotionItemManager(this);
         this.moneyLeaderboard = new MoneyLeaderboard(this);
+        this.levelLeaderboard = new LevelLeaderboard(this);
         this.questManager= new QuestManager(this, getDataFolder(), databaseManager);
         QuestUtils.initialize(questManager);
         SideQuestScheduler.scheduleQuestClearTask(this);
@@ -199,6 +202,8 @@ public final class GachaFight extends JavaPlugin implements Listener {
         new GuideCommand(this);
         new GuideTabCompleter(this);
         new AFKCommand(this);
+        new BuyCommand(this);
+        new PromoteCommand(this, luckPerms);
     }
 
     private void registerEvents() {

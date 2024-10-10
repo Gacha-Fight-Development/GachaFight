@@ -23,7 +23,7 @@ import java.util.UUID;
 
 public class TextDisplayUtils {
 
-    private static final Map<UUID, TextDisplay> activeDisplays = new HashMap<>();
+    public static final Map<UUID, TextDisplay> activeDisplays = new HashMap<>();
 
     public static void summonDamageTextDisplay(Entity target, double damage, boolean isCrit) {
         // Get the world and location near the entity (slightly to the right of the head)

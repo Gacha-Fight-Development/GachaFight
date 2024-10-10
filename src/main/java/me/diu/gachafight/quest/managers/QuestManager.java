@@ -145,7 +145,7 @@ public class QuestManager {
         Quest randomDailyQuest = availableDailyQuests.get(0); // Pick the first random quest
 
         // Add logging to track assignments
-        Bukkit.getLogger().info("Assigning daily quest: " + randomDailyQuest.getName() + " to player: " + player.getName());
+        GachaFight.getInstance().getLogger().info("Assigning daily quest: " + randomDailyQuest.getName() + " to player: " + player.getName());
 
         // Return the assigned quest
         return randomDailyQuest;

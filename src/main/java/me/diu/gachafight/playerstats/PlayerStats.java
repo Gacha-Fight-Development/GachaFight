@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import lombok.Getter;
 import lombok.Setter;
+import me.diu.gachafight.playerstats.leaderboard.LeaderboardUtils;
 import me.diu.gachafight.utils.ColorChat;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -192,4 +193,8 @@ public class PlayerStats {
                         uuid.substring(20, 32).replace(" ", ""));
     }
 
+    public void setMoney(double amount) {
+        this.money = amount;
+        LeaderboardUtils.markPlayerDirty(playerUUID);
+    }
 }
