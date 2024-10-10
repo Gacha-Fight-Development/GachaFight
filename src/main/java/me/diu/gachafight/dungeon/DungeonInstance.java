@@ -60,6 +60,6 @@ public class DungeonInstance {
 
     // Set cooldown for a spawn point
     private void setCooldown(int spawnIndex) {
-        spawnCooldowns.put(spawnIndex, System.currentTimeMillis() + 180 * 1000); // 3-minute cooldown
+        spawnCooldowns.put(spawnIndex, System.currentTimeMillis() + 60 * 1200); // 3-minute cooldown
     }
 }

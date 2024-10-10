@@ -28,6 +28,11 @@ public class ShopItemUseListener implements Listener {
                 item.setAmount(item.getAmount() - 1);
                 player.sendMessage(ColorChat.chat("&aUnlocked /AutoSellGacha"));
             }
+            if (item.getItemMeta().getDisplayName().contains(ColorChat.chat("&e/Shop"))) {
+                Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(),"lp user " + player.getName() + " permission set " + "gacha.shop");
+                item.setAmount(item.getAmount() - 1);
+                player.sendMessage(ColorChat.chat("&aUnlocked /Shop"));
+            }
         }
     }
 }

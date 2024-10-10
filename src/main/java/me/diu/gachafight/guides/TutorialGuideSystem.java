@@ -62,7 +62,7 @@ public class TutorialGuideSystem implements Listener {
             Location playerLocation = player.getLocation();
             double distanceToTarget = playerLocation.distance(destination);
 
-            if (distanceToTarget <= 1.8) {
+            if (distanceToTarget <= 2.3) {
                 // If the player is close to the destination, remove the display
                 removeGuideForPlayer(player);
                 player.sendMessage("You have reached your destination!");

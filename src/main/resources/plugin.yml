@@ -58,6 +58,8 @@ commands:
     usage: /afk
   buy:
     usage: /buy
+  promote:
+    usage: /promote
 
 libraries:
   - org.mongodb:mongodb-driver-sync:5.1.2
@@ -65,6 +67,7 @@ libraries:
   - org.mongodb:bson:5.1.2
 depend:
   - MythicMobs
+  - ModelEngine
 softdepend:
   - PlaceholderAPI
   - ItemsAdder

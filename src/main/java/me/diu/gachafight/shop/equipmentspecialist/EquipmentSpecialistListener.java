@@ -357,11 +357,8 @@ public class EquipmentSpecialistListener implements Listener {
         // Calculate the difference between the max and min values, both scaled by rarity
         double scaledMin = min * rarity;
         double scaledMax = max * rarity;
-        Bukkit.getLogger().info(scaledMax + " " + scaledMin);
         // Calculate the new stat based on the percentage between the min and max
         double newStat = scaledMin + (percentage * (scaledMax - scaledMin));
-        Bukkit.getLogger().info(scaledMax + " 2: " + scaledMin + " 3: " + newStat + " 4: " + percentage + " 5:" + levelmulti);
-
         // Apply the level multiplier
         newStat *= levelmulti;
 

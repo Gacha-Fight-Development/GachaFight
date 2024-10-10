@@ -95,7 +95,7 @@ public class DailyQuestManager {
             stmt.executeUpdate();
 
             // Add logging to track saving
-            Bukkit.getLogger().info("Daily quest saved: " + dailyQuest.getName() + " for player: " + player.getName());
+            GachaFight.getInstance().getLogger().info("Daily quest saved: " + dailyQuest.getName() + " for player: " + player.getName());
         } catch (SQLException e) {
             e.printStackTrace();
         }

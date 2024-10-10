@@ -1,10 +1,13 @@
 package me.diu.gachafight.combat;
 
+import io.lumine.mythic.api.mobs.MythicMob;
+import io.lumine.mythic.bukkit.BukkitAdapter;
 import io.lumine.mythic.bukkit.MythicBukkit;
 import io.lumine.mythic.bukkit.adapters.BukkitEntity;
 import io.lumine.mythic.bukkit.events.MythicDamageEvent;
 import io.lumine.mythic.core.mobs.ActiveMob;
 import me.diu.gachafight.GachaFight;
+import me.diu.gachafight.combat.mobdrops.BulbDeathReward;
 import me.diu.gachafight.combat.mobdrops.GoblinDeathReward;
 import me.diu.gachafight.combat.mobdrops.RPGDeathReward;
 import me.diu.gachafight.playerstats.PlayerStats;
@@ -24,6 +27,7 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,9 +42,11 @@ public class DamageListener implements Listener {
     @EventHandler
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
         if (isSafezone(event.getEntity().getLocation())) {
-            event.setCancelled(true);
-            event.getDamager().sendMessage(ColorChat.chat("&aSafezone. &cPvP only in Dungeon."));
-            return;
+            if (event.getEntity().getType() == EntityType.PLAYER || event.getEntity().getType() == EntityType.PIG) {
+                event.setCancelled(true);
+                event.getDamager().sendMessage(ColorChat.chat("&aSafezone. &cPvP only in Dungeon."));
+                return;
+            }
         }
         // when arrow hits player
         if (event.getDamager() instanceof Arrow && event.getEntity() instanceof Player) {
@@ -191,8 +197,6 @@ public class DamageListener implements Listener {
                         if (random < 0.15) {
                             totalDamage *= 1.5;
                         }
-                        boolean isCrit = random < 0.15;
-                        TextDisplayUtils.summonDamageTextDisplay(player, totalDamage, isCrit);
                     } else { //below triggers when attack dodged
                         totalDamage = 0;
                         player.sendMessage(ColorChat.chat("&aDodged!"));
@@ -237,6 +241,20 @@ public class DamageListener implements Listener {
                 GoblinDeathReward.MobDeath(entity.getName(), player);
             } else if (entity.getName().contains("rpg")) {
                 RPGDeathReward.MobDeath(entity.getName(), player);
+            } else if (entity.getName().contains("Bulb")) {
+                BulbDeathReward.MobDeath(entity.getName(), player);
+            }
+
+            if (Math.random() < 0.001) {
+                MythicMob mob = MythicBukkit.inst().getMobManager().getMythicMob("bulb_lilypad_pet").orElse(null);
+                ActiveMob lilypad = mob.spawn(BukkitAdapter.adapt(entity.getLocation()),1);
+                player.sendMessage(ColorChat.chat("&a&lLilypad Bulb Spawned!"));
+                player.sendMessage(ColorChat.chat("&aKill it before it despawn! (60s)"));
+                new BukkitRunnable() {
+                    public void run() {
+                        lilypad.despawn();
+                    }
+                }.runTaskLater(GachaFight.getInstance(), 1200);
             }
 
             // Notify the player of the exp and money gained
@@ -249,11 +267,16 @@ public class DamageListener implements Listener {
         Player player = event.getEntity();
         PlayerStats stats = PlayerStats.getPlayerStats(player);
         stats.setHp(stats.getMaxhp());
-
+        //clear Damage Indicator
+        TextDisplay display = TextDisplayUtils.activeDisplays.get(player.getUniqueId());
+        System.out.println(display);
+        System.out.println(TextDisplayUtils.activeDisplays.get(player.getUniqueId()));
+        if (display != null) {
+            display.remove();
+        }
         // Create a list to store items that should be removed from the inventory
         List<ItemStack> itemsToRemove = new ArrayList<>();
         List<String> itemNamesToRemove = new ArrayList<>();
-
         // Iterate through the player's inventory
         if (stats.getLevel() > 2) {
             for (ItemStack item : player.getInventory()) {
@@ -313,8 +336,12 @@ public class DamageListener implements Listener {
         if (location.getX() > -259 && location.getX() < 220 && location.getZ() >-419 && location.getZ() < 502) {
             return true;
         }
-        // ==================Tutorial=================
-        if (location.getX() > -766 && location.getX() < -597 && location.getZ() >-30 && location.getZ() < 101) {
+        // =================Tutorial================
+        if (location.getX() > -766 && location.getX() < -597 && location.getZ() > 30 && location.getZ() < 101) {
+            return true;
+        }
+        // ===================AFK====================
+        if (location.getX() > -12 && location.getX() < -3 && location.getZ() > 326 && location.getZ() < 335) {
             return true;
         }
         return false;
