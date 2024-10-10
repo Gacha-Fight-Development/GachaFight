@@ -4,7 +4,7 @@ package me.diu.gachafight.utils;
 public class Calculations {
 
     public static double playerLevelMultiplier(int level) {
-        return 1 + (level * 0.05) - 0.05;
+        return 1 + (level * 0.06) - 0.06;
     }
     public static double healerCost(double hp) { return (hp*0.2) - 2; }
     public static double overseerHPCost(double hp) { return 10 + Math.pow(hp*0.6, 1+0.95); }

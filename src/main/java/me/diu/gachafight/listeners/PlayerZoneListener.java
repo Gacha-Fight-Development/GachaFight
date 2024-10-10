@@ -1,6 +1,7 @@
 package me.diu.gachafight.listeners;
 
 import me.diu.gachafight.GachaFight;
+import me.diu.gachafight.playerstats.PlayerStats;
 import me.diu.gachafight.utils.ColorChat;
 import me.diu.gachafight.utils.GiveItemUtils;
 import org.bukkit.Bukkit;
@@ -96,13 +97,16 @@ public class PlayerZoneListener implements Listener {
 
     // Custom reward method (can be modified as per your needs)
     public static void giveAFKReward(Player player) {
+        PlayerStats stats = PlayerStats.getPlayerStats(player);
         if (Math.random() < 0.8) {
             GiveItemUtils.giveCommonKey(player, 1);
         }
         if (Math.random() < 0.05) {
             GiveItemUtils.giveUncommonKey(player, 1);
         }
-        GiveItemUtils.giveGold(player, (int) (Math.random() * 4)+1);
+        GiveItemUtils.giveGold(player, (int) Math.floor((Math.random() * 4)+1));
+        GiveItemUtils.giveEXP(player, (stats.getLevel() * 0.2));
+        GiveItemUtils.convertGold(player);
     }
 
     private boolean hasPlayerMovedAtLeastOneBlock(Location from, Location to) {

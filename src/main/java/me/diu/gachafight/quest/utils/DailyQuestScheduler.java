@@ -16,7 +16,7 @@ public class DailyQuestScheduler {
         Bukkit.getScheduler().runTaskTimer(plugin, () -> {
             if (isTimeForDailyQuestRefresh()) {
                 DailyQuestManager.clearDailyQuestCompletionData();
-                Bukkit.getLogger().info("Daily quests have been reset.");
+                GachaFight.getInstance().getLogger().info("Daily quests have been reset.");
             }
         }, 0L, 20 * 60 * 60); // Check every hour (in ticks)
     }
@@ -39,7 +39,7 @@ public class DailyQuestScheduler {
         try (Connection conn = GachaFight.getInstance().getDatabaseManager().getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.executeUpdate();
-            Bukkit.getLogger().info("All daily quests have been cleared from quest_progress.");
+            GachaFight.getInstance().getLogger().info("All daily quests have been cleared from quest_progress.");
         } catch (SQLException e) {
             e.printStackTrace();
         }
