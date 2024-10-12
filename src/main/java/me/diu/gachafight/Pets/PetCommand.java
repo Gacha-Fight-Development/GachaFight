@@ -2,22 +2,26 @@ package me.diu.gachafight.Pets;
 
 
 import me.diu.gachafight.GachaFight;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import me.diu.gachafight.utils.ColorChat;
+import net.kyori.adventure.text.TextComponent;
 import org.bukkit.Bukkit;
-import org.bukkit.NamespacedKey;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.persistence.PersistentDataContainer;
-import org.bukkit.persistence.PersistentDataType;
-import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.List;
+
+import static net.kyori.adventure.text.Component.text;
+import static org.bukkit.inventory.ItemStack.empty;
 
 public class PetCommand implements CommandExecutor, Listener {
     private final GachaFight plugin;
@@ -29,76 +33,250 @@ public class PetCommand implements CommandExecutor, Listener {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        // Check if sender has correct permissions
+        if(!sender.hasPermission("gacha.petlicense") || !sender.hasPermission("gacha.dev")){
+            sender.sendMessage(ColorChat.chat("&cPurchase a pet license before you try and use your pets!"));
+        }
+
         Player player = (Player) sender;
-        // make the pet a passenger item display to the player so we dont need to update it
-        ItemStack pet = player.getActiveItem();
+
+        switch (args[0]){
+            case "help":
+                player.sendMessage(ColorChat.chat("&cIncrease the number of pets you have equip at once with Pet Licenses! (3 Max)"));
+                player.sendMessage(ColorChat.chat("&cHold your pet in your main hand and type /pet equip <slot number> to equip it!"));
+                player.sendMessage(ColorChat.chat("&cCheck your current pets with /pet list!"));
+                player.sendMessage(ColorChat.chat("&cRemove a pet with /pet remove <slot>!"));
+                player.sendMessage(ColorChat.chat("&cCheck a pets buffs/debuffs with /pet check <slot>!"));
+                return true;
+            case "equip":
+                setPet(player, args[1]);
+                break;
+            case "slot":
+                getCurrentPet(player, args[1]);
+
+                break;
+
+        }
 
 
 
-        return false;
+
+
+        return true;
+
     }
 
-    public void setPet(Player player){
-        // check if there is currently a pet attached to the player
-        String currentPet = null;
-        if(getCurrentPet(player) != null){
-            currentPet = getCurrentPet(player);
+    // Call this when a player uses a pet license.  If they are not at the max slot count, it will increase their slots each time its called
+    private void addPetSlot(Player player){
+        int currentSlots = checkPetSlots(player);
+        // Check if all slots have been unlocked already
+        if(currentSlots == 3){
+            player.sendMessage(ColorChat.chat("&cYou have already increased your pet count to the max! (3)"));
+            return;
         }
-        // get the players held pets ID and effects from lore
-        ItemStack heldPet = player.getInventory().getItemInMainHand();
-        ItemMeta meta = heldPet.getItemMeta();
-        List<Component> lore = meta.lore();
 
-        String petID = PlainTextComponentSerializer.plainText().serialize(meta.displayName());
+        // If this is the first slot bought, create the armor stand
+        if(currentSlots == 0){
+            ArmorStand petHolder = (ArmorStand) player.getWorld().spawnEntity(player.getLocation(), EntityType.ARMOR_STAND);
+            TextComponent armorStandName = text("Pet Holder[1]");
+            petHolder.customName(armorStandName);
+            petHolder.setVisible(false);
+            petHolder.setInvulnerable(true);
+            player.addPassenger(petHolder);
+        }
 
-
-        for(Component loreStr : lore){
-            String loreReadable = PlainTextComponentSerializer.plainText().serialize(loreStr);
-            String effectName = null;
-            double effectMod;
-
-            if(!loreReadable.contains("Pet")){
-                effectName = loreReadable.split( " ")[0];
-                //effectMod = loreReadable.split(" ")[1];
+        // If player is adding a second or third slot, update armor stand to reflect increase
+        if(currentSlots < 3){
+            List<Entity> passengerList = player.getPassengers();
+            for(Entity passenger : passengerList){
+                if(passenger.getType() == EntityType.ARMOR_STAND && passenger.getName().contains("Pet Holder")){
+                    TextComponent newStandName = text("Pet Holder[" + (currentSlots+1) + "]");
+                    passenger.customName(newStandName);;
+                }
             }
 
         }
 
-        NamespacedKey namespacedKey = new NamespacedKey(this.plugin, "pet");
-        PersistentDataContainer dataContainer = player.getPersistentDataContainer();
-        dataContainer.set(namespacedKey, PersistentDataType.STRING, petID);
+        // Remove the stack of Pet Licenses, or decrement stack size by one
+        ItemStack license = player.getInventory().getItemInMainHand();
+        int itemCount = license.getAmount();
+        if(itemCount == 1){
+            player.getInventory().setItemInMainHand(empty());
+        }
+        if(itemCount > 1){
+            license.setAmount(itemCount-1);
+            player.getInventory().setItemInMainHand(license);
+        }
 
+    }
 
+    // Returns the number of current pet slots a player has unlocked
+    private int checkPetSlots(Player player) {
+        List<Entity> passengerList = player.getPassengers();
+        int petCount = 0;
+        for(Entity passenger : passengerList){
+            if(passenger.getType() == EntityType.ARMOR_STAND && passenger.getName().contains("Pet Holder")){
+                petCount = Integer.parseInt(passenger.getName().replace("Pet Holder[","").replace("]", ""));
+            }
+        }
+        return petCount;
+    }
+
+    // Used to set a pet into a given slot.  Should the slot be filled, the player will get the equip pet back, and equip the one in their main hand
+    // Will also check to see if the slot has been unlocked
+    private void setPet(Player player, String petSlotString){
+        // Check if a valid slot was specified
+        int petSlot = Integer.parseInt(petSlotString);
+        if(petSlot > 3 || petSlot < 0){
+            player.sendMessage(ColorChat.chat("&cThat is not a valid slot!  Please choose slots 1 up to 3!"));
+        }
+
+        // Check if player has the slot unlocked
+        if(petSlot > checkPetSlots(player)){
+            player.sendMessage(ColorChat.chat("&cYou do not have this slot unlocked!  Purchase a Pet License to upgrade your slot count!"));
+            return;
+        }
+
+        // Check if player is holding a valid pet item
+        if(!isPet(player.getInventory().getItemInMainHand())){
+            player.sendMessage(ColorChat.chat("&cHold your pet in your main hand and type /pet to equip it!"));
+            return;
+        }
+
+        // get the players held pet, and return the one in the slot if found
+        ItemStack currentPet = null;
+        ItemStack heldPet = player.getInventory().getItemInMainHand();
+        List<Entity> passengerList = player.getPassengers();
+        for(Entity passenger : passengerList){
+            if(passenger.getType() == EntityType.ARMOR_STAND && passenger.getName().contains("Pet Holder")){
+                ArmorStand armorStand = (ArmorStand) passenger;
+                switch(petSlot){
+                    case 1:
+                        currentPet = armorStand.getEquipment().getHelmet();
+                        armorStand.setItem(EquipmentSlot.HEAD, heldPet);
+                        break;
+                    case 2:
+                        currentPet = armorStand.getEquipment().getItemInMainHand();
+                        armorStand.setItem(EquipmentSlot.HAND, heldPet);
+                    case 3:
+                        currentPet = armorStand.getEquipment().getItemInOffHand();
+                        armorStand.setItem(EquipmentSlot.OFF_HAND, heldPet);
+                }
+                player.sendMessage(ColorChat.chat("&cYour " + heldPet.getItemMeta().displayName() + " &chas been equip!"));
+            }
+        }
         // give previously equip pet back to player
         if (currentPet != null){
-            ItemStack newPetItem = createPetItem(currentPet);
-            player.getInventory().setItemInMainHand(newPetItem);
+            player.getInventory().setItemInMainHand(currentPet);
         }
     }
 
-    public static String getCurrentPet(Player player){
-        NamespacedKey namespacedKey = new NamespacedKey(this.plugin, "pet");
-        PersistentDataContainer dataContainer = player.getPersistentDataContainer();
-        if (dataContainer.has(namespacedKey, PersistentDataType.STRING)) {
-            return dataContainer.get(namespacedKey, PersistentDataType.STRING);
+    // Get information on the pet in the specified slot
+    public void getCurrentPet(Player player, String petSlotString){
+        // Check if a valid slot was specified
+        int petSlot = Integer.parseInt(petSlotString);
+        if(petSlot > 3 || petSlot < 0){
+            player.sendMessage(ColorChat.chat("&cThat is not a valid slot!  Please choose slots 1 up to 3!"));
         }
-        // Default return value if no data is found
-        return null;
+
+        // Check if player has the slot unlocked
+        if(petSlot > checkPetSlots(player)){
+            player.sendMessage(ColorChat.chat("&cYou do not have this slot unlocked!  Purchase a Pet License to upgrade your slot count!"));
+            return;
+        }
+
+        // Get pet ItemStack of specified slot
+        ItemStack pet = null;
+        List<Entity> passengerList = player.getPassengers();
+        for(Entity passenger : passengerList){
+            if(passenger.getType() == EntityType.ARMOR_STAND && passenger.getName().contains("Pet Holder")){
+                ArmorStand armorStand = (ArmorStand) passenger;
+                switch(petSlot){
+                    case 1:
+                        pet = armorStand.getEquipment().getHelmet();
+                        break;
+                    case 2:
+                        pet = armorStand.getEquipment().getItemInMainHand();
+                    case 3:
+                        pet = armorStand.getEquipment().getItemInOffHand();
+                }
+            }
+        }
+
+        // Check if returned pet ItemStack is valid
+        if(pet == null){
+            player.sendMessage(ColorChat.chat("&cYou do not have a pet equip in slot" + petSlot + "!"));
+            return;
+        }
+
+        // Call petToString to read off pet meta
+        petToString(player, pet);
     }
 
-    public ItemStack createPetItem(String petID){
-        //Create pet item via string.  will need a list of models and shit, diu gimme plz
-        switch(petID) {
-            case "1":
-                //do lore?
-                break;
-            case "2":
-                // do lore?
-                int a = 1+1;
-                break;
+    public void getCurrentPets(Player player){
+        // Check if player can even equip pets
+        if(checkPetSlots(player) == 0){
+            player.sendMessage(ColorChat.chat("&cYou currently have no pets equip"));
+            return;
         }
+
+        // Check for armor stand holding pets, and build string for output
+        List<Entity> passengerList = player.getPassengers();
+        for(Entity passenger : passengerList){
+            if(passenger.getType() == EntityType.ARMOR_STAND && passenger.getName().equals("Pet Holder")){
+                ArmorStand armorStand = (ArmorStand) passenger;
+                List<ItemStack> petList = new ArrayList<>();
+                petList.add(armorStand.getEquipment().getHelmet());
+                petList.add(armorStand.getEquipment().getItemInMainHand());
+                petList.add(armorStand.getEquipment().getItemInOffHand());
+                player.sendMessage(ColorChat.chat("&cCurrent equip pets:"));
+                int total = 0;
+                for(ItemStack petItem : petList){
+                    if(petItem.hasItemMeta()){
+                        player.sendMessage(ColorChat.chat("" +petItem.getItemMeta().displayName()));
+                        total += 1;
+                    }
+                }
+
+                if((total == 0)) {
+                    player.sendMessage(ColorChat.chat("&cYou currently have no pets equip"));
+                }
+            }
+        }
+    }
+
+    // Method for creating pets.  This needs work, mostly how we are going to go about choosing what pets can have what stats, etc
+    public ItemStack createPetItem(String petID, String[] lore){
+        //Create pet item via id.  as of right now, all pets are models created with ItemAdder
+        String iaPetString = "iawearables:" + petID;
+        ItemStack pet;
+        ItemMeta meta;
+
         // Default return value if no valid pet is found
         return null;
+    }
+
+    public boolean isPet(ItemStack item){
+        ItemMeta meta = item.getItemMeta();
+        List<String> lore = meta.getLore();
+        // Check if the held item has lore, and return if the first line of lore contains the word 'pet'
+        if(!(lore.isEmpty())){
+            return lore.getFirst().contains("pet");
+        }
+        // Default return value if no valid pet is found
+        return false;
+    }
+
+    // ToString method to pass pet information to player
+    public void petToString(Player player, ItemStack pet){
+        ItemMeta petMeta = pet.getItemMeta();
+        String petName = petMeta.displayName().toString();
+        player.sendMessage(ColorChat.chat("&cPet Name:" + petName));
+        player.sendMessage(ColorChat.chat("&cPet Lore:"));
+
+        for(String meta: petMeta.getLore()){
+            player.sendMessage(ColorChat.chat("&c" + meta + ""));
+        }
     }
 
 
@@ -106,3 +284,4 @@ public class PetCommand implements CommandExecutor, Listener {
 
 
 }
+
