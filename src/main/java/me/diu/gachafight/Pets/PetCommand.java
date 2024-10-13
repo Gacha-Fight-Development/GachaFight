@@ -48,7 +48,7 @@ public class PetCommand implements CommandExecutor, Listener {
                 player.sendMessage(ColorChat.chat("&cCheck your current pets with /pet list!"));
                 player.sendMessage(ColorChat.chat("&cRemove a pet with /pet remove <slot>!"));
                 player.sendMessage(ColorChat.chat("&cCheck a pets buffs/debuffs with /pet check <slot>!"));
-                return true;
+                break;
             case "equip":
                 setPet(player, args[1]);
                 break;
@@ -62,7 +62,7 @@ public class PetCommand implements CommandExecutor, Listener {
                 getCurrentPet(player, args[1]);
                 break;
             case "admin":
-                admin(player, args[1]);
+                admin(player);
                 break;
         }
 
@@ -75,14 +75,14 @@ public class PetCommand implements CommandExecutor, Listener {
     }
 
     // for testing
-    private void admin(Player player, String arg) {
+    private void admin(Player player) {
         int currentSlots = checkPetSlots(player);
         if(currentSlots == 0){
             ArmorStand petHolder = (ArmorStand) player.getWorld().spawnEntity(player.getLocation(), EntityType.ARMOR_STAND);
             TextComponent armorStandName = text("Pet Holder[3]");
             petHolder.customName(armorStandName);
-            petHolder.setVisible(false);
-            petHolder.setInvulnerable(true);
+            petHolder.setVisible(true);
+            petHolder.setInvulnerable(false);
             player.addPassenger(petHolder);
         }
     }
@@ -100,8 +100,8 @@ public class PetCommand implements CommandExecutor, Listener {
             return;
         }
 
-        // Check if player is holding a valid pet item
-        if(!isPet(player.getInventory().getItemInMainHand())){
+        // Check if player has a free main hand
+        if((player.getInventory().getItemInMainHand()) == empty()){
             player.sendMessage(ColorChat.chat("&cEmpty your main hand and retype /pet remove " + petSlot + " to remove it!"));
             return;
         }
@@ -120,11 +120,13 @@ public class PetCommand implements CommandExecutor, Listener {
                     case 2:
                         removedPet = armorStand.getEquipment().getItemInMainHand();
                         armorStand.setItem(EquipmentSlot.HAND, null);
+                        break;
                     case 3:
                         removedPet = armorStand.getEquipment().getItemInOffHand();
                         armorStand.setItem(EquipmentSlot.OFF_HAND, null);
+                        break;
                 }
-                player.sendMessage(ColorChat.chat("&cYour " + removedPet.getItemMeta().displayName() + " &chas been un-equip!"));
+                player.sendMessage(ColorChat.chat("&cYour " + removedPet.getItemMeta().getDisplayName() + " &chas been un-equip!"));
                 player.getInventory().setItemInMainHand(removedPet);
             }
         }
@@ -222,11 +224,13 @@ public class PetCommand implements CommandExecutor, Listener {
                     case 2:
                         currentPet = armorStand.getEquipment().getItemInMainHand();
                         armorStand.setItem(EquipmentSlot.HAND, heldPet);
+                        break;
                     case 3:
                         currentPet = armorStand.getEquipment().getItemInOffHand();
                         armorStand.setItem(EquipmentSlot.OFF_HAND, heldPet);
+                        break;
                 }
-                player.sendMessage(ColorChat.chat("&cYour " + heldPet.getItemMeta().displayName() + " &chas been equip!"));
+                player.sendMessage(ColorChat.chat("&cYour " + heldPet.getItemMeta().getDisplayName() + " &chas been equip!"));
             }
         }
         // give previously equip pet back to player
@@ -261,8 +265,10 @@ public class PetCommand implements CommandExecutor, Listener {
                         break;
                     case 2:
                         pet = armorStand.getEquipment().getItemInMainHand();
+                        break;
                     case 3:
                         pet = armorStand.getEquipment().getItemInOffHand();
+                        break;
                 }
             }
         }
@@ -297,7 +303,7 @@ public class PetCommand implements CommandExecutor, Listener {
                 int total = 0;
                 for(ItemStack petItem : petList){
                     if(petItem.hasItemMeta()){
-                        player.sendMessage(ColorChat.chat("" +petItem.getItemMeta().displayName()));
+                        player.sendMessage(ColorChat.chat("" +petItem.getItemMeta().getDisplayName()));
                         total += 1;
                     }
                 }
@@ -331,10 +337,10 @@ public class PetCommand implements CommandExecutor, Listener {
 
     public boolean isPet(ItemStack item){
         ItemMeta meta = item.getItemMeta();
-        List<String> lore = meta.getLore();
+        List<Component> lore = meta.lore();
         // Check if the held item has lore, and return if the first line of lore contains the word 'pet'
         if(!(lore.isEmpty())){
-            return lore.getFirst().contains("pet");
+            return lore.getFirst().toString().contains("pet");
         }
         // Default return value if no valid pet is found
         return false;
