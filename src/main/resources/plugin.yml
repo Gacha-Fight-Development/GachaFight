@@ -52,6 +52,7 @@ commands:
     aliases: rq
   kick:
     usage: /kick <player> <reason>
+    permission: gacha.helper
   guide:
     usage: /guide <player> <x> <y> <z>
   afk:
@@ -60,7 +61,8 @@ commands:
     usage: /buy
   promote:
     usage: /promote
-
+  removetextdisplay:
+    permission: gacha.dev
 libraries:
   - org.mongodb:mongodb-driver-sync:5.1.2
   - org.mongodb:mongodb-driver-core:5.1.2

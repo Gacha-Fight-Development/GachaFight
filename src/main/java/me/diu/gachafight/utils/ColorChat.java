@@ -18,10 +18,10 @@ public class ColorChat {
         return ChatColor.translateAlternateColorCodes('&', s);
     }
 
-    public static void createItem(Inventory inv, String material, int amount, int invSlot, String displayName, String... loreString) {
+    public static void createItem(Inventory inv, Material material, int amount, int invSlot, String displayName, String... loreString) {
         ItemStack item;
         List<String> lore = new ArrayList<>();
-        item = new ItemStack(Objects.requireNonNull(Material.matchMaterial(material)), amount);
+        item = new ItemStack(Objects.requireNonNull(material), amount);
         ItemMeta meta = item.getItemMeta();
         assert meta != null;
         meta.setDisplayName(ColorChat.chat(displayName)); // Ensure consistency

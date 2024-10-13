@@ -18,7 +18,7 @@ public class DailyQuestScheduler {
                 DailyQuestManager.clearDailyQuestCompletionData();
                 GachaFight.getInstance().getLogger().info("Daily quests have been reset.");
             }
-        }, 0L, 20 * 60 * 60); // Check every hour (in ticks)
+        }, 0L, 1200); // Check every hour (in ticks)
     }
 
     private static boolean isTimeForDailyQuestRefresh() {

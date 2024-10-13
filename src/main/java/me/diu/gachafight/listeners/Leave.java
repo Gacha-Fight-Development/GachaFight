@@ -5,6 +5,7 @@ import me.diu.gachafight.guides.TutorialGuideSystem;
 import me.diu.gachafight.playerstats.PlayerDataManager;
 import me.diu.gachafight.playerstats.PlayerStats;
 import me.diu.gachafight.di.ServiceLocator;
+import me.diu.gachafight.skills.managers.SkillCooldownManager;
 import me.diu.gachafight.utils.ExtractLore;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -32,6 +33,7 @@ public class Leave implements Listener {
         PlayerStats.playerStatsMap.remove(player.getUniqueId());
         plugin.getGuideSystem().removeGuideForPlayer(player);
         GachaFight.getInstance().cancelPlayerTasks(player);
+        SkillCooldownManager.cooldowns.remove(player.getUniqueId());
     }
 
     @EventHandler
@@ -41,5 +43,6 @@ public class Leave implements Listener {
         PlayerStats.playerStatsMap.remove(player.getUniqueId());
         plugin.getGuideSystem().removeGuideForPlayer(player);
         GachaFight.getInstance().cancelPlayerTasks(player);
+        SkillCooldownManager.cooldowns.remove(player.getUniqueId());
     }
 }

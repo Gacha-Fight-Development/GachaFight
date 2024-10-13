@@ -1,8 +1,10 @@
 package me.diu.gachafight.listeners;
 
 import me.diu.gachafight.GachaFight;
+import me.diu.gachafight.dungeon.utils.DungeonUtils;
 import me.diu.gachafight.utils.ColorChat;
 import me.diu.gachafight.utils.FurnitureDataManager;
+import me.diu.gachafight.utils.LootChestDrop;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -39,7 +41,7 @@ public class LootChestListener implements Listener {
             Location location = block.getLocation();
 
             // Check if it's a Goblin or RPG Loot Chest
-            if (isGoblinLootChest(location)) {
+            if (DungeonUtils.isGoblin(location)) {
                 // Goblin Loot Chest logic
                 block.setType(Material.AIR);  // Remove the chest
                 furnitureDataManager.removeFurnitureState(location);
@@ -47,7 +49,7 @@ public class LootChestListener implements Listener {
                 event.getPlayer().sendMessage(ColorChat.chat("&aGoblin Loot Crate Opened!"));
                 furnitureDataManager.saveFurnitureState(location, "minecraft:chest");
                 respawnChest(location);
-            } else if (isRPGLootChest(location)) {
+            } else if (DungeonUtils.isRPG(location)) {
                 // RPG Loot Chest logic
                 block.setType(Material.AIR);  // Remove the chest
                 furnitureDataManager.removeFurnitureState(location);
@@ -71,88 +73,23 @@ public class LootChestListener implements Listener {
         }.runTaskLater(plugin, respawnTime);
     }
 
+    private void spawnRPGLoot(Location location) {
+        // Example RPG loot spawning commands
+        LootChestDrop.dropCommonKey(location, 0.5, 2);
+        LootChestDrop.dropSmallHpPot(location, 0.3, 1);
+        LootChestDrop.dropGold(location, 0.7, 7);
+        LootChestDrop.dropUncommonKey(location, 0.1, 1);
+    }
+
     // Spawn Goblin loot at the location
     private void spawnGoblinLoot(Location location) {
         // Example Goblin loot spawning commands
-        if (Math.random() < 0.5) {
-            Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "si drop 991 " +
-                    (int) (Math.floor(Math.random() * 2) + 1) + " Spawn " +
-                    location.getX() + " " + location.getY() + 1 + " " +
-                    location.getZ());
-        }
-        if (Math.random() < 0.3) {
-            Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "si drop 901 " +
-                    (int) (Math.floor(Math.random() * 1) + 1) + " Spawn " + location.getX() + " " +
-                    location.getY() + 1 + " " + location.getZ());
-        }
-        if (Math.random() < 0.5) {
-            Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "si drop 611 " +
-                    (int) (Math.floor(Math.random() * 12) + 1) + " Spawn " + location.getX() + " " +
-                    location.getY() + 1 + " " + location.getZ());
-        }
-        if (Math.random() < 0.05) {
-            Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "si drop 992 " +
-                    (int) (Math.floor(Math.random() * 1) + 1) + " Spawn " + location.getX() + " " +
-                    location.getY() + 1 + " " + location.getZ());
-        }
-    }
-
-    // Spawn RPG loot at the location
-    private void spawnRPGLoot(Location location) {
-        // Example RPG loot spawning commands
-        if (Math.random() < 0.5) {
-            Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "si drop 991 " +
-                    (int) (Math.floor(Math.random() * 2) + 1) + " Spawn " +
-                    location.getX() + " " + location.getY() + 1 + " " +
-                    location.getZ());
-        }
-        if (Math.random() < 0.3) {
-            Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "si drop 901 " +
-                    (int) (Math.floor(Math.random() * 1) + 1) + " Spawn " + location.getX() + " " +
-                    location.getY() + 1 + " " + location.getZ());
-        }
-        if (Math.random() < 0.5) {
-            Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "si drop 611 " +
-                    (int) (Math.floor(Math.random() * 12) + 1) + " Spawn " + location.getX() + " " +
-                    location.getY() + 1 + " " + location.getZ());
-        }
-        if (Math.random() < 0.05) {
-            Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "si drop 992 " +
-                    (int) (Math.floor(Math.random() * 1) + 1) + " Spawn " + location.getX() + " " +
-                    location.getY() + 1 + " " + location.getZ());
-        }
-    }
-
-    // Check if the chest location is one of the designated Goblin Loot Chest locations
-    private boolean isGoblinLootChest(Location location) {
-        Location[] goblinLootChestLocations = {
-                new Location(location.getWorld(), -702.5, 4, 290.5), // Goblin start
-                new Location(location.getWorld(), -703.5, 4, 317.5),
-                new Location(location.getWorld(), -636.5, 4, 369.5),
-                new Location(location.getWorld(), -648.5, 4, 414.5),
-                new Location(location.getWorld(), -669.5, 4, 420.5),
-                new Location(location.getWorld(), -700.5, 4, 397.5),
-                new Location(location.getWorld(), -714.5, 4, 433.5),
-                new Location(location.getWorld(), -770.5, 4, 382.5),
-                new Location(location.getWorld(), -745.5, 4, 347.5),
-                new Location(location.getWorld(), -655.5, 4, 328.5) // Goblin end
-        };
-
-        for (Location chestLocation : goblinLootChestLocations) {
-            if (location.getWorld().equals(chestLocation.getWorld())
-                    && location.getBlockX() == chestLocation.getBlockX()
-                    && location.getBlockY() == chestLocation.getBlockY()
-                    && location.getBlockZ() == chestLocation.getBlockZ()) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    // Check if the chest location is one of the designated RPG Loot Chest locations
-    private boolean isRPGLootChest(Location location) {
-        //MinX, MaxX, MinZ, MaxZ
-        return location.getX() > -969 && location.getX() < -838 && location.getZ() > -263 && location.getZ() < 469;
+        LootChestDrop.dropCommonKey(location, 0.7, 4);
+        LootChestDrop.dropSmallHpPot(location, 0.3, 2);
+        LootChestDrop.dropGold(location, 1, 12);
+        LootChestDrop.dropUncommonKey(location, 0.35, 1);
+        LootChestDrop.dropUncommonKey(location, 0.35, 1);
+        LootChestDrop.dropRareKey(location, 0.05, 1);
     }
 
     public void saveFurnitureState(Location location, String furnitureID) {

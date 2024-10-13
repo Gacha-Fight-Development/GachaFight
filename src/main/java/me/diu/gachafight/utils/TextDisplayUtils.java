@@ -41,7 +41,7 @@ public class TextDisplayUtils {
             } else {
                 display.text(MiniMessage.miniMessage().deserialize("<!i><red>🗡 <gold>" + String.format("%.1f", damage)));
             }
-
+            activeDisplays.put(display.getUniqueId(), display);
 
             new BukkitRunnable() {
                 @Override

@@ -13,26 +13,26 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 public class RaritySelectionGUI {
 
-    public static final String[] RARITY_NAMES = {
-            "<white>Common",
-            "<gray>Uncommon",
-            "<green>Rare",
-            "<light_blue>Epic",
-            "<magenta>Unique",
-            "<gold>Legendary",
-            "<red>Mythic",
-            "<rainbow>Event/Custom"
+    public static final String[] RARITY_NAMES = { //im just ganna make this plain text
+            "Common", //it shouldnt matter
+            "Uncommon",
+            "Rare",
+            "Epic",
+            "Unique",
+            "Legendary",
+            "Mythic",
+            "Event/Custom"
     };
 
-    public static final String[] RARITY_MATERIALS = {
-            "WHITE_WOOL",
-            "GRAY_WOOL",
-            "LIME_WOOL",
-            "LIGHT_BLUE_WOOL",
-            "PURPLE_WOOL",
-            "ORANGE_WOOL",
-            "RED_WOOL",
-            "PINK_WOOL"
+    public static final Material[] RARITY_MATERIALS = {
+            Material.WHITE_WOOL,
+            Material.GRAY_WOOL,
+            Material.LIME_WOOL,
+            Material.LIGHT_BLUE_WOOL,
+            Material.PURPLE_WOOL,
+            Material.ORANGE_WOOL,
+            Material.RED_WOOL,
+            Material.PINK_WOOL
     };
 
     public static void openGachaRarity(Player player, GachaFight plugin) {

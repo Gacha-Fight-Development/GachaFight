@@ -1,6 +1,7 @@
 package me.diu.gachafight.commands;
 
 import me.diu.gachafight.GachaFight;
+import me.diu.gachafight.combat.DamageListener;
 import me.diu.gachafight.guides.TutorialGuideSystem;
 import me.diu.gachafight.utils.ColorChat;
 import org.bukkit.Bukkit;
@@ -59,6 +60,9 @@ public class GuideCommand implements CommandExecutor {
         if (destination == null) {
             sender.sendMessage("Location '" + locationName + "' not found. Available locations: " + preSetLocations.keySet());
             return true;
+        }
+        if (!DamageListener.isSafezone(player.getLocation())) {
+            player.sendMessage(ColorChat.chat("&cNot in Safe Zone!"));
         }
 
         // Start guiding the target player to the destination
