@@ -1,6 +1,7 @@
 package me.diu.gachafight;
 
 import lombok.Getter;
+import me.diu.gachafight.Pets.PetCommand;
 import me.diu.gachafight.commands.*;
 import me.diu.gachafight.commands.tabs.AdminPlayerDataTabCompleter;
 import me.diu.gachafight.combat.DamageListener;
@@ -75,6 +76,7 @@ public final class GachaFight extends JavaPlugin implements Listener {
     private QuestGUI questGUI;
     private BuyItemManager buyItemManager;
     private TutorialGuideSystem guideSystem;
+    private PetCommand petCommand;
     @Override
     public void onEnable() {
         this.instance = this;
@@ -101,6 +103,7 @@ public final class GachaFight extends JavaPlugin implements Listener {
         this.questGUI = new QuestGUI(questManager);
         this.buyItemManager = new BuyItemManager(this);
         this.guideSystem = new TutorialGuideSystem(this);
+        this.petCommand = new PetCommand(this);
         registerEvents();
         registerCommands();
         loadAllPlayerData(diContainer);
