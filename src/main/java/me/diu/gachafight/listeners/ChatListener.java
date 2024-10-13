@@ -31,6 +31,8 @@ public class ChatListener implements Listener {
             prefix = "%img_manager%";
         } else if (event.getPlayer().hasPermission("gacha.dev")) {
             prefix = "%img_dev%";
+        } else if (event.getPlayer().hasPermission("gacha.admin")) {
+            prefix = "%img_admin%";
         } else if (event.getPlayer().hasPermission("gacha.staff")) {
             prefix = "%img_staff%";
         } else if (event.getPlayer().hasPermission("gacha.mod")) {

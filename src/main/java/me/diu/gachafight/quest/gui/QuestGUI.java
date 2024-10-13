@@ -151,7 +151,6 @@ public class QuestGUI {
             if (meta != null) {
                 // Set the display name and lore of the book based on the quest data
                 meta.setDisplayName("§b" + quest.getName());
-                System.out.println(isQuestCompleted);
                 if (isQuestCompleted) {
                     // Show "Progress: Completed" if the quest is completed
                     meta.setLore(List.of(
