@@ -53,7 +53,7 @@ public class RarityLootTableEditorGUI {
                 player.sendMessage(MiniMessage.miniMessage().deserialize("<red>Item removed from " + RaritySelectionGUI.RARITY_NAMES[rarityIndex] + " loot table."));
                 openGacha(player, rarityIndex, plugin); // Refresh inventory
             }  else if (event.getClick() == ClickType.MIDDLE) {
-                player.getInventory().addItem(event.getCursor());
+                player.getInventory().addItem(event.getCurrentItem());
             }
         }
     }

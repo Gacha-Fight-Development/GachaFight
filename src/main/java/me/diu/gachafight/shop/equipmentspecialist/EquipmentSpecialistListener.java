@@ -73,11 +73,11 @@ public class EquipmentSpecialistListener implements Listener {
                 guiInventory.setItem(16, chestArrow2);
                 player.getInventory().addItem(clickedItem);
             }
-            if (event.getSlot() == 10 && !clickedItem.getItemMeta().getDisplayName().contains("Arrow Check")) {
+            if (event.getClickedInventory().equals(guiInventory) && event.getSlot() == 10 && !clickedItem.getItemMeta().getDisplayName().contains("Arrow Check")) {
                 guiInventory.setItem(10, chestArrow1);
                 player.getInventory().addItem(clickedItem);
             }
-            if (event.getSlot() == 16 && !clickedItem.getItemMeta().getDisplayName().contains("Arrow Check")) {
+            if (event.getClickedInventory().equals(guiInventory) && event.getSlot() == 16 && !clickedItem.getItemMeta().getDisplayName().contains("Arrow Check")) {
                 guiInventory.setItem(16, chestArrow2);
                 player.getInventory().addItem(clickedItem);
             }
@@ -150,6 +150,7 @@ public class EquipmentSpecialistListener implements Listener {
                 }
             }
             equipmentCheck(event, player, true);
+            player.updateInventory();
 
         } else if (event.getView().getTitle().equals("Level Up Equipment")) { //Level: Change | Percentage: Stay
             event.setCancelled(true);  // Prevent moving items in the menu
@@ -488,19 +489,19 @@ public class EquipmentSpecialistListener implements Listener {
                 ItemStack greenCheck;
                 if (reroll) {
                     if (ExtractLore.extractLevelFromName(clickedItem.getItemMeta().getDisplayName()) >= ExtractLore.extractLevelFromName(slot10.getItemMeta().getDisplayName())) {
-                        costForReroll = 10 * Math.pow(ExtractLore.extractLevelFromName(clickedItem.getItemMeta().getDisplayName()), (1+(rarity*0.45)));
+                        costForReroll = 10 * Math.pow(ExtractLore.extractLevelFromName(clickedItem.getItemMeta().getDisplayName()), (1+(rarity*0.35)));
                         //System.out.println(costForReroll);
                         System.out.println(slot10.getItemMeta().getDisplayName());
                         //System.out.println(ExtractLore.extractLevelFromName(slot10.getItemMeta().getDisplayName()));
                     } else {
-                        costForReroll = 10 * Math.pow(ExtractLore.extractLevelFromName(slot10.getItemMeta().getDisplayName()), (1+(rarity*0.45)));
+                        costForReroll = 10 * Math.pow(ExtractLore.extractLevelFromName(slot10.getItemMeta().getDisplayName()), (1+(rarity*0.35)));
                         //System.out.println(costForReroll);
                         System.out.println(slot16.getItemMeta().getDisplayName());
                         //System.out.println(ExtractLore.extractLevelFromName(slot16.getItemMeta().getDisplayName()));
                     }
                     greenCheck = createCustomItem(Material.PAPER, "§aConfirm", 10109, "§aCost: §6" + String.format("%.2f",costForReroll));
                 } else {
-                    costForLevel = 25 * Math.pow( PlayerStats.getPlayerStats(player).getLevel(), (1+(rarity*0.67)));
+                    costForLevel = 25 * Math.pow( PlayerStats.getPlayerStats(player).getLevel(), (1+(rarity*0.56)));
                     greenCheck = createCustomItem(Material.PAPER, "§aConfirm", 10109, "§aCost: §6" + String.format("%.2f",costForLevel));
                 }
                 guiInventory.setItem(22, greenCheck);
@@ -520,13 +521,13 @@ public class EquipmentSpecialistListener implements Listener {
                     ItemStack greenCheck;
                     if (reroll) {
                         if (ExtractLore.extractLevelFromName(clickedItem.getItemMeta().getDisplayName()) >= ExtractLore.extractLevelFromName(slot10.getItemMeta().getDisplayName())) {
-                            costForReroll = 10 * Math.pow(ExtractLore.extractLevelFromName(clickedItem.getItemMeta().getDisplayName()), (1+(rarity*0.45)));
+                            costForReroll = 10 * Math.pow(ExtractLore.extractLevelFromName(clickedItem.getItemMeta().getDisplayName()), (1+(rarity*0.35)));
                         } else {
-                            costForReroll = 10 * Math.pow(ExtractLore.extractLevelFromName(slot10.getItemMeta().getDisplayName()), (1+(rarity*0.45)));
+                            costForReroll = 10 * Math.pow(ExtractLore.extractLevelFromName(slot10.getItemMeta().getDisplayName()), (1+(rarity*0.35)));
                         }
                         greenCheck = createCustomItem(Material.PAPER, "§aConfirm", 10109, "§aCost: §6" + String.format("%.2f",costForReroll));
                     } else {
-                        costForLevel = 25 * Math.pow( PlayerStats.getPlayerStats(player).getLevel(), (1+(rarity*0.67)));
+                        costForLevel = 25 * Math.pow( PlayerStats.getPlayerStats(player).getLevel(), (1+(rarity*0.56)));
                         greenCheck = createCustomItem(Material.PAPER, "§aConfirm", 10109, "§aCost: §6" + String.format("%.2f",costForLevel));
                     }
                     guiInventory.setItem(22, greenCheck);

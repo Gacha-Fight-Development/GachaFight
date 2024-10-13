@@ -89,7 +89,7 @@ public class PlayerStatsListener implements Listener {
     @EventHandler
     public void onOffhandItemSwitch(PlayerSwapHandItemsEvent event) {
         PlayerStats playerStats = PlayerStats.getPlayerStats(event.getPlayer());
-        if (event.getOffHandItem() != null) {
+        if (event.getOffHandItem() != null && !isWeapon(event.getOffHandItem())) {
             clearOffhandStats(playerStats);
             updateOffhandStats(playerStats, event.getOffHandItem());
         } else {
@@ -123,7 +123,7 @@ public class PlayerStatsListener implements Listener {
 
         // Handle item moving out of the offhand
         if (event.getClick() == ClickType.SWAP_OFFHAND || event.getSlot() == 40) {
-            if (currentItem != null) {
+            if (currentItem != null && !isWeapon(cursorItem)) {
                 clearOffhandStats(playerStats);
                 updateOffhandStats(playerStats, cursorItem);
             } else {
@@ -183,7 +183,7 @@ public class PlayerStatsListener implements Listener {
     public static void updateOffhandStats(PlayerStats playerStats, ItemStack item) {
         if (item != null && item.hasItemMeta()) {
             ItemMeta meta = item.getItemMeta();
-            if (meta != null && meta.hasLore()) {
+            if (meta != null && meta.hasLore() && !isWeapon(item)) {
                 double damageValue = ExtractLore.getDamageFromLore(meta.getLore());
                 double armorValue = ExtractLore.getArmorFromLore(meta.getLore());
                 double critValue = ExtractLore.getCritFromLore(meta.getLore());
@@ -216,7 +216,7 @@ public class PlayerStatsListener implements Listener {
     }
 
 
-    private boolean isWeapon(ItemStack item) {
+    public static boolean isWeapon(ItemStack item) {
         if (item == null) return false;
 
         switch (item.getType()) {

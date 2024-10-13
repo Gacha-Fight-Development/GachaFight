@@ -7,6 +7,7 @@ import me.diu.gachafight.playerstats.leaderboard.MoneyEntry;
 import me.diu.gachafight.playerstats.leaderboard.LevelEntry;
 import me.diu.gachafight.playerstats.leaderboard.MoneyLeaderboard;
 import me.diu.gachafight.playerstats.leaderboard.LevelLeaderboard;
+import me.diu.gachafight.skills.managers.MobDropSelector;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -58,7 +59,7 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
                     case "level":
                         return String.valueOf(stats.getLevel());
                     case "luck":
-                        return String.valueOf((stats.getLuck() + stats.getGearStats().getTotalLuck() + stats.getWeaponStats().getLuck()));
+                        return String.format("%.1f", (stats.getLuck() + stats.getGearStats().getTotalLuck() + stats.getWeaponStats().getLuck()));
                     case "exp":
                         return String.format("%.1f", stats.getExp());
                     case "expreq":
@@ -81,6 +82,8 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
                         return String.format("%.0f", (stats.getCritDmg() * 100)) + "%";
                     case "dodge":
                         return String.format("%.1f", (stats.getDodge() * 100)) + "%";
+                    case "test":
+                        return String.valueOf(MobDropSelector.getMob());
 
                     // Money leaderboard placeholders
                     case "money_rank":

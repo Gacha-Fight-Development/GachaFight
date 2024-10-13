@@ -81,36 +81,40 @@ public class ExtractLore {
         }
     }
 
-
+    // easier to explain here
     public static double findMaxStat(String lore, Player player, boolean withPlayerLevel, Boolean withRarity, Double rarity) {
         PlayerStats playerStats = PlayerStats.getPlayerStats(player);
         int playerLevel = playerStats.getLevel();
-        double boostMultiplier = Calculations.playerLevelMultiplier(playerLevel);
+        double levelMultiplier = Calculations.playerLevelMultiplier(playerLevel); // gets the multiplier for levels
 
         double maxStat = 0;
         if (lore != null) {
-            // Detect and extract all stat lines (e.g., Damage, Armor, Crit, Max HP)
+            // this extracts the Armor: 0.7/1.3 -> parts[0] = 0.7 | parts[1] = 1.3 Regex thing
             String[] parts = extractStatRangeFromLore(lore);
             if (parts != null && parts.length == 2) {
                 if (withPlayerLevel) {
                     if (withRarity) {
-                        double currentMaxStat = Double.parseDouble(parts[1].trim()) * boostMultiplier * rarity;
+                        //This will apply the LevelMulti & Rarity so 1.3 -> 1.3*levelmulti*rarity (example: 1.3*lvlmulti*3 (3 = rare))
+                        double currentMaxStat = Double.parseDouble(parts[1].trim()) * levelMultiplier * rarity;
                         if (currentMaxStat > maxStat) {
                             maxStat = currentMaxStat;  // Update maxStat if the current one is larger
                         }
                     } else {
-                        double currentMaxStat = Double.parseDouble(parts[1].trim()) * boostMultiplier;
+                        // only apply level multi
+                        double currentMaxStat = Double.parseDouble(parts[1].trim()) * levelMultiplier;
                         if (currentMaxStat > maxStat) {
                             maxStat = currentMaxStat;  // Update maxStat if the current one is larger
                         }
                     }
                 } else { //without level boost
                     if (withRarity) {
+                        // only rarity
                         double currentMaxStat = Double.parseDouble(parts[1].trim()) * rarity;
                         if (currentMaxStat > maxStat) {
                             maxStat = currentMaxStat;  // Update maxStat if the current one is larger
                         }
                     } else {
+                        // Return default stat: Armor: maxStat: 1.3
                         double currentMaxStat = Double.parseDouble(parts[1].trim());
                         if (currentMaxStat > maxStat) {
                             maxStat = currentMaxStat;  // Update maxStat if the current one is larger

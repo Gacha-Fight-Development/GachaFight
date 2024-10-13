@@ -17,6 +17,14 @@ public class GiveItemUtils {
         Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "si give 992 " + amount + " " + player.getName() + " true");
         player.sendMessage(MiniMessage.miniMessage().deserialize("<green>+ <gray>" +amount+ "x Uncommon Gacha Key"));
     }
+    public static void giveRareKey(Player player, int amount) {
+        Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "si give 993 " + amount + " " + player.getName() + " true");
+        player.sendMessage(MiniMessage.miniMessage().deserialize("<green>+ <green>" +amount+ "x Rare Gacha Key"));
+    }
+    public static void giveEpicKey(Player player, int amount) {
+        Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "si give 994 " + amount + " " + player.getName() + " true");
+        player.sendMessage(MiniMessage.miniMessage().deserialize("<green>+ <aqua>" +amount+ "x Epic Gacha Key"));
+    }
     public static void giveGold(Player player, int amount) {
         Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "si give 611 " + amount + " " + player.getName() + " true");
         player.sendMessage(MiniMessage.miniMessage().deserialize("<green>+ <gold>" +amount+ "x Gold"));

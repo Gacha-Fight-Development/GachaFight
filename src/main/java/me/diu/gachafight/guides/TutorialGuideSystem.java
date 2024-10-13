@@ -75,7 +75,7 @@ public class TutorialGuideSystem implements Listener {
                             plugin.getGuideSystem().guidePlayerToLocation(player, GuideCommand.preSetLocations.get("dungeon"));
                             player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
                         }
-                    }.runTaskLater(plugin, 90*2);
+                    }.runTaskLater(plugin, 100*3);
                 }
             } else {
                 // Move the display closer to the destination at a slower speed

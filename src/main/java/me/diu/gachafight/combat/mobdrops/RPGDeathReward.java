@@ -22,7 +22,7 @@ public class RPGDeathReward {
             if (Math.random() < (0.01 + (stats.getLuck() * 0.001))) {
                 GiveItemUtils.giveUncommonKey(player, 1);
             }
-            if (player.hasPermission("gacha.tutorial.1")) {
+            if (player.hasPermission("gacha.tutorial.1") && !player.hasPermission("op")) {
                 Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "lp user " + player.getName() + " permission unset gacha.tutorial.1");
                 Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "lp user " + player.getName() + " permission set gacha.tutorial.2");
                 player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
@@ -38,40 +38,32 @@ public class RPGDeathReward {
         }
         if (mobName.contains("rpg_zombie") || mobName.contains("rpg_rat_undead") || mobName.contains("rpg_poison_slime_cube")) {
             if (Math.random() < (0.15 + (stats.getLuck() * 0.001))) {
-                Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "si give 991 1 " + player.getName() + " true");
-                player.sendMessage(MiniMessage.miniMessage().deserialize("<green>+ <white>Common Gacha Key"));
+                GiveItemUtils.giveCommonKey(player, 1);
             }
             if (Math.random() < (0.01 + (stats.getLuck() * 0.001))) {
-                Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "si give 992 1 " + player.getName() + " true");
-                player.sendMessage(MiniMessage.miniMessage().deserialize("<green>+ <gray>Uncommon Gacha Key"));
+                GiveItemUtils.giveUncommonKey(player, 1);
             }
         }
         if (mobName.contains("rpg_skeleton") || mobName.contains("rpg_skeleton_crossbow")) {
             if (Math.random() < (0.20 + (stats.getLuck() * 0.001))) {
-                Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "si give 991 1 " + player.getName() + " true");
-                player.sendMessage(MiniMessage.miniMessage().deserialize("<green>+ <white>Common Gacha Key"));
+                GiveItemUtils.giveCommonKey(player, 1);
             }
             if (Math.random() < (0.05 + (stats.getLuck() * 0.001))) {
-                Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "si give 992 1 " + player.getName() + " true");
-                player.sendMessage(MiniMessage.miniMessage().deserialize("<green>+ <gray>Uncommon Gacha Key"));
+                GiveItemUtils.giveUncommonKey(player, 1);
             }
         }
         if (mobName.contains("rpg_sand_golem") || mobName.contains("rpg_stone_golem")) {
             if (Math.random() < (1 + (stats.getLuck() * 0.001))) {
-                Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "si give 991 5 " + player.getName() + " true");
-                player.sendMessage(MiniMessage.miniMessage().deserialize("<green>+ <white>5x Common Gacha Key"));
+                GiveItemUtils.giveCommonKey(player, 5);
             }
             if (Math.random() < (1 + (stats.getLuck() * 0.001))) {
-                Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "si give 992 1 " + player.getName() + " true");
-                player.sendMessage(MiniMessage.miniMessage().deserialize("<green>+ <gray>Uncommon Gacha Key"));
+                GiveItemUtils.giveUncommonKey(player, 1);
             }
             if (Math.random() < (0.2 + (stats.getLuck() * 0.001))) {
-                Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "si give 992 1 " + player.getName() + " true");
-                player.sendMessage(MiniMessage.miniMessage().deserialize("<green>+ <gray>Uncommon Gacha Key"));
+                GiveItemUtils.giveUncommonKey(player, 1);
             }
-            if (Math.random() < (0.02 + (stats.getLuck() * 0.001))) {
-                Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "si give 993 1 " + player.getName() + " true");
-                player.sendMessage(MiniMessage.miniMessage().deserialize("<green>+ <green>Rare Gacha Key"));
+            if (Math.random() < (0.03 + (stats.getLuck() * 0.001))) {
+                GiveItemUtils.giveRareKey(player, 1);
             }
             player.sendMessage(MiniMessage.miniMessage().deserialize("<aqua>Boss Bonus:"));
             player.sendMessage(MiniMessage.miniMessage().deserialize(" <green>+ <yellow>$100"));

@@ -17,6 +17,8 @@ import java.util.UUID;
 
 public class PlayerZoneListener implements Listener {
 
+    public static final long delay = 1200*4;
+
     // AFK zone
     private final int minX = -12, maxX = -3;
     private final int minY = 176, maxY = 180;
@@ -43,7 +45,7 @@ public class PlayerZoneListener implements Listener {
             // If player is in the zone and not already being rewarded, start rewarding
             if (!playerTasks.containsKey(player.getUniqueId())) {
                 player.sendMessage(ColorChat.chat("&aEntered AFK Zone."));
-                player.sendMessage(ColorChat.chat("&aYour next reward in 1 minute."));
+                player.sendMessage(ColorChat.chat("&aYour next reward in " + delay/1200 + " minute."));
                 startRewardingPlayer(player);
             }
         } else {
@@ -71,12 +73,12 @@ public class PlayerZoneListener implements Listener {
                 player.sendMessage(ColorChat.chat("&aAFK Zone, You Have been Rewarded:"));
                 // You can add your custom reward logic here
                 giveAFKReward(player);
-                player.sendMessage(ColorChat.chat("&aNext Reward in 1 Minute"));
+                player.sendMessage(ColorChat.chat("&aNext Reward in " + delay/1200 + " Minute"));
             }
         };
 
         // Run the task every 1 minute (1200 ticks = 1 minute)
-        rewardTask.runTaskTimer(GachaFight.getInstance(), 1200L, 1200L);
+        rewardTask.runTaskTimer(GachaFight.getInstance(), delay, delay);
 
         // Store the task in the map
         playerTasks.put(playerId, rewardTask);
@@ -104,8 +106,8 @@ public class PlayerZoneListener implements Listener {
         if (Math.random() < 0.05) {
             GiveItemUtils.giveUncommonKey(player, 1);
         }
-        GiveItemUtils.giveGold(player, (int) Math.floor((Math.random() * 4)+1));
-        GiveItemUtils.giveEXP(player, (stats.getLevel() * 0.2));
+        GiveItemUtils.giveGold(player, (int) Math.floor((Math.random() * 6)+1)); //should this increase? $0.6 per kill
+        GiveItemUtils.giveEXP(player, (stats.getLevel() * 0.2));//this? 1.33 exp per kill
         GiveItemUtils.convertGold(player);
     }
 

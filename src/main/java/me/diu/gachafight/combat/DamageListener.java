@@ -10,8 +10,12 @@ import me.diu.gachafight.GachaFight;
 import me.diu.gachafight.combat.mobdrops.BulbDeathReward;
 import me.diu.gachafight.combat.mobdrops.GoblinDeathReward;
 import me.diu.gachafight.combat.mobdrops.RPGDeathReward;
+import me.diu.gachafight.dungeon.utils.DungeonUtils;
 import me.diu.gachafight.playerstats.PlayerStats;
 import me.diu.gachafight.quest.listeners.QuestKillListener;
+import me.diu.gachafight.skills.managers.MobDropSelector;
+import me.diu.gachafight.skills.managers.SkillDamageSource;
+import me.diu.gachafight.skills.rarity.SkillList;
 import me.diu.gachafight.utils.ColorChat;
 import me.diu.gachafight.utils.TextDisplayUtils;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -19,6 +23,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.damage.DamageSource;
+import org.bukkit.damage.DamageType;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -66,8 +71,8 @@ public class DamageListener implements Listener {
         }
 
         // Handle Gacha Chest
-        if (event.getDamager() instanceof Player && event.getEntity().getName().contains("Gacha Chest")) {
-
+        if (event.getDamageSource().getDamageType().equals(DamageType.ON_FIRE)) {
+            //handleFireDamage(event, (Player) event.getDamager(), (Player) event.getEntity());
         }
     }
 
@@ -76,10 +81,20 @@ public class DamageListener implements Listener {
         PlayerStats stats = PlayerStats.getPlayerStats(player);
         // Retrieve player's damage stat
         double playerDamage = stats.getDamage() + stats.getWeaponStats().getDamage() + stats.getGearStats().getTotalDamage();
-        // Get the mob's armor using MythicMobs API
+        if (DungeonUtils.isRPG(entity.getLocation())) {
+            if (playerDamage > 15) {
+                playerDamage = 15;
+            }
+        }
+        // Checks for SKILL Damage
+        if (event.getDamageSource().getDamageType().equals(DamageType.CACTUS)) {
+            playerDamage *= event.getDamage();
+        } else {
+            playerDamage *= SkillList.getPlayerSkillCharge(player);
+        }
         double mobArmor = getMobArmor(entity);
-        // Calculate the custom total damage
-        double totalDamage = playerDamage - mobArmor; // Calc PvE
+        // ==============Calc PvE================
+        double totalDamage = playerDamage - mobArmor;
         if (totalDamage < 0.5) {
             totalDamage = 0.5;
         }
@@ -118,7 +133,11 @@ public class DamageListener implements Listener {
 
         // Calculate the attacker's total damage
         double attackerDamage = attackerStats.getDamage() + attackerStats.getWeaponStats().getDamage() + attackerStats.getGearStats().getTotalDamage();
-
+        if (DungeonUtils.isRPG(target.getLocation())) {
+            if (attackerDamage > 15) {
+                attackerDamage = 15;
+            }
+        }
         // Calculate the target's total armor
         double targetArmor = targetStats.getArmor() + targetStats.getGearStats().getTotalArmor();
 
@@ -129,12 +148,12 @@ public class DamageListener implements Listener {
         if (Math.random() > targetStats.getDodge()) { //below triggers if not dodged
             //reduce damage for target if attacker level is above target's level
             if (attackerStats.getLevel() > targetStats.getLevel()) {
-                int levelDiff = attackerStats.getLevel() - targetStats.getLevel();
+                double levelDiff = attackerStats.getLevel() - targetStats.getLevel();
                 //sets a minimum of 10% damage
-                if (levelDiff*0.1 >= 0.9) {
-                    levelDiff = 1;
+                if (levelDiff >= 10) {
+                    levelDiff = 0.5;
                 }
-                totalDamage = totalDamage*(1-(levelDiff*0.1));
+                totalDamage = totalDamage*(1-(levelDiff*0.07));
             }
             //sets minimum damage of 0.5
             if (totalDamage < 0.5) {
@@ -224,25 +243,35 @@ public class DamageListener implements Listener {
         }
     }
 
+    public void handleFireDamage() {
+
+    }
+
     // New method to handle mob death and give rewards
     private void handleMobDeath(Player player, Entity entity) {
         if (entity instanceof LivingEntity) {
             double mobHp = ((LivingEntity) entity).getMaxHealth();
             double expGained = mobHp / 7.5;
             double moneyGained = mobHp / 20;
-
-            // Add experience to the player
+            double rankMulti = 1;
+            // Add EXP & $ to the player
             PlayerStats playerStats = PlayerStats.getPlayerStats(player);
-            playerStats.addExp((int) expGained, player);
+            if (player.hasPermission("gacha.vip")) {
+                rankMulti = 1.2;
+            }
+            playerStats.addExp( expGained * rankMulti, player);
+            playerStats.setMoney(playerStats.getMoney() + (moneyGained*rankMulti));
 
-            // Add money to the player
-            playerStats.setMoney(playerStats.getMoney() + moneyGained);
+
             if (entity.getName().contains("Goblin")) {
                 GoblinDeathReward.MobDeath(entity.getName(), player);
             } else if (entity.getName().contains("rpg")) {
                 RPGDeathReward.MobDeath(entity.getName(), player);
             } else if (entity.getName().contains("Bulb")) {
                 BulbDeathReward.MobDeath(entity.getName(), player);
+            }
+            if (entity.getName().equalsIgnoreCase(MobDropSelector.getMob())) {
+
             }
 
             if (Math.random() < 0.001) {
@@ -269,15 +298,12 @@ public class DamageListener implements Listener {
         stats.setHp(stats.getMaxhp());
         //clear Damage Indicator
         TextDisplay display = TextDisplayUtils.activeDisplays.get(player.getUniqueId());
-        System.out.println(display);
-        System.out.println(TextDisplayUtils.activeDisplays.get(player.getUniqueId()));
         if (display != null) {
             display.remove();
         }
         // Create a list to store items that should be removed from the inventory
         List<ItemStack> itemsToRemove = new ArrayList<>();
         List<String> itemNamesToRemove = new ArrayList<>();
-        // Iterate through the player's inventory
         if (stats.getLevel() > 2) {
             for (ItemStack item : player.getInventory()) {
                 if (item != null && item.hasItemMeta()) {
@@ -285,9 +311,8 @@ public class DamageListener implements Listener {
                     if (meta != null && meta.hasLore()) {
                         for (String lore : meta.getLore()) {
                             if (lore.contains("Drop On Death")) {
-                                // Drop the item on the ground without adding it to the event drops
                                 player.getWorld().dropItemNaturally(player.getLocation(), item);
-                                itemsToRemove.add(item); // Mark the item for removal from inventory
+                                itemsToRemove.add(item);
                                 itemNamesToRemove.add("&e"+item.getAmount() + "x " + item.getItemMeta().getDisplayName() + "&r");
                                 break;
                             }
@@ -345,5 +370,21 @@ public class DamageListener implements Listener {
             return true;
         }
         return false;
+    }
+
+    public static void handleFireTicks() {
+        new BukkitRunnable() {
+            public void run() {
+                for (Player player : Bukkit.getServer().getOnlinePlayers()) {
+                    if (player.isVisualFire()) {
+                        PlayerStats stats = PlayerStats.getPlayerStats(player);
+                        player.damage(0);
+                        double damage = stats.getMaxhp()/40;
+                        stats.setHp(stats.getHp()-damage);
+                    }
+                }
+            }
+        }.runTaskTimer(GachaFight.getInstance(), 20, 60);
+
     }
 }

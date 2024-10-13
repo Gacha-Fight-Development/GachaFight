@@ -1,5 +1,6 @@
 package me.diu.gachafight;
 
+import io.lumine.mythic.bukkit.commands.spawners.RemoveCommand;
 import lombok.Getter;
 import me.diu.gachafight.commands.*;
 import me.diu.gachafight.commands.tabs.AdminPlayerDataTabCompleter;
@@ -39,6 +40,8 @@ import me.diu.gachafight.shop.potion.listeners.PotionUseListener;
 import me.diu.gachafight.shop.sell.ShopManager;
 import me.diu.gachafight.shop.potion.listeners.PotionShopListener;
 import me.diu.gachafight.shop.potion.managers.PotionItemManager;
+import me.diu.gachafight.skills.SkillSystem;
+import me.diu.gachafight.skills.managers.MobDropSelector;
 import me.diu.gachafight.utils.ColorChat;
 import me.diu.gachafight.utils.FurnitureDataManager;
 import me.diu.gachafight.utils.TextDisplayUtils;
@@ -103,11 +106,12 @@ public final class GachaFight extends JavaPlugin implements Listener {
         this.guideSystem = new TutorialGuideSystem(this);
         registerEvents();
         registerCommands();
+        MobDropSelector.scheduleTimer();
+        DamageListener.handleFireTicks();
+        MobDropSelector.init();
         loadAllPlayerData(diContainer);
         Blocks.spawnGachaChest();
         Blocks.spawnTutorialGachaChest();
-        Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), "minecraft:kill @e[type=minecraft:text_display]");
-        Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), "citizens reload");
         furnitureDataManager.loadMissingFurniture();
         if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
             PlaceholderAPIHook.registerHook();
@@ -204,6 +208,7 @@ public final class GachaFight extends JavaPlugin implements Listener {
         new AFKCommand(this);
         new BuyCommand(this);
         new PromoteCommand(this, luckPerms);
+        new RemoveTextDisplayCommand(this);
     }
 
     private void registerEvents() {
@@ -230,6 +235,8 @@ public final class GachaFight extends JavaPlugin implements Listener {
         new ShopItemUseListener(this);
         new FoodConsumeListener(this);
         new PlayerZoneListener(this);
+        new SkillSystem(this);
+        new ChunkUnloadListener(this);
     }
 
     public void cancelPlayerTasks(Player player) {
@@ -246,6 +253,7 @@ public final class GachaFight extends JavaPlugin implements Listener {
     private void cancelAllPlayerTasks() {
         for (Player player : Bukkit.getOnlinePlayers()) {
             cancelPlayerTasks(player);
+            player.closeInventory();
         }
     }
     public void reloadPlugin() {
