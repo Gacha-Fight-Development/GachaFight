@@ -3,6 +3,7 @@ package me.diu.gachafight.Pets;
 
 import me.diu.gachafight.GachaFight;
 import me.diu.gachafight.utils.ColorChat;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
@@ -51,11 +52,18 @@ public class PetCommand implements CommandExecutor, Listener {
             case "equip":
                 setPet(player, args[1]);
                 break;
-            case "slot":
-                getCurrentPet(player, args[1]);
-
+            case "list":
+                getCurrentPets(player);
                 break;
-
+            case "remove":
+                removePet(player, args[1]);
+                break;
+            case "check":
+                getCurrentPet(player, args[1]);
+                break;
+            case "admin":
+                admin(player, args[1]);
+                break;
         }
 
 
@@ -64,6 +72,62 @@ public class PetCommand implements CommandExecutor, Listener {
 
         return true;
 
+    }
+
+    // for testing
+    private void admin(Player player, String arg) {
+        int currentSlots = checkPetSlots(player);
+        if(currentSlots == 0){
+            ArmorStand petHolder = (ArmorStand) player.getWorld().spawnEntity(player.getLocation(), EntityType.ARMOR_STAND);
+            TextComponent armorStandName = text("Pet Holder[3]");
+            petHolder.customName(armorStandName);
+            petHolder.setVisible(false);
+            petHolder.setInvulnerable(true);
+            player.addPassenger(petHolder);
+        }
+    }
+
+    private void removePet(Player player, String petSlotString) {
+        // Check if a valid slot was specified
+        int petSlot = Integer.parseInt(petSlotString);
+        if(petSlot > 3 || petSlot < 0){
+            player.sendMessage(ColorChat.chat("&cThat is not a valid slot!  Please choose slots 1 up to 3!"));
+        }
+
+        // Check if player has the slot unlocked
+        if(petSlot > checkPetSlots(player)){
+            player.sendMessage(ColorChat.chat("&cYou do not have this slot unlocked!  Purchase a Pet License to upgrade your slot count!"));
+            return;
+        }
+
+        // Check if player is holding a valid pet item
+        if(!isPet(player.getInventory().getItemInMainHand())){
+            player.sendMessage(ColorChat.chat("&cEmpty your main hand and retype /pet remove " + petSlot + " to remove it!"));
+            return;
+        }
+
+        // Get passenger armor stand and remove pet
+        List<Entity> passengerList = player.getPassengers();
+        ItemStack removedPet = null;
+        for(Entity passenger : passengerList){
+            if(passenger.getType() == EntityType.ARMOR_STAND && passenger.getName().contains("Pet Holder")){
+                ArmorStand armorStand = (ArmorStand) passenger;
+                switch(petSlot){
+                    case 1:
+                        removedPet = armorStand.getEquipment().getHelmet();
+                        armorStand.setItem(EquipmentSlot.HEAD, null);
+                        break;
+                    case 2:
+                        removedPet = armorStand.getEquipment().getItemInMainHand();
+                        armorStand.setItem(EquipmentSlot.HAND, null);
+                    case 3:
+                        removedPet = armorStand.getEquipment().getItemInOffHand();
+                        armorStand.setItem(EquipmentSlot.OFF_HAND, null);
+                }
+                player.sendMessage(ColorChat.chat("&cYour " + removedPet.getItemMeta().displayName() + " &chas been un-equip!"));
+                player.getInventory().setItemInMainHand(removedPet);
+            }
+        }
     }
 
     // Call this when a player uses a pet license.  If they are not at the max slot count, it will increase their slots each time its called
@@ -247,10 +311,19 @@ public class PetCommand implements CommandExecutor, Listener {
 
     // Method for creating pets.  This needs work, mostly how we are going to go about choosing what pets can have what stats, etc
     public ItemStack createPetItem(String petID, String[] lore){
-        //Create pet item via id.  as of right now, all pets are models created with ItemAdder
-        String iaPetString = "iawearables:" + petID;
-        ItemStack pet;
-        ItemMeta meta;
+        //Create pet from si menu
+        TextComponent petNameComponent = text(petID);
+        ItemStack pet = null;
+        ItemMeta meta = null;
+        List<Component> loreComponent = new ArrayList<>();
+        for(String loreLine : lore){
+            TextComponent loreAsComponent = text(loreLine);
+            loreComponent.add(loreAsComponent);
+        }
+        meta.displayName(petNameComponent);
+        //meta.
+        //meta.lore(loreComponent);
+        pet.setItemMeta(meta);
 
         // Default return value if no valid pet is found
         return null;
