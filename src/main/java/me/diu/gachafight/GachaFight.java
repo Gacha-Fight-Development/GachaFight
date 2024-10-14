@@ -7,6 +7,7 @@ import me.diu.gachafight.commands.tabs.AdminPlayerDataTabCompleter;
 import me.diu.gachafight.combat.DamageListener;
 import me.diu.gachafight.commands.tabs.GuideTabCompleter;
 import me.diu.gachafight.commands.tabs.ShopTabCompleter;
+import me.diu.gachafight.commands.tabs.SkillTabCompleter;
 import me.diu.gachafight.dungeon.DungeonGUI;
 import me.diu.gachafight.guides.TutorialGuideSystem;
 import me.diu.gachafight.listeners.*;
@@ -53,6 +54,7 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import java.io.File;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
@@ -104,6 +106,10 @@ public final class GachaFight extends JavaPlugin implements Listener {
         this.questGUI = new QuestGUI(questManager);
         this.buyItemManager = new BuyItemManager(this);
         this.guideSystem = new TutorialGuideSystem(this);
+        File skillsDir = new File(getDataFolder(), "Skills");
+        if (!skillsDir.exists()) {
+            skillsDir.mkdirs();
+        }
         registerEvents();
         registerCommands();
         MobDropSelector.scheduleTimer();
@@ -135,6 +141,7 @@ public final class GachaFight extends JavaPlugin implements Listener {
                 }
             }
         }.runTaskTimerAsynchronously(this, 0L, 20L);
+        scheduleSound();
         Bukkit.broadcastMessage(ColorChat.chat("&b&lReload Complete"));
         Bukkit.broadcastMessage(ColorChat.chat("&aFull Heal from Reload"));
     }
@@ -209,6 +216,8 @@ public final class GachaFight extends JavaPlugin implements Listener {
         new BuyCommand(this);
         new PromoteCommand(this, luckPerms);
         new RemoveTextDisplayCommand(this);
+        new SkillCommand(this);
+        new SkillTabCompleter(this);
     }
 
     private void registerEvents() {
@@ -237,6 +246,19 @@ public final class GachaFight extends JavaPlugin implements Listener {
         new PlayerZoneListener(this);
         new SkillSystem(this);
         new ChunkUnloadListener(this);
+    }
+    public void scheduleSound() {
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "minecraft:playsound custom:celestial music @a");
+                for (Player player : Bukkit.getOnlinePlayers()) {
+                    if (!DamageListener.isSafezone(player.getLocation())) {
+                        player.stopAllSounds();
+                    }
+                }
+            }
+        }.runTaskTimer(this, 2640L, 3000L);
     }
 
     public void cancelPlayerTasks(Player player) {

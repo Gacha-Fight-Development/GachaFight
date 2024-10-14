@@ -1,0 +1,13 @@
+sword spin:
+  damage: 0.75
+  cooldown: 10
+  radius: 3.0
+  description: "Perform a spinning attack, damaging all enemies within a <radius> block radius."
+
+sword burst:
+  damage: 1.5
+  cooldown: 15
+  projectileSpeed: 0.5
+  maxDistance: 2.5
+  hitboxSize: 0.5
+  description: "Release a burst of sword energy that travels <maxDistance> blocks, damaging enemies in its path."

@@ -85,8 +85,8 @@ public class GachaManager {
                         // Variable minStat and maxStat is for calculating Quality of Item (Example: 20%)
                         // findMinStat() and findMaxStat checks for if you want to find min & max with or without Rarity Multi or Level multi
                         // Example: minStat = 0.7*levelmulti*rarity | maxStat = 1.3*levelmulti*rarity
-                        double minStat = ExtractLore.findMinStat(line, player, true, true, getRarityMultiplier(rarityIndex));
-                        double maxStat = ExtractLore.findMaxStat(line, player, true, true, getRarityMultiplier(rarityIndex));
+                        double minStat = ExtractLore.findMinStat(line, player, true, true, RarityUtils.getRarityMultiplier(rarityIndex));
+                        double maxStat = ExtractLore.findMaxStat(line, player, true, true, RarityUtils.getRarityMultiplier(rarityIndex));
                         //PDC Values are RAW Values meaning 0.7/1.3 -> 0.7 | 1.3
                         //BUT you cannot use these values for Item Quality because live example: 1/2.5 gives a 12.58 armor so its ganna be over 100%!
                         // You use the variable minStat & maxStat because it includes the Player Level & Rarity
@@ -95,14 +95,14 @@ public class GachaManager {
                         maxStatDamagePDC = ExtractLore.findMaxStat(line, player, false, false, null);
                         statPercentages.add(calculatePercentage(ExtractLore.getDamageFromLore(customizedReward.getLore()), minStat, maxStat));
                     } else if (line.contains("Armor:")) { //same thing
-                        double minStat = ExtractLore.findMinStat(line, player, true, true, getRarityMultiplier(rarityIndex));
-                        double maxStat = ExtractLore.findMaxStat(line, player,  true, true, getRarityMultiplier(rarityIndex));
+                        double minStat = ExtractLore.findMinStat(line, player, true, true, RarityUtils.getRarityMultiplier(rarityIndex));
+                        double maxStat = ExtractLore.findMaxStat(line, player,  true, true, RarityUtils.getRarityMultiplier(rarityIndex));
                         minStatArmorPDC = ExtractLore.findMinStat(line, player,  false, false, null);
                         maxStatArmorPDC = ExtractLore.findMaxStat(line, player,  false, false, null);
                         statPercentages.add(calculatePercentage(ExtractLore.getArmorFromLore(customizedReward.getLore()), minStat, maxStat));
                     } else if (line.contains("HP:")) { // same thing
-                        double minStat = ExtractLore.findMinStat(line, player,  true, true, getRarityMultiplier(rarityIndex));
-                        double maxStat = ExtractLore.findMaxStat(line, player,  true, true, getRarityMultiplier(rarityIndex));
+                        double minStat = ExtractLore.findMinStat(line, player,  true, true, RarityUtils.getRarityMultiplier(rarityIndex));
+                        double maxStat = ExtractLore.findMaxStat(line, player,  true, true, RarityUtils.getRarityMultiplier(rarityIndex));
                         minStatHPPDC = ExtractLore.findMinStat(line, player,  false, false, null);
                         maxStatHPPDC = ExtractLore.findMaxStat(line, player,  false, false, null);
                         statPercentages.add(calculatePercentage(ExtractLore.getMaxHpFromLore(customizedReward.getLore()), minStat, maxStat));
@@ -175,7 +175,7 @@ public class GachaManager {
                 if(!itemSold) {
                     // Give the item to the player
                     player.getInventory().addItem(customizedReward);
-                    player.sendMessage(MiniMessage.miniMessage().deserialize("<green>You received a " + getRarityColor(rarityIndex) + RaritySelectionGUI.RARITY_NAMES[rarityIndex] + " item!"));
+                    player.sendMessage(MiniMessage.miniMessage().deserialize("<green>You received a " + RarityUtils.getRarityColor(rarityIndex) + RaritySelectionGUI.RARITY_NAMES[rarityIndex] + " item!"));
 
                     // Reduce keys by 1
                     key.setAmount(key.getAmount() - 1);
@@ -232,7 +232,7 @@ public class GachaManager {
                     double maxStat = Double.parseDouble(parts[1].trim());
 
                     // Apply the rarity multiplier
-                    double multiplier = getRarityMultiplier(rarityIndex);
+                    double multiplier = RarityUtils.getRarityMultiplier(rarityIndex);
                     minStat *= multiplier;
                     maxStat *= multiplier;
 
@@ -257,36 +257,6 @@ public class GachaManager {
 
         // Return the original lore line if parsing failed
         return MiniMessage.miniMessage().deserialize(loreLine);
-    }
-
-
-
-
-    public static double getRarityMultiplier(int rarityIndex) {
-        switch (rarityIndex) {
-            case 1: return 1.5;  // Uncommon
-            case 2: return 3;  // Rare
-            case 3: return 4.5;  // Epic
-            case 4: return 6;  // Unique
-            case 5: return 7.5;  // Legendary
-            case 6: return 10; // Mythic
-            default: return 1.0; // Common or Event (no multiplier)
-        }
-    }
-
-    public static String getRarityColor(int rarityIndex) {
-        // Define the color for each rarity using MiniMessage formatting
-        switch (rarityIndex) {
-            case 0: return "<!i><white>"; // Common
-            case 1: return "<!i><gray>";  // Uncommon
-            case 2: return "<!i><green>"; // Rare
-            case 3: return "<!i><aqua>";  // Epic
-            case 4: return "<!i><light_purple>"; // Unique
-            case 5: return "<!i><gold>"; // Legendary
-            case 6: return "<!i><red>";  // Mythic
-            case 7: return "<!i><rainbow>"; // Event/Custom
-            default: return "<!i><white>"; // Default to white if something goes wrong
-        }
     }
 
     private int getRandomRarity(ItemStack key, Player player) {
@@ -377,11 +347,11 @@ public class GachaManager {
 
             // Add blank line and rarity information in the lore
             lore.add(MiniMessage.miniMessage().deserialize(""));  // Add blank line to look nice :)
-            String rarityColor = getRarityColor(rarityIndex); // Look at getRarityColor() should be self explanitory
+            String rarityColor = RarityUtils.getRarityColor(rarityIndex); // Look at getRarityColor() should be self explanitory
             String rarityName = RaritySelectionGUI.RARITY_NAMES[rarityIndex]; // Grabs the Name of the rarity using rarityIndex
             lore.add(MiniMessage.miniMessage().deserialize(rarityColor + "⮞ " + rarityName)); // Rarity line lore
             // newName = [<player's level>] <Item Name> | This does not include the quality of sword (%)
-            Component newName = MiniMessage.miniMessage().deserialize("<!i><dark_gray>[<gold>" + PlayerStats.getPlayerStats(player).getLevel() + "<dark_gray>] " + getRarityColor(rarityIndex) + PlainTextComponentSerializer.plainText().serialize(meta.displayName()));
+            Component newName = MiniMessage.miniMessage().deserialize("<!i><dark_gray>[<gold>" + PlayerStats.getPlayerStats(player).getLevel() + "<dark_gray>] " + RarityUtils.getRarityColor(rarityIndex) + PlainTextComponentSerializer.plainText().serialize(meta.displayName()));
             meta.displayName(newName); //sets the display name of the item
             meta.lore(lore); // sets the lore of the item
             item.setItemMeta(meta); //saves all changes to the item
@@ -432,7 +402,6 @@ public class GachaManager {
 
 
     // GetRandomRarity() gets these Probabilities and select which rarity it will choose.
-    // Probability table for Common Gacha Key
     private final double[] commonKeyProbabilities = { //will equal to 100% or if its less than 100 then it will default to common
             89, // common 89%
             10.4, // uncommon 10.4%
@@ -521,5 +490,4 @@ public class GachaManager {
             0,  // mythic
             20   // event
     };
-
 }

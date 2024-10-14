@@ -5,10 +5,8 @@ import me.diu.gachafight.skills.listeners.MasterMageListener;
 import me.diu.gachafight.skills.listeners.SkillClickListener;
 import me.diu.gachafight.skills.listeners.SkillJoinListener;
 import me.diu.gachafight.skills.listeners.SkillUseListener;
-import me.diu.gachafight.skills.rarity.SkillList;
-import me.diu.gachafight.skills.rarity.common.SwordChargeSkill;
-import me.diu.gachafight.skills.rarity.common.SwordSlashSkill;
-import me.diu.gachafight.skills.utils.ItemUtils;
+import me.diu.gachafight.skills.managers.SkillManager;
+import me.diu.gachafight.skills.utils.SkillItemUtils;
 import me.diu.gachafight.utils.ColorChat;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -30,7 +28,7 @@ public class SkillSystem {
         Bukkit.getPluginManager().registerEvents(new SkillJoinListener(), plugin);
         Bukkit.getPluginManager().registerEvents(new SkillUseListener(plugin), plugin);
         Bukkit.getPluginManager().registerEvents(new MasterMageListener(plugin), plugin);
-        new SkillList(plugin);
+        new SkillManager(plugin);
     }
 
     public static void setupSkillSlots(Player player) {
@@ -50,7 +48,7 @@ public class SkillSystem {
             meta.setLore(lore);
             itemFrame.setItemMeta(meta);
             player.getInventory().setItem(15, itemFrame);
-        } else if (item15.getType() != Material.ITEM_FRAME && !ItemUtils.isNetheriteUpgradeTemplate(item15)) {
+        } else if (item15.getType() != Material.ITEM_FRAME && !SkillItemUtils.isNetheriteUpgradeTemplate(item15)) {
             player.sendMessage(ColorChat.chat("&cClear Top Row, last 3 column items inside your inventory!"));
         }
         if (item16 == null) {
@@ -58,7 +56,7 @@ public class SkillSystem {
             meta.setLore(lore);
             itemFrame.setItemMeta(meta);
             player.getInventory().setItem(16, itemFrame);
-        } else if (item16.getType() != Material.ITEM_FRAME && !ItemUtils.isNetheriteUpgradeTemplate(item16)) {
+        } else if (item16.getType() != Material.ITEM_FRAME && !SkillItemUtils.isNetheriteUpgradeTemplate(item16)) {
             player.sendMessage(ColorChat.chat("&cClear Top Row, last 3 column items inside your inventory!"));
         }
         if (item17 == null) {
@@ -66,7 +64,7 @@ public class SkillSystem {
             meta.setLore(lore);
             itemFrame.setItemMeta(meta);
             player.getInventory().setItem(17, itemFrame);
-        } else if (item17.getType() != Material.ITEM_FRAME && !ItemUtils.isNetheriteUpgradeTemplate(item17)) {
+        } else if (item17.getType() != Material.ITEM_FRAME && !SkillItemUtils.isNetheriteUpgradeTemplate(item17)) {
             player.sendMessage(ColorChat.chat("&cClear Top Row, last 3 column items inside your inventory!"));
         }
     }

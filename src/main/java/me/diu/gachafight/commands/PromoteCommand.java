@@ -20,9 +20,9 @@ public class PromoteCommand implements CommandExecutor {
         Player player = (Player) sender;
         if (args.length > 1) {
             if (player.hasPermission("gacha.helper") || player.hasPermission("gacha.builder")) {
-                Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), "lp user " + player.getName() + "parent add gacha." + args[1].toLowerCase());
+                Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), "lp user " + player.getName() + "parent add " + args[1].toLowerCase());
             } else {
-                Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), "lp user " + player.getName() + "parent set gacha." + args[1].toLowerCase());
+                Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), "lp user " + player.getName() + "parent set " + args[1].toLowerCase());
             }
         }
         return true;

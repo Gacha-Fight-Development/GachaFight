@@ -2,51 +2,101 @@ package me.diu.gachafight.skills.rarity.common;
 
 import me.diu.gachafight.GachaFight;
 import me.diu.gachafight.skills.managers.SkillCooldownManager;
+import me.diu.gachafight.skills.utils.Skill;
+import me.diu.gachafight.utils.ColorChat;
 import org.bukkit.ChatColor;
 import org.bukkit.Particle;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.Listener;
-import org.bukkit.event.EventHandler;
+import org.bukkit.scheduler.BukkitRunnable;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.UUID;
 
-public class SwordChargeSkill {
+public class SwordChargeSkill implements Skill {
 
     private final GachaFight plugin;
-    public static final HashMap<UUID, Boolean> swordChargeActive = new HashMap<>(); // Tracks if the next attack is empowered
+    public static int cooldownDuration;
+    public static int skillDuration;
+    public static double damage;
+    public static final HashMap<UUID, Boolean> swordChargeActive = new HashMap<>();
 
     public SwordChargeSkill(GachaFight plugin) {
         this.plugin = plugin;
+        loadConfig();
     }
 
-    // Triggered when the player uses the skill (via right-click with a sword)
-    public static void useSwordCharge(Player player, int slot) {
+    private void loadConfig() {
+        File configFile = new File(plugin.getDataFolder(), "Skills/common.yml");
+        if (!configFile.exists()) {
+            plugin.saveResource("Skills/common.yml", false);
+        }
+        FileConfiguration config = YamlConfiguration.loadConfiguration(configFile);
+        damage = config.getDouble("sword charge.damage", 1.5);
+        cooldownDuration = config.getInt("sword charge.cooldown", 5);
+        skillDuration = config.getInt("sword charge.duration", 10);
+    }
+
+    @Override
+    public void useSkill(Player player, int slot) {
         UUID playerUUID = player.getUniqueId();
 
-        // Check if the player is on cooldown
         if (SkillCooldownManager.isOnCooldown(playerUUID, slot)) {
             long remainingTime = SkillCooldownManager.getRemainingCooldown(playerUUID, slot);
-            player.sendMessage(ChatColor.RED + "Skill on cooldown! " + remainingTime + " seconds remaining.");
+            player.sendMessage(ColorChat.chat("&cSkill on cooldown! " + remainingTime + " seconds remaining."));
             return;
         }
 
-        // Activate the next attack as a Sword Slash
-        swordChargeActive.put(playerUUID, true); // Set the next attack as empowered
-        player.sendMessage(ChatColor.LIGHT_PURPLE + "Sword Charge ready! Your next attack will be empowered.");
+        swordChargeActive.put(playerUUID, true);
+        player.sendMessage(ColorChat.chat("&dSword Charge ready! Your next attack will be empowered."));
 
-        // Set a cooldown of 5 seconds
-        SkillCooldownManager.setCooldown(playerUUID, slot, 5);
+        SkillCooldownManager.setCooldown(playerUUID, slot, cooldownDuration);
         spawnActivationParticles(player);
+
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                deactivateSkill(player);
+            }
+        }.runTaskLater(plugin, skillDuration * 20L);
     }
-    private static void spawnActivationParticles(Player player) {
+
+    @Override
+    public double applySkillEffect(Player player, LivingEntity target) {
+        UUID playerUUID = player.getUniqueId();
+        if (swordChargeActive.remove(playerUUID) != null) {
+            player.sendMessage(ChatColor.GOLD + "You used Sword Charge! Dealt " + damage*100 + "% damage.");
+            player.getWorld().spawnParticle(Particle.FLAME, player.getLocation().add(0, 1, 0),
+                    20, 0.3, 0.3, 0.3, 0.05);
+            return damage;
+        }
+        return 1.0; // Default multiplier if skill is not active
+    }
+
+    @Override
+    public boolean isSkillActive(Player player) {
+        return swordChargeActive.getOrDefault(player.getUniqueId(), false);
+    }
+
+    @Override
+    public void deactivateSkill(Player player) {
+        UUID playerUUID = player.getUniqueId();
+        if (swordChargeActive.remove(playerUUID) != null) {
+            player.sendMessage(ColorChat.chat("&7Sword Charge effect has worn off."));
+            // You might want to add some deactivation particles here
+        }
+    }
+
+    private void spawnActivationParticles(Player player) {
         player.getWorld().spawnParticle(
-                Particle.END_ROD, // The type of particle
-                player.getLocation().add(0, 1, 0), // Spawn location, slightly above the player
-                30, // Number of particles
-                0.5, 1, 0.5, // X, Y, Z offsets for randomization
-                0.1 // Speed of the particles
+                Particle.END_ROD,
+                player.getLocation().add(0, 1, 0),
+                30,
+                0.5, 1, 0.5,
+                0.1
         );
     }
 }

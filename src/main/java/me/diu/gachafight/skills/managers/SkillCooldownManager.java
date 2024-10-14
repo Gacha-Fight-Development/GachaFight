@@ -10,8 +10,8 @@ public class SkillCooldownManager {
     public static final Map<UUID, Map<Integer, Long>> cooldowns = new HashMap<>();
 
     // Set cooldown for a specific slot
-    public static void setCooldown(UUID playerUUID, int slot, int seconds) {
-        long cooldownEndTime = System.currentTimeMillis() + (seconds * 1000);
+    public static void setCooldown(UUID playerUUID, int slot, double seconds) {
+        long cooldownEndTime = System.currentTimeMillis() + (long) (seconds * 1000);
 
         // Check if the player already has cooldowns tracked
         if (!cooldowns.containsKey(playerUUID)) {
