@@ -43,7 +43,7 @@ public class LootChestListener implements Listener {
             // Check if it's a Goblin or RPG Loot Chest
             if (DungeonUtils.isGoblin(location)) {
                 // Goblin Loot Chest logic
-                block.setType(Material.AIR);  // Remove the chest
+                block.setType(Material.AIR);
                 furnitureDataManager.removeFurnitureState(location);
                 spawnGoblinLoot(location);
                 event.getPlayer().sendMessage(ColorChat.chat("&aGoblin Loot Crate Opened!"));
@@ -51,7 +51,7 @@ public class LootChestListener implements Listener {
                 respawnChest(location);
             } else if (DungeonUtils.isRPG(location)) {
                 // RPG Loot Chest logic
-                block.setType(Material.AIR);  // Remove the chest
+                block.setType(Material.AIR);
                 furnitureDataManager.removeFurnitureState(location);
                 spawnRPGLoot(location);
                 event.getPlayer().sendMessage(ColorChat.chat("&aRPG Loot Crate Opened!"));

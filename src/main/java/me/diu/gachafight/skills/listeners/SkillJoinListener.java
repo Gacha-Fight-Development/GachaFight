@@ -13,9 +13,6 @@ public class SkillJoinListener implements Listener {
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
         // Setup the skill slots when the player joins
-        if (!player.hasPermission("gacha.dev")) {
-            return;
-        }
         SkillSystem.setupSkillSlots(player);
     }
 }

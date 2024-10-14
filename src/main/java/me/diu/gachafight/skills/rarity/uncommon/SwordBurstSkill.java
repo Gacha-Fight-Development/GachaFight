@@ -2,42 +2,59 @@ package me.diu.gachafight.skills.rarity.uncommon;
 
 import io.lumine.mythic.bukkit.utils.particles.Particle;
 import me.diu.gachafight.GachaFight;
-import me.diu.gachafight.playerstats.PlayerStats;
 import me.diu.gachafight.skills.managers.SkillCooldownManager;
 import me.diu.gachafight.skills.managers.SkillDamageSource;
+import me.diu.gachafight.skills.utils.Skill;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
-import org.bukkit.damage.DamageSource;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
+import java.io.File;
 import java.util.UUID;
 
-public class SwordBurstSkill {
+public class SwordBurstSkill implements Skill {
 
     private final GachaFight plugin;
+    private double damage;
+    private int cooldown;
+    private double projectileSpeed;
+    private double maxDistance;
+    private double hitboxSize;
 
     public SwordBurstSkill(GachaFight plugin) {
         this.plugin = plugin;
+        loadConfig();
     }
 
-    public static void useSwordBurst(Player player, int slot) {
-        UUID playerUUID = player.getUniqueId();
-        PlayerStats stats = PlayerStats.getPlayerStats(player);
-        double damage = 1.5;
-        int cooldown = 5;
+    private void loadConfig() {
+        File configFile = new File(plugin.getDataFolder(), "Skills/uncommon.yml");
+        if (!configFile.exists()) {
+            plugin.saveResource("Skills/uncommon.yml", false);
+        }
+        FileConfiguration config = YamlConfiguration.loadConfiguration(configFile);
+        damage = config.getDouble("sword burst.damage", 1.5);
+        cooldown = config.getInt("sword burst.cooldown", 5);
+        projectileSpeed = config.getDouble("sword burst.projectileSpeed", 0.5);
+        maxDistance = config.getDouble("sword burst.maxDistance", 2.5);
+        hitboxSize = config.getDouble("sword burst.hitboxSize", 0.5);
+    }
 
-        // Check cooldown
+    @Override
+    public void useSkill(Player player, int slot) {
+        UUID playerUUID = player.getUniqueId();
+
         if (SkillCooldownManager.isOnCooldown(playerUUID, slot)) {
             long remainingTime = SkillCooldownManager.getRemainingCooldown(playerUUID, slot);
             player.sendMessage(ChatColor.RED + "Skill on cooldown! " + remainingTime + " seconds remaining.");
             return;
         }
 
-        // Launch projectile 2.5 blocks in front of player
         Location startLocation = player.getEyeLocation().add(player.getLocation().getDirection().normalize());
         Vector direction = startLocation.getDirection().normalize();
 
@@ -47,35 +64,42 @@ public class SwordBurstSkill {
 
             @Override
             public void run() {
-                projectileLocation.add(direction.clone().multiply(0.5));
+                projectileLocation.add(direction.clone().multiply(projectileSpeed));
 
-                // Particle effect for the projectile (small burst with magic)
-                player.getWorld().spawnParticle(Particle.CRIT_MAGIC.toBukkitParticle(), projectileLocation, 5, 0, 0, 0, 0.1);
-                player.getWorld().spawnParticle(Particle.SMOKE_NORMAL.toBukkitParticle(), projectileLocation, 2, 0, 0, 0, 0.02);
+                spawnParticles(projectileLocation);
 
-                for (Entity entity : projectileLocation.getWorld().getNearbyEntities(projectileLocation, 0.5, 0.5, 0.5)) {
+                for (Entity entity : projectileLocation.getWorld().getNearbyEntities(projectileLocation, hitboxSize, hitboxSize, hitboxSize)) {
                     if (entity instanceof LivingEntity && entity != player) {
-                        LivingEntity target = (LivingEntity) entity;
-
-                        // Apply skill damage
-                        target.damage(damage, SkillDamageSource.damageSource(player)); //Damage
-
-                        player.sendMessage(ChatColor.GOLD + "Sword Burst hit " + target.getName() + " for " + damage + " damage!");
-
-                        // Cancel the task after hitting the first target
+                        applySkillEffect(player, (LivingEntity) entity);
                         this.cancel();
                         return;
                     }
                 }
 
-                distanceTravelled += 0.5;
-                if (distanceTravelled >= 2.5) {
-                    this.cancel(); // End after 2.5 blocks
+                distanceTravelled += projectileSpeed;
+                if (distanceTravelled >= maxDistance) {
+                    this.cancel();
                 }
             }
-        }.runTaskTimer(GachaFight.getInstance(), 0, 1);
+        }.runTaskTimer(plugin, 0, 1);
 
-        // Set skill cooldown (5 seconds)
         SkillCooldownManager.setCooldown(playerUUID, slot, cooldown);
+    }
+
+    @Override
+    public double applySkillEffect(Player player, LivingEntity target) {
+        target.damage(damage, SkillDamageSource.damageSource(player));
+        player.sendMessage(ChatColor.GOLD + "Sword Burst hit " + target.getName() + " for " +
+                String.format("%.1f", damage * 100) + "% damage!");
+        return 1.0; // This skill doesn't modify damage, it applies its own damage
+    }
+
+    private void spawnParticles(Location location) {
+        location.getWorld().spawnParticle(Particle.CRIT_MAGIC.toBukkitParticle(), location, 5, 0, 0, 0, 0.1);
+        location.getWorld().spawnParticle(Particle.SMOKE_NORMAL.toBukkitParticle(), location, 2, 0, 0, 0, 0.02);
+    }
+    @Override
+    public boolean hasActiveState() {
+        return false; // This skill doesn't have an active state
     }
 }

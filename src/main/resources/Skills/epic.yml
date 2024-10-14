@@ -1,0 +1,6 @@
+life steal:
+  cooldown: 10
+  duration: 30
+  heal_percentage: 0.5
+  heal_display: 50
+  description: "For the next <duration> seconds, your attacks will steal <heal_display>% of the damage dealt as health."

@@ -14,15 +14,14 @@ import me.diu.gachafight.dungeon.utils.DungeonUtils;
 import me.diu.gachafight.playerstats.PlayerStats;
 import me.diu.gachafight.quest.listeners.QuestKillListener;
 import me.diu.gachafight.skills.managers.MobDropSelector;
-import me.diu.gachafight.skills.managers.SkillDamageSource;
-import me.diu.gachafight.skills.rarity.SkillList;
+import me.diu.gachafight.skills.managers.SkillManager;
+import me.diu.gachafight.skills.utils.RandomSkillUtils;
 import me.diu.gachafight.utils.ColorChat;
 import me.diu.gachafight.utils.TextDisplayUtils;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.damage.DamageSource;
 import org.bukkit.damage.DamageType;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
@@ -70,10 +69,6 @@ public class DamageListener implements Listener {
             handlePlayerVsPlayer(event, (Player) event.getDamager(), (Player) event.getEntity());
         }
 
-        // Handle Gacha Chest
-        if (event.getDamageSource().getDamageType().equals(DamageType.ON_FIRE)) {
-            //handleFireDamage(event, (Player) event.getDamager(), (Player) event.getEntity());
-        }
     }
 
     // Handle Player vs Entity (PvE)
@@ -90,11 +85,11 @@ public class DamageListener implements Listener {
         if (event.getDamageSource().getDamageType().equals(DamageType.CACTUS)) {
             playerDamage *= event.getDamage();
         } else {
-            playerDamage *= SkillList.getPlayerSkillCharge(player);
+            playerDamage *= SkillManager.applyActiveSkills(player, entity);
         }
         double mobArmor = getMobArmor(entity);
         // ==============Calc PvE================
-        double totalDamage = playerDamage - mobArmor;
+        double totalDamage = playerDamage - mobArmor; // armor
         if (totalDamage < 0.5) {
             totalDamage = 0.5;
         }
@@ -142,7 +137,7 @@ public class DamageListener implements Listener {
         double targetArmor = targetStats.getArmor() + targetStats.getGearStats().getTotalArmor();
 
         // Calculate the custom damage for PvP
-        double totalDamage = attackerDamage - (targetArmor); // Adjust the armor effect as needed
+        double totalDamage = attackerDamage - (targetArmor/4); // Adjust the armor effect as needed
 
         //Check for if player dodged
         if (Math.random() > targetStats.getDodge()) { //below triggers if not dodged
@@ -243,10 +238,6 @@ public class DamageListener implements Listener {
         }
     }
 
-    public void handleFireDamage() {
-
-    }
-
     // New method to handle mob death and give rewards
     private void handleMobDeath(Player player, Entity entity) {
         if (entity instanceof LivingEntity) {
@@ -271,9 +262,18 @@ public class DamageListener implements Listener {
                 BulbDeathReward.MobDeath(entity.getName(), player);
             }
             if (entity.getName().equalsIgnoreCase(MobDropSelector.getMob())) {
-
+                if (Math.random() < 0.0002) {
+                    player.getInventory().addItem(MobDropSelector.getDrop(player));
+                }
             }
-
+            if (Math.random() < ((double) 1 /258)) {
+                player.getInventory().addItem(RandomSkillUtils.getRandomCommonSkill());
+                player.sendMessage(ColorChat.chat("&a&l Received &f&lCommon &a&lSkill!"));
+            }
+            if (Math.random() < ((double) 1/512)) {
+                player.getInventory().addItem(RandomSkillUtils.getRandomUncommonSkill());
+                player.sendMessage(ColorChat.chat("&a&l Received &7&lUncommon &a&lSkill!"));
+            }
             if (Math.random() < 0.001) {
                 MythicMob mob = MythicBukkit.inst().getMobManager().getMythicMob("bulb_lilypad_pet").orElse(null);
                 ActiveMob lilypad = mob.spawn(BukkitAdapter.adapt(entity.getLocation()),1);
@@ -377,6 +377,7 @@ public class DamageListener implements Listener {
             public void run() {
                 for (Player player : Bukkit.getServer().getOnlinePlayers()) {
                     if (player.isVisualFire()) {
+                        player.sendMessage("a");
                         PlayerStats stats = PlayerStats.getPlayerStats(player);
                         player.damage(0);
                         double damage = stats.getMaxhp()/40;
@@ -385,6 +386,5 @@ public class DamageListener implements Listener {
                 }
             }
         }.runTaskTimer(GachaFight.getInstance(), 20, 60);
-
     }
 }

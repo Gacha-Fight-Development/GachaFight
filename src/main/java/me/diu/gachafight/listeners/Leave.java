@@ -35,14 +35,4 @@ public class Leave implements Listener {
         GachaFight.getInstance().cancelPlayerTasks(player);
         SkillCooldownManager.cooldowns.remove(player.getUniqueId());
     }
-
-    @EventHandler
-    public void onKick(PlayerKickEvent event) {
-        Player player = event.getPlayer();
-        playerDataManager.savePlayerData(player);
-        PlayerStats.playerStatsMap.remove(player.getUniqueId());
-        plugin.getGuideSystem().removeGuideForPlayer(player);
-        GachaFight.getInstance().cancelPlayerTasks(player);
-        SkillCooldownManager.cooldowns.remove(player.getUniqueId());
-    }
 }

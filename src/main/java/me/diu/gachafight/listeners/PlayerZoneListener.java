@@ -17,7 +17,7 @@ import java.util.UUID;
 
 public class PlayerZoneListener implements Listener {
 
-    public static final long delay = 1200*4;
+    public static final long delay = 1200*3;
 
     // AFK zone
     private final int minX = -12, maxX = -3;

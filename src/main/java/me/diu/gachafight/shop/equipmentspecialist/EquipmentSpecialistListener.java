@@ -6,6 +6,7 @@ import me.diu.gachafight.playerstats.PlayerStats;
 import me.diu.gachafight.utils.Calculations;
 import me.diu.gachafight.utils.ExtractLore;
 import me.diu.gachafight.utils.Prefix;
+import me.diu.gachafight.utils.RarityUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
@@ -253,20 +254,20 @@ public class EquipmentSpecialistListener implements Listener {
             if (guiInventory.getItem(13).getType() != Material.BLUE_STAINED_GLASS_PANE) {
                 event.getPlayer().getInventory().addItem(guiInventory.getItem(13));
             }
-            if (guiInventory.getItem(16).getType() != Material.PAPER) {
+            if (guiInventory.getItem(16).getMaxStackSize() != 64) {
                 event.getPlayer().getInventory().addItem(guiInventory.getItem(16));
             }
-            if (guiInventory.getItem(10).getType() != Material.PAPER) {
+            if (guiInventory.getItem(10).getMaxStackSize() != 64) {
                 event.getPlayer().getInventory().addItem(guiInventory.getItem(10));
             }
         } else if (event.getView().getTitle().equals("Reroll Stats")) {
             if (guiInventory.getItem(13).getType() != Material.LIGHT_BLUE_STAINED_GLASS_PANE) {
                 event.getPlayer().getInventory().addItem(guiInventory.getItem(13));
             }
-            if (guiInventory.getItem(16).getType() != Material.PAPER) {
+            if (guiInventory.getItem(16).getMaxStackSize() != 64) {
                 event.getPlayer().getInventory().addItem(guiInventory.getItem(16));
             }
-            if (guiInventory.getItem(10).getType() != Material.PAPER) {
+            if (guiInventory.getItem(10).getMaxStackSize() != 64) {
                 event.getPlayer().getInventory().addItem(guiInventory.getItem(10));
             }
         }
@@ -378,7 +379,7 @@ public class EquipmentSpecialistListener implements Listener {
 
         // Player's new level
         int playerLevel = PlayerStats.getPlayerStats(player).getLevel();
-        String newLevelText = "<dark_gray>[<gold>" + playerLevel + "<dark_gray>]"+ GachaManager.getRarityColor(rarity);
+        String newLevelText = "<dark_gray>[<gold>" + playerLevel + "<dark_gray>]"+ RarityUtils.getRarityColor(rarity);
 
         // If the level is found, replace it with the player's current level
         if (matcher.find()) {
@@ -400,9 +401,9 @@ public class EquipmentSpecialistListener implements Listener {
             double max = Double.parseDouble(minMax.get(1));
             double newStat;
             if (isReroll) {
-                newStat = rerollItem(min, max, levelMulti, GachaManager.getRarityMultiplier(rarity));
+                newStat = rerollItem(min, max, levelMulti, RarityUtils.getRarityMultiplier(rarity));
             } else {
-                newStat = levelUpItem(min, max, levelMulti, GachaManager.getRarityMultiplier(rarity), ExtractLore.extractPercentageFromName(itemMeta.getDisplayName()));
+                newStat = levelUpItem(min, max, levelMulti, RarityUtils.getRarityMultiplier(rarity), ExtractLore.extractPercentageFromName(itemMeta.getDisplayName()));
             }
             // Update the lore with the new stat
             List<String> loreString = itemMeta.getLore();
@@ -546,7 +547,7 @@ public class EquipmentSpecialistListener implements Listener {
         System.out.println(itemMeta.getDisplayName());
         int level = ExtractLore.extractLevelFromName(itemMeta.getDisplayName());
         int rarityIndex = ExtractLore.extractRarityFromLore(lore);
-        double rarityMulti = GachaManager.getRarityMultiplier(rarityIndex);
+        double rarityMulti = RarityUtils.getRarityMultiplier(rarityIndex);
         double levelMulti = Calculations.playerLevelMultiplier(level);
         // List to hold percentages of stats
         List<Double> statPercentages = new ArrayList<>();
@@ -584,7 +585,7 @@ public class EquipmentSpecialistListener implements Listener {
 
         // Create the new display name with the rerolled percentage
         String levelPrefix = "<dark_gray>[<gold>" + level + "<dark_gray>] ";
-        String itemName = GachaManager.getRarityColor(rarityIndex) + ExtractLore.ExtractItemName(itemMeta.getDisplayName());
+        String itemName = RarityUtils.getRarityColor(rarityIndex) + ExtractLore.ExtractItemName(itemMeta.getDisplayName());
         return MiniMessage.miniMessage().deserialize("<!i>" + levelPrefix + itemName + " " +  percentageDisplay);
     }
 }

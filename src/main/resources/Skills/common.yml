@@ -1,0 +1,10 @@
+sword charge:
+  damage: 1.1
+  cooldown: 10
+  duration: 10
+  description: "Empower your next attack with a charged sword strike for <duration> seconds."
+
+sword slash:
+  damage: 0.75
+  cooldown: 5
+  description: "Launch a powerful slash that travels forward, damaging the first enemy it hits."
