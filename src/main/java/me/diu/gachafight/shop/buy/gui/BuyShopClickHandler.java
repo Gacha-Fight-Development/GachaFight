@@ -1,6 +1,7 @@
 package me.diu.gachafight.shop.buy.gui;
 
 import me.diu.gachafight.GachaFight;
+import me.diu.gachafight.hooks.VaultHook;
 import me.diu.gachafight.playerstats.PlayerStats;
 import me.diu.gachafight.utils.ColorChat;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -39,8 +40,8 @@ public class BuyShopClickHandler {
         // Check if the item is priced with money
         if (priceLine.contains("$")) {
             double price = Double.parseDouble(priceLine.replace("$", ""));
-            if (stats.getMoney() >= price) {
-                stats.setMoney(stats.getMoney() - price);
+            if (VaultHook.getBalance(player) >= price) {
+                VaultHook.withdraw(player, price);
 
                 // Clone the item and remove the price from the lore
                 ItemStack purchasedItem = item.clone();

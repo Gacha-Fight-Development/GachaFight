@@ -19,6 +19,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -45,18 +46,18 @@ public class SkillCommand implements CommandExecutor {
 
         switch (action) {
             case "get":
-                if (args.length < 2) {
-                    sender.sendMessage(ColorChat.chat("&cUsage: /skill get <skill>"));
+                if (args.length < 3) {
+                    sender.sendMessage(ColorChat.chat("&cUsage: /skill get <rarity> <skill>"));
                     return true;
                 }
-                skillName = String.join(" ", java.util.Arrays.copyOfRange(args, 1, args.length)).toLowerCase();
+                skillName = String.join(" ", Arrays.copyOfRange(args, 2, args.length)).toLowerCase();
                 break;
             case "give":
                 if (args.length < 3) {
                     sender.sendMessage(ColorChat.chat("&cUsage: /skill give <skill> <player>"));
                     return true;
                 }
-                skillName = String.join(" ", java.util.Arrays.copyOfRange(args, 1, args.length - 1)).toLowerCase();
+                skillName = String.join(" ", Arrays.copyOfRange(args, 1, args.length - 1)).toLowerCase();
                 targetPlayer = Bukkit.getPlayer(args[args.length - 1]);
                 if (targetPlayer == null) {
                     sender.sendMessage(ColorChat.chat("&cPlayer not found: " + args[args.length - 1]));
@@ -68,7 +69,7 @@ public class SkillCommand implements CommandExecutor {
                     sender.sendMessage(ColorChat.chat("&cUsage: /skill drop <skill> <x> <y> <z>"));
                     return true;
                 }
-                skillName = String.join(" ", java.util.Arrays.copyOfRange(args, 1, args.length - 3)).toLowerCase();
+                skillName = String.join(" ", Arrays.copyOfRange(args, 1, args.length - 3)).toLowerCase();
                 break;
             default:
                 sender.sendMessage(ColorChat.chat("&cInvalid action. Use 'get', 'give', or 'drop'."));

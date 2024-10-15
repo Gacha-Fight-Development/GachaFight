@@ -1,6 +1,7 @@
 package me.diu.gachafight.listeners;
 
 import me.diu.gachafight.GachaFight;
+import me.diu.gachafight.hooks.VaultHook;
 import me.diu.gachafight.playerstats.PlayerStats;
 import me.diu.gachafight.utils.ColorChat;
 import org.bukkit.Bukkit;
@@ -70,7 +71,7 @@ public class BankNPCListener implements Listener {
         if (totalGoldValue > 0) {
             // Add money to the player's stats
             PlayerStats playerStats = PlayerStats.getPlayerStats(player);
-            playerStats.setMoney(playerStats.getMoney() + totalGoldValue);
+            VaultHook.addMoney(player, totalGoldValue);
 
             // Inform the player
             player.sendMessage(ColorChat.chat("&a+&6$&e" + totalGoldValue + "."));

@@ -1,6 +1,7 @@
 package me.diu.gachafight.shop.overseer.listeners;
 
 import lombok.NonNull;
+import me.diu.gachafight.hooks.VaultHook;
 import me.diu.gachafight.playerstats.PlayerStats;
 import me.diu.gachafight.shop.overseer.gui.OverseerShopGUI;
 import me.diu.gachafight.utils.Calculations;
@@ -68,8 +69,9 @@ public class OverseerShopClickListener implements Listener {
     private void increaseHP(Player player) {
         PlayerStats stats = PlayerStats.getPlayerStats(player);
         double cost = Calculations.overseerHPCost(stats.getMaxhp());
-        if (stats.getMoney() >= cost) {
-            stats.setMoney(stats.getMoney() - cost);
+        if (VaultHook.getBalance(player) >= cost) {
+            VaultHook.withdraw(player, cost);
+            stats.setMaxhp(stats.getMaxhp() + 0.1);
             stats.setMaxhp(stats.getMaxhp()+0.1);
             player.sendMessage(MiniMessage.miniMessage().deserialize("<!i><green>+ <gold>0.1 <color:#FB035F>❤"));
         } else {
@@ -80,8 +82,8 @@ public class OverseerShopClickListener implements Listener {
     private void increaseDamage(Player player) {
         PlayerStats stats = PlayerStats.getPlayerStats(player);
         double cost = Calculations.overseerDamageCost(stats.getDamage());
-        if (stats.getMoney() >= cost) {
-            stats.setMoney(stats.getMoney() - cost);
+        if (VaultHook.getBalance(player) >= cost) {
+            VaultHook.withdraw(player, cost);
             stats.setDamage(stats.getDamage()+0.1);
             player.sendMessage(MiniMessage.miniMessage().deserialize("<!i><green>+ <gold>0.1 <red>🗡"));
         } else {
@@ -94,8 +96,8 @@ public class OverseerShopClickListener implements Listener {
         // Your logic to increase armor
         PlayerStats stats = PlayerStats.getPlayerStats(player);
         double cost = Calculations.overseerArmorCost(stats.getArmor());
-        if (stats.getMoney() >= cost) {
-            stats.setMoney(stats.getMoney() - cost);
+        if (VaultHook.getBalance(player) >= cost) {
+            VaultHook.withdraw(player, cost);
             stats.setArmor(stats.getArmor()+0.1);
             player.sendMessage(MiniMessage.miniMessage().deserialize("<!i><green>+ <gold>0.1 <green>🛡"));
         } else {
@@ -106,8 +108,8 @@ public class OverseerShopClickListener implements Listener {
     private void increaseCritChance(Player player) {
         PlayerStats stats = PlayerStats.getPlayerStats(player);
         double cost = Calculations.overseerCritChanceCost(stats.getCritChance());
-        if (stats.getMoney() >= cost) {
-            stats.setMoney(stats.getMoney() - cost);
+        if (VaultHook.getBalance(player) >= cost) {
+            VaultHook.withdraw(player, cost);
             stats.setCritChance(stats.getCritChance()+0.001);
             player.sendMessage(MiniMessage.miniMessage().deserialize("<!i><green>+ <gold>0.1% <color:#FFA500>🌠"));
         } else {
@@ -118,8 +120,8 @@ public class OverseerShopClickListener implements Listener {
     private void increaseCritDamage(Player player) {
         PlayerStats stats = PlayerStats.getPlayerStats(player);
         double cost = Calculations.overseerCritDmgCost(stats.getCritDmg());
-        if (stats.getMoney() >= cost) {
-            stats.setMoney(stats.getMoney() - cost);
+        if (VaultHook.getBalance(player) >= cost) {
+            VaultHook.withdraw(player, cost);
             stats.setCritDmg(stats.getCritDmg()+0.01);
             player.sendMessage(MiniMessage.miniMessage().deserialize("<!i><green>+ <gold>1% <color:#9B870C>💥"));
         } else {
@@ -130,8 +132,8 @@ public class OverseerShopClickListener implements Listener {
     private void increaseSpeed(Player player) {
         PlayerStats stats = PlayerStats.getPlayerStats(player);
         double cost = Calculations.overseerSpeedCost(stats.getSpeed());
-        if (stats.getMoney() >= cost) {
-            stats.setMoney(stats.getMoney() - cost);
+        if (VaultHook.getBalance(player) >= cost) {
+            VaultHook.withdraw(player, cost);
             stats.setSpeed(stats.getSpeed()+0.01);
             player.sendMessage(MiniMessage.miniMessage().deserialize("<!i><green>+ <gold>1% <white>⏩"));
             player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(stats.getSpeed()*0.1);
@@ -147,8 +149,8 @@ public class OverseerShopClickListener implements Listener {
             player.sendMessage(ColorChat.chat("&6Dodge Maxed (30%)"));
             return;
         }
-        if (stats.getMoney() >= cost) {
-            stats.setMoney(stats.getMoney() - cost);
+        if (VaultHook.getBalance(player) >= cost) {
+            VaultHook.withdraw(player, cost);
             stats.setDodge(stats.getDodge()+0.001);
             player.sendMessage(MiniMessage.miniMessage().deserialize("<!i><green>+ <gold>0.1% <gray>👻"));
         } else {

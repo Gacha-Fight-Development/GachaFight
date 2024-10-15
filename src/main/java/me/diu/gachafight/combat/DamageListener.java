@@ -11,6 +11,7 @@ import me.diu.gachafight.combat.mobdrops.BulbDeathReward;
 import me.diu.gachafight.combat.mobdrops.GoblinDeathReward;
 import me.diu.gachafight.combat.mobdrops.RPGDeathReward;
 import me.diu.gachafight.dungeon.utils.DungeonUtils;
+import me.diu.gachafight.hooks.VaultHook;
 import me.diu.gachafight.playerstats.PlayerStats;
 import me.diu.gachafight.quest.listeners.QuestKillListener;
 import me.diu.gachafight.skills.managers.MobDropSelector;
@@ -39,7 +40,7 @@ import java.util.List;
 
 public class DamageListener implements Listener {
 
-    private final int weaponDelay = 40;
+    private final int weaponDelay = 20;
 
     public DamageListener(GachaFight plugin) {
         Bukkit.getPluginManager().registerEvents(this, plugin);
@@ -274,7 +275,7 @@ public class DamageListener implements Listener {
                 rankMulti = 1.2;
             }
             playerStats.addExp( expGained * rankMulti, player);
-            playerStats.setMoney(playerStats.getMoney() + (moneyGained*rankMulti));
+            VaultHook.addMoney(player, (moneyGained*rankMulti));
 
 
             if (entity.getName().contains("Goblin")) {
@@ -289,7 +290,7 @@ public class DamageListener implements Listener {
                     player.getInventory().addItem(MobDropSelector.getDrop(player));
                 }
             }
-            if (Math.random() < 0.003) {
+            if (Math.random() < 0.0015) {
                 player.getInventory().addItem(RandomSkillUtils.getRandomCommonSkill());
                 player.sendMessage(ColorChat.chat("&a&l Received &f&lCommon &a&lSkill!"));
             }
@@ -297,7 +298,7 @@ public class DamageListener implements Listener {
                 player.getInventory().addItem(RandomSkillUtils.getRandomUncommonSkill());
                 player.sendMessage(ColorChat.chat("&a&l Received &7&lUncommon &a&lSkill!"));
             }
-            if (Math.random() < 0.0015) {
+            if (Math.random() < 0.0005) {
                 player.getInventory().addItem(RandomSkillUtils.getRandomUncommonSkill());
                 player.sendMessage(ColorChat.chat("&a&l Received &7&lUncommon &a&lSkill!"));
             }

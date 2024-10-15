@@ -1,6 +1,7 @@
 package me.diu.gachafight.shop.sell;
 
 import me.diu.gachafight.GachaFight;
+import me.diu.gachafight.hooks.VaultHook;
 import me.diu.gachafight.playerstats.PlayerStats;
 import me.diu.gachafight.utils.SellPriceCalculator;
 import net.kyori.adventure.text.Component;
@@ -104,7 +105,7 @@ public class ShopManager implements Listener {
             if (slot == 49 && event.getCurrentItem().getType() == Material.EMERALD) {
                 double totalMoney = sellItems(event.getInventory());
                 player.sendMessage(MiniMessage.miniMessage().deserialize("<green>You sold your items for <gold>" + String.format("%.1f", totalMoney) + " <green>money!"));
-                PlayerStats.getPlayerStats(player).setMoney(PlayerStats.getPlayerStats(player).getMoney() + totalMoney);
+                VaultHook.addMoney(player, totalMoney);
                 player.closeInventory();
             }
         }

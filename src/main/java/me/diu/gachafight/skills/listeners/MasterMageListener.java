@@ -1,6 +1,7 @@
 package me.diu.gachafight.skills.listeners;
 
 import me.diu.gachafight.GachaFight;
+import me.diu.gachafight.hooks.VaultHook;
 import me.diu.gachafight.playerstats.PlayerStats;
 import me.diu.gachafight.skills.managers.MobDropSelector;
 import me.diu.gachafight.utils.ColorChat;
@@ -66,11 +67,11 @@ public class MasterMageListener implements Listener {
                     player.sendMessage(ColorChat.chat("&cAnother player has already revealed Mob!"));
                     return;
                 }
-                if (stats.getMoney() < 10000) {
+                if (VaultHook.getBalance(player) < 10000) {
                     player.sendMessage(ColorChat.chat("&cYou need at least 10k to get a hint from the Master Mage!"));
                     return;
                 }
-                stats.setMoney(stats.getMoney() - 10000);
+                VaultHook.withdraw(player, 10000);
                 MobDropSelector.changeMobs(player);
                 player.sendMessage(ColorChat.chat("&7[&dMagical Orb&7] &a" + MobDropSelector.getMob() + " &7will now drop Rare+ Skill Book"));
             }

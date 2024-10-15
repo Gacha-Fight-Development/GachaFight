@@ -1,5 +1,6 @@
 package me.diu.gachafight.scoreboard;
 
+import me.clip.placeholderapi.PlaceholderAPI;
 import me.diu.gachafight.GachaFight;
 import me.diu.gachafight.playerstats.PlayerDataManager;
 import me.diu.gachafight.playerstats.PlayerStats;
@@ -29,7 +30,16 @@ public class Board {
             playerDataManager.loadPlayerData(player);
             stats = playerDataManager.getPlayerStats(player.getUniqueId());
         }
-        Score moneyScore = obj.getScore(ColorChat.chat("&a$" + String.format("%.1f", PlayerStats.getPlayerStats(player).getMoney())));
+        String rawMoneyText = PlaceholderAPI.setPlaceholders(player, "%vault_eco_balance%");
+        double balance;
+        try {
+            balance = Double.parseDouble(rawMoneyText);
+        } catch (NumberFormatException e) {
+            balance = 0.0; // Default to 0 if parsing fails
+        }
+
+        String formattedMoney = String.format("&a$ %.2f", Math.round(balance * 100.0) / 100.0);
+        Score moneyScore = obj.getScore(ColorChat.chat(formattedMoney));
         moneyScore.setScore(5);
 
         Score gemScore = obj.getScore(ColorChat.chat("&a❖" + stats.getGem()));

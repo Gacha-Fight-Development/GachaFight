@@ -1,7 +1,7 @@
 package me.diu.gachafight;
 
-import io.lumine.mythic.bukkit.commands.spawners.RemoveCommand;
 import lombok.Getter;
+import me.diu.gachafight.Pets.PetCommand;
 import me.diu.gachafight.commands.*;
 import me.diu.gachafight.commands.tabs.AdminPlayerDataTabCompleter;
 import me.diu.gachafight.combat.DamageListener;
@@ -10,6 +10,7 @@ import me.diu.gachafight.commands.tabs.ShopTabCompleter;
 import me.diu.gachafight.commands.tabs.SkillTabCompleter;
 import me.diu.gachafight.dungeon.DungeonGUI;
 import me.diu.gachafight.guides.TutorialGuideSystem;
+import me.diu.gachafight.hooks.VaultHook;
 import me.diu.gachafight.listeners.*;
 import me.diu.gachafight.playerstats.PlayerDataManager;
 import me.diu.gachafight.playerstats.PlayerStats;
@@ -49,6 +50,7 @@ import me.diu.gachafight.utils.FurnitureDataManager;
 import me.diu.gachafight.utils.TextDisplayUtils;
 import net.luckperms.api.LuckPerms;
 import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.SoundCategory;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
@@ -60,6 +62,7 @@ import java.io.File;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 @Getter
 public final class GachaFight extends JavaPlugin implements Listener {
@@ -84,45 +87,13 @@ public final class GachaFight extends JavaPlugin implements Listener {
     private TutorialGuideSystem guideSystem;
     @Override
     public void onEnable() {
-        this.instance = this;
-        RegisteredServiceProvider<LuckPerms> provider = getServer().getServicesManager().getRegistration(LuckPerms.class);
-        if (provider != null) {
-            luckPerms = provider.getProvider();
-        }
+        instance = this;
         saveDefaultConfig();
         getServer().getPluginManager().registerEvents(this, this);
 
-        // Initialize DIContainer
-        this.diContainer = new DIContainer(this);
-
-        String mysqlUsername = getConfig().getString("mysql.username");
-        String mysqlPassword = getConfig().getString("mysql.password");
-        this.databaseManager = new DatabaseManager(mysqlUsername, mysqlPassword);
-
-        // Wait for MongoDB connection and then initialize other services
-        diContainer.waitForInitialization().thenRun(() -> {
-            // Run the rest of the initialization on the main thread
-            Bukkit.getScheduler().runTask(this, () -> {
-                try {
-                    initializeServices();
-                    registerEvents();
-                    registerCommands();
-                    loadAllPlayerData();
-                    scheduleTimers();
-
-                    Bukkit.broadcastMessage(ColorChat.chat("&b&lGachaFight Fully Loaded"));
-                    Bukkit.broadcastMessage(ColorChat.chat("&aFull Heal from Reload"));
-                } catch (Exception e) {
-                    getLogger().severe("Failed to initialize GachaFight: " + e.getMessage());
-                    e.printStackTrace();
-                    Bukkit.getPluginManager().disablePlugin(this);
-                }
-            });
-        }).exceptionally(e -> {
-            getLogger().severe("Failed to initialize MongoDB connection: " + e.getMessage());
-            Bukkit.getScheduler().runTask(this, () -> Bukkit.getPluginManager().disablePlugin(this));
-            return null;
-        });
+        initializeLuckPerms();
+        setupVault();
+        initializeDatabases();
     }
 
     @Override
@@ -141,13 +112,58 @@ public final class GachaFight extends JavaPlugin implements Listener {
         }
         diContainer.shutdown();
         saveConfig();
-        try {
-            if (databaseManager != null) {
-                databaseManager.disconnect();
-            }
-        } catch (SQLException e) {
-            getLogger().severe("Error disconnecting from MySQL: " + e.getMessage());
+        if (databaseManager != null) {
+            databaseManager.disconnect();
+            getLogger().info("Successfully disconnected from the database.");
         }
+    }
+
+    private void initializeLuckPerms() {
+        RegisteredServiceProvider<LuckPerms> provider = getServer().getServicesManager().getRegistration(LuckPerms.class);
+        if (provider != null) {
+            luckPerms = provider.getProvider();
+        }
+    }
+    private boolean setupVault() {
+        if (!getServer().getPluginManager().isPluginEnabled("Vault")) {
+            return false;
+        }
+        return VaultHook.setupEconomy();
+    }
+
+    private void initializeDatabases() {
+        this.diContainer = new DIContainer(this);
+        String mysqlUsername = getConfig().getString("mysql.username");
+        String mysqlPassword = getConfig().getString("mysql.password");
+        this.databaseManager = new DatabaseManager(this, mysqlUsername, mysqlPassword);
+
+        CompletableFuture<Void> mysqlFuture = databaseManager.initializeAsync();
+        CompletableFuture<Void> mongoFuture = diContainer.waitForInitialization();
+
+        CompletableFuture.allOf(mysqlFuture, mongoFuture).thenRun(() ->
+                Bukkit.getScheduler().runTask(this, this::completeInitialization)
+        ).exceptionally(this::handleInitializationError);
+    }
+
+    private void completeInitialization() {
+        try {
+            initializeServices();
+            registerEvents();
+            registerCommands();
+            loadAllPlayerData();
+            scheduleTimers();
+            Bukkit.broadcastMessage(ColorChat.chat("&b&lGachaFight Fully Loaded"));
+            Bukkit.broadcastMessage(ColorChat.chat("&aFull Heal from Reload"));
+        } catch (Exception e) {
+            getLogger().severe("Failed to initialize GachaFight: " + e.getMessage());
+            e.printStackTrace();
+            Bukkit.getPluginManager().disablePlugin(this);
+        }
+    }
+    private Void handleInitializationError(Throwable e) {
+        getLogger().severe("Failed to initialize databases: " + e.getMessage());
+        Bukkit.getScheduler().runTask(this, () -> Bukkit.getPluginManager().disablePlugin(this));
+        return null;
     }
 
     private void initializeServices() {
@@ -275,6 +291,7 @@ public final class GachaFight extends JavaPlugin implements Listener {
         new RemoveTextDisplayCommand(this);
         new SkillCommand(this);
         new SkillTabCompleter(this);
+        new PetCommand(this);
     }
 
     private void registerEvents() {
