@@ -21,15 +21,18 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.ArrayList;
 import java.util.List;
 
+import static java.util.regex.Pattern.CASE_INSENSITIVE;
 import static net.kyori.adventure.text.Component.text;
 import static org.bukkit.inventory.ItemStack.empty;
 
 public class PetCommand implements CommandExecutor, Listener {
     private final GachaFight plugin;
+
     public PetCommand(GachaFight plugin){
         this.plugin = plugin;
         plugin.getCommand("pet").setExecutor(this);
         Bukkit.getPluginManager().registerEvents(this, plugin);
+        new PetEffects(plugin);
     }
 
     @Override
@@ -47,7 +50,7 @@ public class PetCommand implements CommandExecutor, Listener {
                 player.sendMessage(ColorChat.chat("&cHold your pet in your main hand and type /pet equip <slot number> to equip it!"));
                 player.sendMessage(ColorChat.chat("&cCheck your current pets with /pet list!"));
                 player.sendMessage(ColorChat.chat("&cRemove a pet with /pet remove <slot>!"));
-                player.sendMessage(ColorChat.chat("&cCheck a pets buffs/debuffs with /pet check <slot>!"));
+                player.sendMessage(ColorChat.chat("&cCheck a pets buffs/de-buffs with /pet check <slot>!"));
                 break;
             case "equip":
                 setPet(player, args[1]);
@@ -64,6 +67,8 @@ public class PetCommand implements CommandExecutor, Listener {
             case "admin":
                 admin(player);
                 break;
+            case "create":
+                createPetItem(player);
         }
 
 
@@ -315,24 +320,12 @@ public class PetCommand implements CommandExecutor, Listener {
         }
     }
 
-    // Method for creating pets.  This needs work, mostly how we are going to go about choosing what pets can have what stats, etc
-    public ItemStack createPetItem(String petID, String[] lore){
-        //Create pet from si menu
-        TextComponent petNameComponent = text(petID);
-        ItemStack pet = null;
-        ItemMeta meta = null;
-        List<Component> loreComponent = new ArrayList<>();
-        for(String loreLine : lore){
-            TextComponent loreAsComponent = text(loreLine);
-            loreComponent.add(loreAsComponent);
-        }
-        meta.displayName(petNameComponent);
-        //meta.
-        //meta.lore(loreComponent);
-        pet.setItemMeta(meta);
+    public void createPetItem(Player player){
+        ItemStack heldPet = player.getInventory().getItemInMainHand();
+        ItemStack newPetItem = PetEffects.createPetStats(heldPet);
 
-        // Default return value if no valid pet is found
-        return null;
+
+        player.getInventory().setItemInMainHand(newPetItem);
     }
 
     public boolean isPet(ItemStack item){
@@ -340,7 +333,7 @@ public class PetCommand implements CommandExecutor, Listener {
         List<Component> lore = meta.lore();
         // Check if the held item has lore, and return if the first line of lore contains the word 'pet'
         if(!(lore.isEmpty())){
-            return lore.getFirst().toString().contains("pet");
+            return lore.getFirst().toString().toLowerCase().contains("pet");
         }
         // Default return value if no valid pet is found
         return false;
