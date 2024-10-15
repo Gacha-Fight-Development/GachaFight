@@ -63,6 +63,8 @@ commands:
     usage: /promote
   removetextdisplay:
     permission: gacha.dev
+  skill:
+    permission: gacha.dev
   pet:
     usage: /pet
     permission: gacha.dev

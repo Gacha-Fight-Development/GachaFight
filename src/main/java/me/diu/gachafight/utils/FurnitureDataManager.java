@@ -68,7 +68,8 @@ public class FurnitureDataManager {
 
                 Location location = new Location(Bukkit.getWorld(worldName), x, y, z);
                 if (!isFurnitureAtLocation(location)) {
-                    CustomFurniture.spawn(furnitureID, location.getBlock());
+                    location.getBlock().setType(Material.CHEST);
+                    removeFurnitureState(location);
                 }
             }
         }

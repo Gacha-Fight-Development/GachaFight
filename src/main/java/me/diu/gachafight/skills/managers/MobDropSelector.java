@@ -2,11 +2,18 @@ package me.diu.gachafight.skills.managers;
 
 import lombok.Getter;
 import me.diu.gachafight.GachaFight;
+import me.diu.gachafight.dungeon.utils.DungeonUtils;
+import me.diu.gachafight.listeners.LootChestListener;
+import me.diu.gachafight.skills.utils.RandomSkillUtils;
 import me.diu.gachafight.utils.ColorChat;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.Location;
+import org.bukkit.block.Block;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.File;
@@ -72,6 +79,56 @@ public class MobDropSelector {
             }
         }
     }
+
+    public static ItemStack getDrop(Player player) {
+        String playerName = player.getName();
+        Block location = player.getLocation().getBlock();
+        String centeredLocation;
+        if (DungeonUtils.isRPG(player.getLocation())) {
+            centeredLocation = centerText("Location: Dungeon 1", 63);
+        } else if (DungeonUtils.isGoblin(player.getLocation())) {
+            centeredLocation = centerText("Location: Dungeon 2", 63);
+        } else {
+            centeredLocation = centerText("Location: " + location.getX() + " " + location.getY() + " " + location.getZ(), 63);
+        }
+        if (Math.random() < 0.1) {
+            String centeredName = centerText("&6&lPlayer: &e&l" + playerName + "&a&lReceived &d&lRare &a&lSkill", 63);
+            Bukkit.broadcastMessage(ColorChat.chat("&c&l&m---------------------------------------------"));
+            Bukkit.broadcastMessage(ColorChat.chat(centeredName));
+            Bukkit.broadcastMessage(ColorChat.chat("&6&l" + centeredLocation));
+            Bukkit.broadcastMessage(ColorChat.chat("&c&l&m---------------------------------------------"));
+            return RandomSkillUtils.getRandomEpicSkill();
+        } else {
+            String centeredName = centerText("&6&lPlayer: &e&l" + playerName + "&a&lReceived &d&lRare &a&lSkill", 63);
+            Bukkit.broadcastMessage(ColorChat.chat("&c&l&m---------------------------------------------"));
+            Bukkit.broadcastMessage(ColorChat.chat(centeredName));
+            Bukkit.broadcastMessage(ColorChat.chat("&6&l" + centeredLocation));
+            Bukkit.broadcastMessage(ColorChat.chat("&c&l&m---------------------------------------------"));
+            return RandomSkillUtils.getRandomRareSkill();
+        }
+    }
+    public static String centerText(String text, int lineLength) {
+        // Remove color codes for length calculation
+        String strippedText = ChatColor.stripColor(ColorChat.chat(text));
+
+        if (strippedText.length() >= lineLength) {
+            return text;
+        }
+
+        int spaces = (lineLength - strippedText.length()) / 2;
+        StringBuilder centeredText = new StringBuilder();
+
+        // Add spaces before the text
+        for (int i = 0; i < spaces; i++) {
+            centeredText.append(" ");
+        }
+
+        // Add the original text with color codes
+        centeredText.append(text);
+
+        return centeredText.toString();
+    }
+
 
     private static void clearMobData() {
         Bukkit.broadcastMessage(ColorChat.chat("&6Mob: &e" + mob + " &7no longer drops rare skill book"));

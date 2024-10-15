@@ -107,6 +107,7 @@ public class DungeonGUI implements Listener {
     private void handleDungeonSelection(Player player, Dungeon dungeon) {
         Location spawnLocation = dungeon.getNextAvailableSpawn();
         if (spawnLocation != null) {
+            player.stopAllSounds();
             player.teleport(spawnLocation);
             player.sendMessage(ColorChat.chat("&aTeleported to " + dungeon.getName() + "!"));
             player.sendMessage(ColorChat.chat("&cItems obtained inside dungeon drop on death!"));

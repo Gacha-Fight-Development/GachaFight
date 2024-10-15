@@ -32,9 +32,6 @@ public class MasterMageListener implements Listener {
         }
         Player player = event.getPlayer();
         PlayerStats stats = PlayerStats.getPlayerStats(player);
-        if (!player.hasPermission("gacha.dev")) {
-            player.sendMessage("Not Implemented yet.");
-        }
         if (stats.getLevel() < 10) {
             player.sendMessage(ColorChat.chat("&cYou need at least level 10!"));
         }
