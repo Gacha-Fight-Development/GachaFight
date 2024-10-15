@@ -1,10 +1,22 @@
 # Config for pet effects
 
 turtle:
-  lore: "A Strong Turtle Pet!"
-  minHp: 5
-  maxHp: 10
-  minDefence: 5
-  maxDefence: 10
+  lore: "A Big Strong Turtle Pet!"
+  minHP: 5
+  maxHP: 10
+  minDefence: 1
+  maxDefence: 15
 
 octopus:
+  lore: "A Cute Little Octopus Pet!"
+  minHP: 5
+  maxHP: 10
+  minDamage: 1
+  maxDamage: 15
+
+snowy_owl:
+  lore: "A Fierce Snowy Owl Pet!"
+  minDamage: 1
+  maxDamage: 100
+  minDefence: -100
+  maxDefence: 0

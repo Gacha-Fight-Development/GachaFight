@@ -35,6 +35,12 @@ public class PotionUseListener implements Listener {
                     player.setCooldown(Material.LEATHER_HORSE_ARMOR, 60);
                     event.setCancelled(true);
                 }
+                if (meta.hasDisplayName() && meta.getDisplayName().contains("Medium HP Potion")) {
+                    useHPPotion(player, 12);
+                    item.setAmount(item.getAmount() - 1);
+                    player.setCooldown(Material.LEATHER_HORSE_ARMOR, 60);
+                    event.setCancelled(true);
+                }
                 if (meta.hasDisplayName() && meta.getDisplayName().contains("Small Speed Potion")) {
                     useSpeedPotion(player, 2);
                     item.setAmount(item.getAmount() - 1);
