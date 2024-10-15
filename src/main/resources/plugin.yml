@@ -65,6 +65,9 @@ commands:
     permission: gacha.dev
   skill:
     permission: gacha.dev
+  pet:
+    usage: /pet
+    permission: gacha.dev
 libraries:
   - org.mongodb:mongodb-driver-sync:5.1.2
   - org.mongodb:mongodb-driver-core:5.1.2
