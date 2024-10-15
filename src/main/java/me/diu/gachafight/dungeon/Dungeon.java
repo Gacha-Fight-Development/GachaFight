@@ -9,28 +9,30 @@ import java.util.List;
 import java.util.Map;
 
 public class Dungeon {
+    private static final long COOLDOWN_DURATION = 40 * 1000; // 40 seconds in milliseconds
 
     @Getter
     private final String name;
-    private final List<Location> spawnPoints = new ArrayList<>();
-    private final Map<Integer, Long> spawnCooldowns = new HashMap<>();
-    private int currentSpawn = 0;
     @Getter
-    private final String description;
+    private final List<String> description;
+    private final List<Location> spawnPoints;
+    private final long[] spawnCooldowns;
+    private int currentSpawnIndex;
 
-    public Dungeon(String name, String description, List<Location> spawnPoints) {
+    public Dungeon(String name, List<String> description, List<Location> spawnPoints) {
         this.name = name;
-        this.description = description;
-        this.spawnPoints.addAll(spawnPoints);
+        this.description = new ArrayList<>(description);
+        this.spawnPoints = new ArrayList<>(spawnPoints);
+        this.spawnCooldowns = new long[spawnPoints.size()];
+        this.currentSpawnIndex = 0;
     }
 
-    // Get the next available spawn point that's not on cooldown
     public Location getNextAvailableSpawn() {
         for (int i = 0; i < spawnPoints.size(); i++) {
-            int spawnIndex = (currentSpawn + i) % spawnPoints.size();
+            int spawnIndex = (currentSpawnIndex + i) % spawnPoints.size();
             if (!isOnCooldown(spawnIndex)) {
                 setCooldown(spawnIndex);
-                currentSpawn = (spawnIndex + 1) % spawnPoints.size();
+                currentSpawnIndex = (spawnIndex + 1) % spawnPoints.size();
                 return spawnPoints.get(spawnIndex);
             }
         }
@@ -39,12 +41,11 @@ public class Dungeon {
 
     // Check if a spawn point is on cooldown
     private boolean isOnCooldown(int spawnIndex) {
-        Long cooldownEnd = spawnCooldowns.get(spawnIndex);
-        return cooldownEnd != null && cooldownEnd > System.currentTimeMillis();
+        return System.currentTimeMillis() < spawnCooldowns[spawnIndex];
     }
 
     // Set cooldown for a spawn point
     private void setCooldown(int spawnIndex) {
-        spawnCooldowns.put(spawnIndex, System.currentTimeMillis() + 40 * 1000); // 40 sec cooldown
+        spawnCooldowns[spawnIndex] = System.currentTimeMillis() + COOLDOWN_DURATION;
     }
 }

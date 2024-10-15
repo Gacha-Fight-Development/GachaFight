@@ -3,15 +3,13 @@ package me.diu.gachafight;
 import lombok.Getter;
 import me.diu.gachafight.Pets.PetCommand;
 import me.diu.gachafight.commands.*;
-import me.diu.gachafight.commands.tabs.AdminPlayerDataTabCompleter;
+import me.diu.gachafight.commands.tabs.*;
 import me.diu.gachafight.combat.DamageListener;
-import me.diu.gachafight.commands.tabs.GuideTabCompleter;
-import me.diu.gachafight.commands.tabs.ShopTabCompleter;
-import me.diu.gachafight.commands.tabs.SkillTabCompleter;
 import me.diu.gachafight.dungeon.DungeonGUI;
 import me.diu.gachafight.guides.TutorialGuideSystem;
 import me.diu.gachafight.hooks.VaultHook;
 import me.diu.gachafight.listeners.*;
+import me.diu.gachafight.party.PartyManager;
 import me.diu.gachafight.playerstats.PlayerDataManager;
 import me.diu.gachafight.playerstats.PlayerStats;
 import me.diu.gachafight.di.DIContainer;
@@ -167,20 +165,36 @@ public final class GachaFight extends JavaPlugin implements Listener {
     }
 
     private void initializeServices() {
+        System.out.println("playerDataManager");
         this.playerDataManager = new PlayerDataManager(this, diContainer.getService(MongoService.class));
+        System.out.println("dicontainer");
         diContainer.registerService(PlayerDataManager.class, this.playerDataManager);
+        System.out.println("score");
         this.scoreboard = new Board(diContainer);
+        System.out.println("gacha");
         this.GachaLootTableManager = new GachaLootTableManager(this);
+        System.out.println("potion");
         this.potionItemManager = new PotionItemManager(this);
+        System.out.println("money");
         this.moneyLeaderboard = new MoneyLeaderboard(this);
+        System.out.println("levelleader");
         this.levelLeaderboard = new LevelLeaderboard(this);
+        System.out.println("quest");
         this.questManager = new QuestManager(this, getDataFolder(), databaseManager);
+        System.out.println("quest 2");
         QuestUtils.initialize(questManager);
+        System.out.println("gachamanager");
         this.gachaManager = new GachaManager(this, luckPerms, questManager);
+        System.out.println("furniture");
         this.furnitureDataManager = new FurnitureDataManager(this);
+        System.out.println("questgui");
         this.questGUI = new QuestGUI(questManager);
+        System.out.println("buyitem");
         this.buyItemManager = new BuyItemManager(this);
+        System.out.println("guide");
         this.guideSystem = new TutorialGuideSystem(this);
+        System.out.println("party");
+        PartyManager.initialize(this);
 
         File skillsDir = new File(getDataFolder(), "Skills");
         if (!skillsDir.exists()) {
@@ -292,6 +306,8 @@ public final class GachaFight extends JavaPlugin implements Listener {
         new SkillCommand(this);
         new SkillTabCompleter(this);
         new PetCommand(this);
+        new PartyCommand(this);
+        new PartyTabCompleter(this);
     }
 
     private void registerEvents() {
