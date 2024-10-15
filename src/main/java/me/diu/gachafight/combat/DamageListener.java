@@ -40,7 +40,7 @@ import java.util.List;
 
 public class DamageListener implements Listener {
 
-    private final int weaponDelay = 20;
+    private final int weaponDelay = 0;
 
     public DamageListener(GachaFight plugin) {
         Bukkit.getPluginManager().registerEvents(this, plugin);

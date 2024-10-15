@@ -68,6 +68,8 @@ commands:
   pet:
     usage: /pet
     permission: gacha.dev
+  party:
+    usage: /party
 libraries:
   - org.mongodb:mongodb-driver-sync:5.1.2
   - org.mongodb:mongodb-driver-core:5.1.2
