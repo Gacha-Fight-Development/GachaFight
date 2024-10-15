@@ -122,13 +122,16 @@ public class SkillCommand implements CommandExecutor {
     public static ItemStack createSkillItem(String skillName, FileConfiguration skillConfig) {
         ItemStack skillItem = new ItemStack(Material.NETHERITE_UPGRADE_SMITHING_TEMPLATE, 1);
         ItemMeta meta = skillItem.getItemMeta();
+        skillName = skillName.toLowerCase();
         File configFile = SkillFileUtils.loadSkillFile(skillName);
+        System.out.println(configFile);
         String rarityName = capitalizeFirstLetter(configFile.getName().replace(".yml", ""));
         String rarityColor = RarityUtils.getRarityColor(rarityName);
         if (meta != null) {
             meta.setDisplayName(ColorChat.chat(rarityColor + capitalizeEachWord(skillName) + " &b&l(Skill)"));
 
             List<String> lore = new ArrayList<>();
+            System.out.println(skillConfig.getInt(skillName + ".cooldown"));
             lore.add(ColorChat.chat("&6Cooldown: &e" + skillConfig.getInt(skillName + ".cooldown", 0)));
 
             // Convert damage multiplier to percentage

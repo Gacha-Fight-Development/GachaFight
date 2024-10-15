@@ -32,6 +32,7 @@ import me.diu.gachafight.quest.utils.DailyQuestScheduler;
 import me.diu.gachafight.quest.utils.QuestUtils;
 import me.diu.gachafight.quest.utils.SideQuestScheduler;
 import me.diu.gachafight.scoreboard.Board;
+import me.diu.gachafight.services.MongoService;
 import me.diu.gachafight.shop.buy.BuyItemManager;
 import me.diu.gachafight.shop.buy.listener.ShopItemUseListener;
 import me.diu.gachafight.shop.equipmentspecialist.EquipmentSpecialistListener;
@@ -48,6 +49,7 @@ import me.diu.gachafight.utils.FurnitureDataManager;
 import me.diu.gachafight.utils.TextDisplayUtils;
 import net.luckperms.api.LuckPerms;
 import org.bukkit.Bukkit;
+import org.bukkit.SoundCategory;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.RegisteredServiceProvider;
@@ -89,61 +91,38 @@ public final class GachaFight extends JavaPlugin implements Listener {
         }
         saveDefaultConfig();
         getServer().getPluginManager().registerEvents(this, this);
+
+        // Initialize DIContainer
         this.diContainer = new DIContainer(this);
-        this.databaseManager = new DatabaseManager(this.getConfig().getString("mysql.username"), this.getConfig().getString("mysql.password"));
-        this.playerDataManager = diContainer.getService(PlayerDataManager.class);
-        this.scoreboard = new Board(diContainer);
-        this.GachaLootTableManager = new GachaLootTableManager(this);
-        this.potionItemManager = new PotionItemManager(this);
-        this.moneyLeaderboard = new MoneyLeaderboard(this);
-        this.levelLeaderboard = new LevelLeaderboard(this);
-        this.questManager= new QuestManager(this, getDataFolder(), databaseManager);
-        QuestUtils.initialize(questManager);
-        SideQuestScheduler.scheduleQuestClearTask(this);
-        DailyQuestScheduler.scheduleDailyQuestRefresh(this);
-        this.gachaManager = new GachaManager(this, luckPerms, questManager);
-        this.furnitureDataManager = new FurnitureDataManager(this);
-        this.questGUI = new QuestGUI(questManager);
-        this.buyItemManager = new BuyItemManager(this);
-        this.guideSystem = new TutorialGuideSystem(this);
-        File skillsDir = new File(getDataFolder(), "Skills");
-        if (!skillsDir.exists()) {
-            skillsDir.mkdirs();
-        }
-        registerEvents();
-        registerCommands();
-        MobDropSelector.scheduleTimer();
-        DamageListener.handleFireTicks();
-        MobDropSelector.init();
-        loadAllPlayerData(diContainer);
-        Blocks.spawnGachaChest();
-        Blocks.spawnTutorialGachaChest();
-        furnitureDataManager.loadMissingFurniture();
-        if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
-            PlaceholderAPIHook.registerHook();
-        }
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                if (Blocks.gachaChest != null) {
-                    Blocks.gachaChest.remove();
+
+        String mysqlUsername = getConfig().getString("mysql.username");
+        String mysqlPassword = getConfig().getString("mysql.password");
+        this.databaseManager = new DatabaseManager(mysqlUsername, mysqlPassword);
+
+        // Wait for MongoDB connection and then initialize other services
+        diContainer.waitForInitialization().thenRun(() -> {
+            // Run the rest of the initialization on the main thread
+            Bukkit.getScheduler().runTask(this, () -> {
+                try {
+                    initializeServices();
+                    registerEvents();
+                    registerCommands();
+                    loadAllPlayerData();
+                    scheduleTimers();
+
+                    Bukkit.broadcastMessage(ColorChat.chat("&b&lGachaFight Fully Loaded"));
+                    Bukkit.broadcastMessage(ColorChat.chat("&aFull Heal from Reload"));
+                } catch (Exception e) {
+                    getLogger().severe("Failed to initialize GachaFight: " + e.getMessage());
+                    e.printStackTrace();
+                    Bukkit.getPluginManager().disablePlugin(this);
                 }
-                Blocks.spawnGachaChest();
-                guideSystem.cleanupAll();
-            }
-        }.runTaskTimer(this, 6000, 4000);
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                for (Player player : Bukkit.getOnlinePlayers()) {
-                    PlayerStats stats = PlayerStats.getPlayerStats(player);
-                    stats.updateActionbar(player); // Update action bar with current HP
-                }
-            }
-        }.runTaskTimerAsynchronously(this, 0L, 20L);
-        scheduleSound();
-        Bukkit.broadcastMessage(ColorChat.chat("&b&lReload Complete"));
-        Bukkit.broadcastMessage(ColorChat.chat("&aFull Heal from Reload"));
+            });
+        }).exceptionally(e -> {
+            getLogger().severe("Failed to initialize MongoDB connection: " + e.getMessage());
+            Bukkit.getScheduler().runTask(this, () -> Bukkit.getPluginManager().disablePlugin(this));
+            return null;
+        });
     }
 
     @Override
@@ -159,11 +138,85 @@ public final class GachaFight extends JavaPlugin implements Listener {
         diContainer.shutdown();
         saveConfig();
         try {
-            databaseManager.disconnect();
+            if (databaseManager != null) {
+                databaseManager.disconnect();
+            }
         } catch (SQLException e) {
-            e.printStackTrace();
+            getLogger().severe("Error disconnecting from MySQL: " + e.getMessage());
         }
     }
+
+    private void initializeServices() {
+        this.playerDataManager = new PlayerDataManager(this, diContainer.getService(MongoService.class));
+        diContainer.registerService(PlayerDataManager.class, this.playerDataManager);
+        this.scoreboard = new Board(diContainer);
+        this.GachaLootTableManager = new GachaLootTableManager(this);
+        this.potionItemManager = new PotionItemManager(this);
+        this.moneyLeaderboard = new MoneyLeaderboard(this);
+        this.levelLeaderboard = new LevelLeaderboard(this);
+        this.questManager = new QuestManager(this, getDataFolder(), databaseManager);
+        QuestUtils.initialize(questManager);
+        this.gachaManager = new GachaManager(this, luckPerms, questManager);
+        this.furnitureDataManager = new FurnitureDataManager(this);
+        this.questGUI = new QuestGUI(questManager);
+        this.buyItemManager = new BuyItemManager(this);
+        this.guideSystem = new TutorialGuideSystem(this);
+
+        File skillsDir = new File(getDataFolder(), "Skills");
+        if (!skillsDir.exists()) {
+            skillsDir.mkdirs();
+        }
+
+        MobDropSelector.init();
+        Blocks.spawnGachaChest();
+        Blocks.spawnTutorialGachaChest();
+        furnitureDataManager.loadMissingFurniture();
+
+        if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
+            PlaceholderAPIHook.registerHook();
+        }
+    }
+
+    private void loadAllPlayerData() {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            playerDataManager.loadPlayerData(player);
+            PlayerStats stats = playerDataManager.getPlayerStats(player.getUniqueId());
+            int scoreboardTask = Bukkit.getScheduler().runTaskTimer(this, () -> scoreboard.setScoreBoard(player), 20, 60).getTaskId();
+            scoreboardTasks.put(player, scoreboardTask);
+            PlayerZoneListener.startRewardingPlayer(player);
+        }
+    }
+
+    private void scheduleTimers() {
+        SideQuestScheduler.scheduleQuestClearTask(this);
+        DailyQuestScheduler.scheduleDailyQuestRefresh(this);
+        MobDropSelector.scheduleTimer();
+        DamageListener.handleFireTicks();
+
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (Blocks.gachaChest != null) {
+                    Blocks.gachaChest.remove();
+                }
+                Blocks.spawnGachaChest();
+                guideSystem.cleanupAll();
+            }
+        }.runTaskTimer(this, 6000, 4000);
+
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                for (Player player : Bukkit.getOnlinePlayers()) {
+                    PlayerStats stats = PlayerStats.getPlayerStats(player);
+                    stats.updateActionbar(player);
+                }
+            }
+        }.runTaskTimerAsynchronously(this, 0L, 20L);
+
+        scheduleSound();
+    }
+
     private void removeAllDisplay() {
         if (Blocks.gachaChest != null) {
             Blocks.gachaChest.remove();
@@ -251,14 +304,14 @@ public final class GachaFight extends JavaPlugin implements Listener {
         new BukkitRunnable() {
             @Override
             public void run() {
-                Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "minecraft:playsound custom:celestial music @a");
                 for (Player player : Bukkit.getOnlinePlayers()) {
-                    if (!DamageListener.isSafezone(player.getLocation())) {
-                        player.stopAllSounds();
+                    player.stopAllSounds();
+                    if (DamageListener.isSafezone(player.getLocation())) {
+                        player.playSound(player, "custom:celestrial", SoundCategory.MUSIC, 5, 1);
                     }
                 }
             }
-        }.runTaskTimer(this, 2640L, 3000L);
+        }.runTaskTimer(this, 0L, 3000L); //2640
     }
 
     public void cancelPlayerTasks(Player player) {

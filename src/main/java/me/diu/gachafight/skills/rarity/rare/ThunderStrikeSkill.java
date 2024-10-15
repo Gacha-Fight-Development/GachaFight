@@ -2,6 +2,7 @@ package me.diu.gachafight.skills.rarity.rare;
 
 import me.diu.gachafight.GachaFight;
 import me.diu.gachafight.skills.managers.SkillCooldownManager;
+import me.diu.gachafight.skills.managers.SkillDamageSource;
 import me.diu.gachafight.skills.utils.Skill;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -68,7 +69,7 @@ public class ThunderStrikeSkill implements Skill {
             if (entity instanceof LivingEntity && entity != player) {
                 LivingEntity target = (LivingEntity) entity;
 
-                target.damage(damage * target.getMaxHealth(), player);
+                target.damage(damage, SkillDamageSource.damageSource(player));
                 target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, stunDuration * 20, 5));
                 target.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, stunDuration * 20, 5));
 

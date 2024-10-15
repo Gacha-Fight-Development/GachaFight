@@ -135,6 +135,11 @@ public class DamageListener implements Listener {
         }
         // Calculate the target's total armor
         double targetArmor = targetStats.getArmor() + targetStats.getGearStats().getTotalArmor();
+        if (DungeonUtils.isRPG(target.getLocation())) {
+            if (targetArmor > 18) {
+                targetArmor = 18;
+            }
+        }
 
         // Calculate the custom damage for PvP
         double totalDamage = attackerDamage - (targetArmor/4); // Adjust the armor effect as needed
@@ -197,6 +202,11 @@ public class DamageListener implements Listener {
                     // Get the player's armor stat
                     PlayerStats stats = PlayerStats.getPlayerStats(player);
                     double playerArmor = stats.getArmor() + stats.getGearStats().getTotalArmor();
+                    if (DungeonUtils.isRPG(player.getLocation())) {
+                        if (playerArmor > 18) {
+                            playerArmor = 18;
+                        }
+                    }
 
                     // Calculate the total damage received by the player
                     double totalDamage = mobDamage - (playerArmor * 0.4); // Calc EvP
@@ -245,6 +255,8 @@ public class DamageListener implements Listener {
             double expGained = mobHp / 7.5;
             double moneyGained = mobHp / 20;
             double rankMulti = 1;
+            double petExpMulti;
+            double petGoldMulti;
             // Add EXP & $ to the player
             PlayerStats playerStats = PlayerStats.getPlayerStats(player);
             if (player.hasPermission("gacha.vip")) {
@@ -266,11 +278,15 @@ public class DamageListener implements Listener {
                     player.getInventory().addItem(MobDropSelector.getDrop(player));
                 }
             }
-            if (Math.random() < ((double) 1 /258)) {
+            if (Math.random() < 0.003) {
                 player.getInventory().addItem(RandomSkillUtils.getRandomCommonSkill());
                 player.sendMessage(ColorChat.chat("&a&l Received &f&lCommon &a&lSkill!"));
             }
-            if (Math.random() < ((double) 1/512)) {
+            if (player.hasPermission("op")) {
+                player.getInventory().addItem(RandomSkillUtils.getRandomUncommonSkill());
+                player.sendMessage(ColorChat.chat("&a&l Received &7&lUncommon &a&lSkill!"));
+            }
+            if (Math.random() < 0.0015) {
                 player.getInventory().addItem(RandomSkillUtils.getRandomUncommonSkill());
                 player.sendMessage(ColorChat.chat("&a&l Received &7&lUncommon &a&lSkill!"));
             }
@@ -376,15 +392,16 @@ public class DamageListener implements Listener {
         new BukkitRunnable() {
             public void run() {
                 for (Player player : Bukkit.getServer().getOnlinePlayers()) {
-                    if (player.isVisualFire()) {
+                    if (player.getFireTicks() > 1) {
                         player.sendMessage("a");
                         PlayerStats stats = PlayerStats.getPlayerStats(player);
                         player.damage(0);
                         double damage = stats.getMaxhp()/40;
                         stats.setHp(stats.getHp()-damage);
+                        stats.syncHealthWithHearts(player);
                     }
                 }
             }
-        }.runTaskTimer(GachaFight.getInstance(), 20, 60);
+        }.runTaskTimer(GachaFight.getInstance(), 20, 20);
     }
 }

@@ -55,6 +55,7 @@ public class SkillClickListener implements Listener {
         if (SkillItemUtils.isNetheriteUpgradeTemplate(cursorItem)) {
             if (SkillItemUtils.isNetheriteUpgradeTemplate(clickedItem)) {
                 event.getView().getBottomInventory().setItem(slot, cursorItem);
+                event.setCursor(new ItemStack(Material.AIR));
                 player.getInventory().addItem(clickedItem);
             } else {
                 event.getView().getBottomInventory().setItem(slot, cursorItem);

@@ -68,7 +68,8 @@ public class GachaManager {
             } else if (isPotion(customizedReward)) { //check for potion (if its potion then no need to modify lore)
                 player.getInventory().addItem(customizedReward);
                 player.sendMessage(ColorChat.chat("&a+ &6Potion"));
-            } else { //Equipment
+            }
+            else { //Equipment
                 // alright this is where it gets confusing
                 List<String> lore = customizedReward.getItemMeta().getLore(); // Gets Lore of random item Example: Armor 0.7/1.3
                 // Example of customizedReward at this point: DisplayName: [<player lvl>] <item name> | lore: Damage/Armor/HP: 1.23
