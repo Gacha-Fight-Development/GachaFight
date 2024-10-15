@@ -26,6 +26,7 @@ repositories {
 
 dependencies {
     compileOnly "io.papermc.paper:paper-api:1.20.6-R0.1-SNAPSHOT"
+    compileOnly "com.github.MilkBowl:VaultAPI:1.7"
 
     compileOnly 'org.projectlombok:lombok:1.18.34'
     annotationProcessor 'org.projectlombok:lombok:1.18.34'
@@ -43,6 +44,7 @@ dependencies {
     implementation "net.kyori:adventure-text-minimessage:4.17.0"
     compileOnly 'com.github.LoneDev6:API-ItemsAdder:3.6.1'
     implementation "com.zaxxer:HikariCP:4.0.3"
+
 }
 
 shadowJar {
@@ -80,7 +82,7 @@ processResources {
 tasks.register('deployToServer', Copy) {
     dependsOn shadowJar // Ensure shadowJar task is completed first
     from tasks.shadowJar
-    into 'C:\\Users\\hoot\\Documents\\gacha build' // Update with your server's plugins directory
+    into 'C:\\Users\\xiaol\\OneDrive\\Desktop\\Server\\plugins' // Update with your server's plugins directory
     doLast {
         println "Deployed to server's plugin directory."
     }

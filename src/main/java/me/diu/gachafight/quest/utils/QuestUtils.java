@@ -1,6 +1,7 @@
 package me.diu.gachafight.quest.utils;
 
 import me.diu.gachafight.GachaFight;
+import me.diu.gachafight.hooks.VaultHook;
 import me.diu.gachafight.playerstats.PlayerStats;
 import me.diu.gachafight.quest.Quest;
 import me.diu.gachafight.quest.managers.DailyQuestManager;
@@ -107,7 +108,7 @@ public class QuestUtils {
         PlayerStats stats = PlayerStats.getPlayerStats(player);
         if (quest.getRewards().containsKey("money")) {
             int money = (int) quest.getRewards().get("money");
-            stats.setMoney(stats.getMoney() + money);
+            VaultHook.addMoney(player, money);
             player.sendMessage("§aYou received " + money + " coins!");
             // Update player's money balance (this would depend on your economy system)
         }

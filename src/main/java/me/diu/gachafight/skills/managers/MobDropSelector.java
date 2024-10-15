@@ -92,14 +92,14 @@ public class MobDropSelector {
             centeredLocation = centerText("Location: " + location.getX() + " " + location.getY() + " " + location.getZ(), 63);
         }
         if (Math.random() < 0.1) {
-            String centeredName = centerText("&6&lPlayer: &e&l" + playerName + "&a&lReceived &d&lRare &a&lSkill", 63);
+            String centeredName = centerText("&6&lPlayer: &e&l" + playerName + "&a&lReceived &d&lEpic &a&lSkill", 63);
             Bukkit.broadcastMessage(ColorChat.chat("&c&l&m---------------------------------------------"));
             Bukkit.broadcastMessage(ColorChat.chat(centeredName));
             Bukkit.broadcastMessage(ColorChat.chat("&6&l" + centeredLocation));
             Bukkit.broadcastMessage(ColorChat.chat("&c&l&m---------------------------------------------"));
             return RandomSkillUtils.getRandomEpicSkill();
         } else {
-            String centeredName = centerText("&6&lPlayer: &e&l" + playerName + "&a&lReceived &d&lRare &a&lSkill", 63);
+            String centeredName = centerText("&6&lPlayer: &e&l" + playerName + "&a&lReceived &a&lRare &a&lSkill", 63);
             Bukkit.broadcastMessage(ColorChat.chat("&c&l&m---------------------------------------------"));
             Bukkit.broadcastMessage(ColorChat.chat(centeredName));
             Bukkit.broadcastMessage(ColorChat.chat("&6&l" + centeredLocation));

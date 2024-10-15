@@ -1,6 +1,7 @@
 package me.diu.gachafight.commands;
 
 import me.diu.gachafight.GachaFight;
+import me.diu.gachafight.hooks.VaultHook;
 import me.diu.gachafight.playerstats.PlayerDataManager;
 import me.diu.gachafight.playerstats.PlayerStats;
 import me.diu.gachafight.di.ServiceLocator;
@@ -130,7 +131,7 @@ public class AdminPlayerDataCommand implements CommandExecutor {
                             stats.setExp(stats.getExp() + doubleValue);
                             break;
                         case "money":
-                            stats.setMoney(stats.getMoney() + doubleValue);
+                            VaultHook.addMoney(targetPlayer, doubleValue);
                             break;
                         case "gem":
                             stats.setGem(stats.getGem() + intValue);
@@ -187,7 +188,7 @@ public class AdminPlayerDataCommand implements CommandExecutor {
                             stats.setExp(doubleValue);
                             break;
                         case "money":
-                            stats.setMoney(doubleValue);
+                            VaultHook.setMoney(targetPlayer, doubleValue);
                             break;
                         case "gem":
                             stats.setGem(intValue);
@@ -208,7 +209,7 @@ public class AdminPlayerDataCommand implements CommandExecutor {
                 break;
         }
         if(targetPlayer == null) {
-            plugin.getPlayerDataManager().saveOfflinePlayerData(playerUUID, args[0], stats);
+            plugin.getPlayerDataManager().saveOfflinePlayerData(targetPlayer, args[0], stats);
         }
         return true;
     }

@@ -1,6 +1,7 @@
 package me.diu.gachafight.listeners;
 
 import me.diu.gachafight.GachaFight;
+import me.diu.gachafight.hooks.VaultHook;
 import me.diu.gachafight.playerstats.PlayerStats;
 import me.diu.gachafight.utils.Calculations;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -36,7 +37,7 @@ public class HealerNPCListener implements Listener {
 
             double currentHp = stats.getHp();
             double maxHp = stats.getMaxhp();
-            double playerMoney = stats.getMoney();
+            double playerMoney = VaultHook.getBalance(player);
             double healCost = Calculations.healerCost(maxHp);
 
             // Check if the player is already at max HP
@@ -47,7 +48,7 @@ public class HealerNPCListener implements Listener {
 
             if (playerMoney >= healCost) {
                 // Deduct the cost and heal the player
-                stats.setMoney(playerMoney - healCost);
+                VaultHook.withdraw(player, healCost);
                 stats.setHp(maxHp);
                 stats.syncHealthWithHearts(player);
                 String cost = String.format("%.1f", healCost);

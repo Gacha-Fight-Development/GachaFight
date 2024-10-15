@@ -3,6 +3,7 @@ package me.diu.gachafight.listeners;
 import me.diu.gachafight.GachaFight;
 import me.diu.gachafight.commands.GuideCommand;
 import me.diu.gachafight.display.Blocks;
+import me.diu.gachafight.hooks.VaultHook;
 import me.diu.gachafight.playerstats.PlayerDataManager;
 import me.diu.gachafight.playerstats.PlayerStats;
 import me.diu.gachafight.di.ServiceLocator;
@@ -45,7 +46,7 @@ public class Join implements Listener {
         playerDataManager.loadPlayerData(player);
         PlayerStats stats = playerDataManager.getPlayerStats(player.getUniqueId());
         // ============NEW PLAYERS===============
-        if (!player.hasPlayedBefore() || stats.getMoney() < 0.1) {
+        if (!player.hasPlayedBefore() || VaultHook.getBalance(player) < 0.1) {
             new BukkitRunnable() {
                 @Override
                 public void run() {

@@ -1,6 +1,7 @@
 package me.diu.gachafight.shop.potion.gui;
 
 import me.diu.gachafight.GachaFight;
+import me.diu.gachafight.hooks.VaultHook;
 import me.diu.gachafight.playerstats.PlayerStats;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
@@ -59,8 +60,8 @@ public class PotionShopItemGUI {
 
         if (priceLine.contains("$")) {
             double price = Double.parseDouble(priceLine.replace("$", ""));
-            if (stats.getMoney() >= price) {
-                stats.setMoney(stats.getMoney() - price);
+            if (VaultHook.getBalance(player) >= price) {
+                VaultHook.withdraw(player, price);
 
                 // Clone the item and remove the price line from the lore
                 ItemStack purchasedItem = item.clone();

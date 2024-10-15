@@ -2,6 +2,7 @@ package me.diu.gachafight.combat.mobdrops;
 
 import me.diu.gachafight.GachaFight;
 import me.diu.gachafight.commands.GuideCommand;
+import me.diu.gachafight.hooks.VaultHook;
 import me.diu.gachafight.playerstats.PlayerStats;
 import me.diu.gachafight.utils.GiveItemUtils;
 import me.diu.gachafight.utils.TutorialBossBar;
@@ -68,7 +69,7 @@ public class RPGDeathReward {
             player.sendMessage(MiniMessage.miniMessage().deserialize("<aqua>Boss Bonus:"));
             player.sendMessage(MiniMessage.miniMessage().deserialize(" <green>+ <yellow>$100"));
             player.sendMessage(MiniMessage.miniMessage().deserialize(" <green>+ <aqua>25 EXP"));
-            stats.setMoney(stats.getMoney() + 100); stats.setExp(stats.getExp() + 25);
+            VaultHook.addMoney(player, 100); stats.setExp(stats.getExp() + 25);
         }
     }
 }

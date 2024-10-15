@@ -7,6 +7,7 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.ReplaceOptions;
 import me.diu.gachafight.GachaFight;
 import me.diu.gachafight.di.ServiceLocator;
+import me.diu.gachafight.hooks.VaultHook;
 import me.diu.gachafight.services.MongoService;
 import org.bson.Document;
 import org.bukkit.Bukkit;
@@ -76,7 +77,6 @@ public class PlayerDataManager {
         stats.setDamage(document.getDouble("damage"));
         stats.setArmor(document.getDouble("armor"));
         stats.setMaxhp(document.getDouble("hp"));
-        stats.setMoney(document.getDouble("money"));
         stats.setGem(document.getInteger("gem", 0));
         stats.setSpeed(document.getDouble("speed"));
         stats.setCritChance(document.getDouble("critchance"));
@@ -114,24 +114,25 @@ public class PlayerDataManager {
         UUID playerId = player.getUniqueId();
         PlayerStats stats = PlayerStats.playerStatsMap.get(playerId);
         if (stats != null) {
-            savePlayerStats(playerId, player.getName(), stats);
+            savePlayerStats(player, player.getName(), stats);
         } else {
             plugin.getLogger().warning("Failed to save data: PlayerStats not found for player " + player.getName());
         }
     }
 
-    public void saveOfflinePlayerData(UUID playerUUID, String playerName, PlayerStats stats) {
+    public void saveOfflinePlayerData(Player player, String playerName, PlayerStats stats) {
         if (stats != null) {
-            savePlayerStats(playerUUID, playerName, stats);
+            savePlayerStats(player, playerName, stats);
         } else {
             plugin.getLogger().warning("Failed to save data: PlayerStats not found for player " + playerName);
         }
     }
 
-    private void savePlayerStats(UUID playerUUID, String playerName, PlayerStats stats) {
-        if (stats.getMoney() < 1 && stats.getGem() < 1) {
+    private void savePlayerStats(Player player, String playerName, PlayerStats stats) {
+        if (VaultHook.getBalance(player) < 1|| stats.getGem() < 1) {
             return; // Skip saving if both money and gems are less than 1
         }
+        UUID playerUUID = player.getUniqueId();
 
         Document document = new Document()
                 .append("uuid", playerUUID.toString())
@@ -146,7 +147,6 @@ public class PlayerDataManager {
                 .append("luck", stats.getLuck())
                 .append("speed", stats.getSpeed())
                 .append("dodge", stats.getDodge())
-                .append("money", stats.getMoney())
                 .append("gem", stats.getGem());
 
         try {

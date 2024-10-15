@@ -1,6 +1,7 @@
 package me.diu.gachafight.playerstats.leaderboard;
 
 import me.diu.gachafight.GachaFight;
+import me.diu.gachafight.hooks.VaultHook;
 import me.diu.gachafight.playerstats.PlayerDataManager;
 import me.diu.gachafight.playerstats.PlayerStats;
 import org.bukkit.Bukkit;
@@ -57,10 +58,10 @@ public class MoneyLeaderboard {
         // Update the moneyData map with current online players' data and mark dirty players
         for (Player player : Bukkit.getOnlinePlayers()) {
             PlayerStats stats = PlayerStats.getPlayerStats(player);
-            if (stats.getMoney() > 1) {
+            if (VaultHook.getBalance(player) > 1) {
                 UUID playerUUID = player.getUniqueId();
-                if (!moneyData.containsKey(playerUUID) || moneyData.get(playerUUID) != stats.getMoney()) {
-                    moneyData.put(playerUUID, stats.getMoney());
+                if (!moneyData.containsKey(playerUUID) || moneyData.get(playerUUID) != VaultHook.getBalance(player)) {
+                    moneyData.put(playerUUID, VaultHook.getBalance(player));
                     LeaderboardUtils.markPlayerDirty(playerUUID); // Mark the player as dirty if their money changes
                 }
             }

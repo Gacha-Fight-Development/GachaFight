@@ -2,6 +2,7 @@ package me.diu.gachafight.shop.equipmentspecialist;
 
 import me.diu.gachafight.GachaFight;
 import me.diu.gachafight.gacha.managers.GachaManager;
+import me.diu.gachafight.hooks.VaultHook;
 import me.diu.gachafight.playerstats.PlayerStats;
 import me.diu.gachafight.utils.Calculations;
 import me.diu.gachafight.utils.ExtractLore;
@@ -97,9 +98,9 @@ public class EquipmentSpecialistListener implements Listener {
                     PlayerStats playerStats = PlayerStats.getPlayerStats(player);
 
                     // Ensure the player has enough currency for the reroll
-                    if (playerStats.getMoney() >= costForReroll) {
+                    if (VaultHook.getBalance(player) >= costForReroll) {
                         // Deduct currency for reroll
-                        playerStats.setMoney(playerStats.getMoney() - costForReroll);
+                        VaultHook.withdraw(player, costForReroll);
 
                         // Get the ItemMeta and PDC from the equipment
                         ItemStack itemReroll;
@@ -190,9 +191,9 @@ public class EquipmentSpecialistListener implements Listener {
                     PlayerStats playerStats = PlayerStats.getPlayerStats(player);
                     double levelMulti = Calculations.playerLevelMultiplier(playerStats.getLevel());
                     // Check if player has enough money (this part depends on how you're handling player stats)
-                    if (playerStats.getMoney() >= costForLevel) {
+                    if (VaultHook.getBalance(player) >= costForLevel) {
                         // Deduct money
-                        playerStats.setMoney(playerStats.getMoney()-costForLevel);
+                        VaultHook.withdraw(player, costForLevel);
                         ItemStack itemLevelUp;
 
                         if (ExtractLore.extractPercentageFromName(equipment.getItemMeta().getDisplayName()) >= ExtractLore.extractPercentageFromName(cloneItem.getItemMeta().getDisplayName())) {

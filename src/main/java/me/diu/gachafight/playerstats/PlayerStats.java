@@ -4,9 +4,11 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import lombok.Getter;
 import lombok.Setter;
+import me.diu.gachafight.hooks.VaultHook;
 import me.diu.gachafight.playerstats.leaderboard.LeaderboardUtils;
 import me.diu.gachafight.utils.ColorChat;
 import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
 import java.io.BufferedReader;
@@ -35,7 +37,6 @@ public class PlayerStats {
     private double dodge;
     private double speed;
     private double luck;
-    private double money;
     private int gem;
 
     private GearStats gearStats;
@@ -52,7 +53,6 @@ public class PlayerStats {
         this.critDmg = 1.5;
         this.dodge = 0.01;
         this.luck = 5;
-        this.money = 0;
         this.gem = 0;
         this.speed = 1;
         this.gearStats = new GearStats();
@@ -68,6 +68,7 @@ public class PlayerStats {
 
     public String showStats(Player player) {
         PlayerStats stats = getPlayerStats(player);
+        String moneyDisplay = VaultHook.isEconomySetup() ? VaultHook.getFormattedBalance(player) : "N/A";
         return ColorChat.chat("&aStats:\n" +
                 "&eLevel: " + stats.getLevel() + "\n" +
                 "&eExp: " + String.format("%.2f", stats.getExp()) + "/" + stats.getRequiredExp() + "\n" +
@@ -81,11 +82,13 @@ public class PlayerStats {
                 "&eSpeed: " + String.format("%.2f", stats.getSpeed()) + "\n" +
                 "Dodge: " + stats.getDodge() + "\n" +
                 "&eLuck: " + stats.getLuck() + "\n" +
-                "Money: " + String.format("%.2f", stats.getMoney()) + " Gem: " + stats.getGem());
+                "Money: " + moneyDisplay + " Gem: " + stats.getGem());
     }
 
     public String showStats(UUID uuid) {
         PlayerStats stats = getPlayerStats(uuid);
+        OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
+        String moneyDisplay = VaultHook.isEconomySetup() ? VaultHook.getFormattedBalance(offlinePlayer) : "N/A";
         return ColorChat.chat("&aStats:\n" +
                 "&eLevel: " + stats.getLevel() + "\n" +
                 "&eExp: " + String.format("%.2f", stats.getExp()) + "/" + stats.getRequiredExp() + "\n" +
@@ -99,7 +102,15 @@ public class PlayerStats {
                 "&eSpeed: " + stats.getSpeed() + "\n" +
                 "Dodge: " + stats.getDodge() + "\n" +
                 "&eLuck: " + stats.getLuck() + "\n" +
-                "Money: " + String.format("%.2f", stats.getMoney()) + " Gem: " + stats.getGem());
+                "Money: " + moneyDisplay + " Gem: " + stats.getGem());
+    }
+
+    public boolean removeMoney(Player player, double amount) {
+        if (VaultHook.getBalance(player) >= amount) {
+            VaultHook.withdraw(player, amount);
+            return true;
+        }
+        return false;
     }
 
     public void addExp(double amount, Player player) {
@@ -191,10 +202,5 @@ public class PlayerStats {
                         uuid.substring(12, 16) + "-" +
                         uuid.substring(16, 20) + "-" +
                         uuid.substring(20, 32).replace(" ", ""));
-    }
-
-    public void setMoney(double amount) {
-        this.money = amount;
-        LeaderboardUtils.markPlayerDirty(playerUUID);
     }
 }

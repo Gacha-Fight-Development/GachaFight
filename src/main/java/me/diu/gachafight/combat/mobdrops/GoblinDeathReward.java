@@ -1,5 +1,6 @@
 package me.diu.gachafight.combat.mobdrops;
 
+import me.diu.gachafight.hooks.VaultHook;
 import me.diu.gachafight.playerstats.PlayerStats;
 import me.diu.gachafight.skills.managers.MobDropSelector;
 import me.diu.gachafight.utils.GiveItemUtils;
@@ -45,7 +46,7 @@ public class GoblinDeathReward {
             player.sendMessage(MiniMessage.miniMessage().deserialize("<aqua>Boss Bonus:"));
             player.sendMessage(MiniMessage.miniMessage().deserialize(" <green>+ <yellow>$250"));
             player.sendMessage(MiniMessage.miniMessage().deserialize(" <green>+ <aqua>75 EXP"));
-            stats.setMoney(stats.getMoney() + 250); stats.setExp(stats.getExp() + 75);
+            VaultHook.addMoney(player, 250); stats.setExp(stats.getExp() + 75);
         }
     }
 }
