@@ -1,0 +1,10 @@
+# Config for pet effects
+
+turtle:
+  lore: "A Strong Turtle Pet!"
+  minHp: 5
+  maxHp: 10
+  minDefence: 5
+  maxDefence: 10
+
+octopus:
