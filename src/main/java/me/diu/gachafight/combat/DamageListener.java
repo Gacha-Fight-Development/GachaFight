@@ -39,6 +39,8 @@ import java.util.List;
 
 public class DamageListener implements Listener {
 
+    private final int weaponDelay = 40;
+
     public DamageListener(GachaFight plugin) {
         Bukkit.getPluginManager().registerEvents(this, plugin);
     }
@@ -75,6 +77,12 @@ public class DamageListener implements Listener {
     private void handlePlayerVsEntity(EntityDamageByEntityEvent event, Player player, LivingEntity entity) {
         PlayerStats stats = PlayerStats.getPlayerStats(player);
         // Retrieve player's damage stat
+        if (player.getCooldown(player.getInventory().getItemInMainHand().getType()) != 0) {
+            if (!event.getDamageSource().getDamageType().equals(DamageType.CACTUS)) {
+                return;
+            }
+        }
+        player.setCooldown(player.getInventory().getItemInMainHand().getType(), weaponDelay);
         double playerDamage = stats.getDamage() + stats.getWeaponStats().getDamage() + stats.getGearStats().getTotalDamage();
         if (DungeonUtils.isRPG(entity.getLocation())) {
             if (playerDamage > 15) {
@@ -125,7 +133,10 @@ public class DamageListener implements Listener {
         // Get attacker and target stats
         PlayerStats attackerStats = PlayerStats.getPlayerStats(attacker);
         PlayerStats targetStats = PlayerStats.getPlayerStats(target);
-
+        if (attacker.getCooldown(attacker.getInventory().getItemInMainHand().getType()) != 0) {
+            return;
+        }
+        attacker.setCooldown(attacker.getInventory().getItemInMainHand().getType(), weaponDelay);
         // Calculate the attacker's total damage
         double attackerDamage = attackerStats.getDamage() + attackerStats.getWeaponStats().getDamage() + attackerStats.getGearStats().getTotalDamage();
         if (DungeonUtils.isRPG(target.getLocation())) {

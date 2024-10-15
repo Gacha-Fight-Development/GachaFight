@@ -135,6 +135,10 @@ public final class GachaFight extends JavaPlugin implements Listener {
         guideSystem.cleanupAll();
         TextDisplayUtils.removeAllDisplays();
         cancelAllPlayerTasks();
+        Bukkit.getScheduler().cancelTasks(this);
+        if (diContainer != null) {
+            diContainer.shutdown();
+        }
         diContainer.shutdown();
         saveConfig();
         try {

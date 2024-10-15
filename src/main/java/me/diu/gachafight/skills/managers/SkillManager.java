@@ -64,11 +64,8 @@ public class SkillManager {
     public static double applyActiveSkills(Player player, LivingEntity target) {
         double damageMultiplier = 1.0;
         for (Skill skill : skills.values()) {
-            System.out.println(skill);
             if (skill.hasActiveState()) {
-                System.out.println(skill);
                 if (skill.isSkillActive(player)) {
-                    System.out.println(player);
                     damageMultiplier = skill.applySkillEffect(player, target);
                     skill.deactivateSkill(player);
                     break;

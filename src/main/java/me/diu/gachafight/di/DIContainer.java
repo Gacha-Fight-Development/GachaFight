@@ -54,15 +54,17 @@ public class DIContainer implements ServiceLocator {
     }
 
     public void shutdown() {
-        MongoService mongoService = getService(MongoService.class);
-        if (mongoService != null) {
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    mongoService.close();
+        for (Object service : services.values()) {
+            if (service instanceof AutoCloseable) {
+                try {
+                    ((AutoCloseable) service).close();
+                } catch (Exception e) {
+                    plugin.getLogger().warning("Error closing service: " + service.getClass().getSimpleName());
+                    e.printStackTrace();
                 }
-            }.runTaskAsynchronously(plugin);
+            }
         }
+        services.clear();
     }
 
     public CompletableFuture<Void> waitForInitialization() {
