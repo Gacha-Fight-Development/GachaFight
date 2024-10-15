@@ -19,181 +19,145 @@ import java.util.UUID;
 public class PlayerDataManager {
     private final GachaFight plugin;
     private final MongoService service;
-    private final MongoDatabase database;
-    private final MongoCollection<Document> collection;
+    private MongoDatabase database;
+    private MongoCollection<Document> collection;
 
-    public PlayerDataManager(GachaFight plugin, ServiceLocator serviceLocator) {
+    public PlayerDataManager(GachaFight plugin, MongoService service) {
         this.plugin = plugin;
-        this.service = serviceLocator.getService(MongoService.class);
-        this.database = service.getDatabase();
-        this.collection = service.getCollection("PlayerData");
+        this.service = service;
+        initializeDatabase();
+    }
+
+    private void initializeDatabase() {
+        try {
+            this.database = service.getDatabase();
+            this.collection = database.getCollection("PlayerData");
+        } catch (Exception e) {
+            plugin.getLogger().severe("Failed to initialize MongoDB connection: " + e.getMessage());
+        }
     }
 
     public void loadPlayerData(Player player) {
+        if (collection == null) {
+            plugin.getLogger().warning("MongoDB collection is not initialized. Using default stats for player: " + player.getName());
+            useDefaultStats(player);
+            return;
+        }
+
         UUID playerId = player.getUniqueId();
         Document document = collection.find(Filters.eq("uuid", playerId.toString())).first();
-        PlayerStats stats;
+        PlayerStats stats = PlayerStats.playerStatsMap.computeIfAbsent(playerId, k -> new PlayerStats(playerId));
 
         if (document != null) {
-            //Gets Default PlayerData and puts into playerStatsMap (Memory Storage)
-            stats = PlayerStats.playerStatsMap.computeIfAbsent(playerId, k -> new PlayerStats(player.getUniqueId()));
-            //Overriding Default PlayerData With MongoDB Data
-            stats.setLevel(document.getInteger("level", 1));
-            stats.setExp(document.getDouble("exp"));
-            stats.setDamage(document.getDouble("damage"));
-            stats.setArmor(document.getDouble("armor"));
-            stats.setMaxhp(document.getDouble("hp"));
-            stats.setMoney(document.getDouble("money"));
-            stats.setGem(document.getInteger("gem", 0));
-            if (document.getDouble("speed") != null) {
-                stats.setSpeed(document.getDouble("speed"));
-            }
-            if (document.getDouble("critchance") != null) {
-                stats.setCritChance(document.getDouble("critchance"));
-            }
-            if (document.getDouble("critdmg")!= null) {
-                stats.setCritDmg(document.getDouble("critdmg"));
-            }
-            if (document.getDouble("dodge") != null) {
-                stats.setDodge(document.getDouble("dodge"));
-            }
-            if (document.getDouble("luck") != null) {
-                stats.setLuck(document.getDouble("luck"));
-            }
-
-            PlayerStatsListener.updateSpecificGearStats(stats, player.getInventory().getHelmet(), PlayerArmorChangeEvent.SlotType.HEAD);
-            PlayerStatsListener.updateSpecificGearStats(stats, player.getInventory().getChestplate(), PlayerArmorChangeEvent.SlotType.CHEST);
-            PlayerStatsListener.updateSpecificGearStats(stats, player.getInventory().getLeggings(), PlayerArmorChangeEvent.SlotType.LEGS);
-            PlayerStatsListener.updateSpecificGearStats(stats, player.getInventory().getBoots(), PlayerArmorChangeEvent.SlotType.FEET);
-            PlayerStatsListener.updateOffhandStats(stats, player.getInventory().getItemInOffHand());
-            PlayerStatsListener.updateWeaponStats(stats, player.getInventory().getItemInMainHand());
-            stats.setHp(stats.getMaxhp() + stats.getGearStats().getTotalMaxHp());
-            player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(stats.getSpeed()*0.1);
+            loadStatsFromDocument(stats, document);
             plugin.getLogger().info("Loaded data for player: " + player.getName());
         } else {
-            stats = new PlayerStats(player.getUniqueId());
-            PlayerStats.playerStatsMap.put(playerId, stats);
             plugin.getLogger().info("No data found for player: " + player.getName() + ", using default stats.");
         }
 
-        // Sync health with hearts after loading data
-        stats.syncHealthWithHearts(player);
-        stats.updateActionbar(player); // Update the actionbar with current health
-
-        // Update gear and weapon stats based on the player's current equipment
-
-        // Update weapon stats (main hand item)
-        ItemStack mainHandItem = player.getInventory().getItemInMainHand();
-        PlayerStatsListener.updateWeaponStats(stats, mainHandItem);
-
-        // Update armor stats (helmet, chestplate, leggings, boots)
-        ItemStack helmet = player.getInventory().getHelmet();
-        PlayerStatsListener.updateSpecificGearStats(stats, helmet, PlayerArmorChangeEvent.SlotType.HEAD);
-
-        ItemStack chestplate = player.getInventory().getChestplate();
-        PlayerStatsListener.updateSpecificGearStats(stats, chestplate, PlayerArmorChangeEvent.SlotType.CHEST);
-
-        ItemStack leggings = player.getInventory().getLeggings();
-        PlayerStatsListener.updateSpecificGearStats(stats, leggings, PlayerArmorChangeEvent.SlotType.LEGS);
-
-        ItemStack boots = player.getInventory().getBoots();
-        PlayerStatsListener.updateSpecificGearStats(stats, boots, PlayerArmorChangeEvent.SlotType.FEET);
+        updatePlayerStats(player, stats);
     }
 
     public PlayerStats loadOfflinePlayerData(String playerName, UUID playerUUID) {
-
         Document document = collection.find(Filters.eq("uuid", playerUUID.toString())).first();
-        PlayerStats stats = null;
-
-        if (document != null) {
-            stats = PlayerStats.playerStatsMap.computeIfAbsent(playerUUID, k -> new PlayerStats(playerUUID));
-            stats.setLevel(document.getInteger("level", 1));
-            stats.setExp(document.getDouble("exp"));
-            stats.setDamage(document.getDouble("damage"));
-            stats.setArmor(document.getDouble("armor"));
-            stats.setMaxhp(document.getDouble("hp"));
-            stats.setMoney(document.getDouble("money"));
-            stats.setGem(document.getInteger("gem", 0));
-            if (document.getDouble("speed") != null) {
-                stats.setSpeed(document.getDouble("speed"));
-            }
-            if (document.getDouble("critchance") != null) {
-                stats.setCritChance(document.getDouble("critchance"));
-            }
-            if (document.getDouble("critdmg")!= null) {
-                stats.setCritDmg(document.getDouble("critdmg"));
-            }
-            if (document.getDouble("dodge") != null) {
-                if (document.getDouble("dodge") > 1) {
-                    stats.setDodge(0.01);
-                } else {
-                    stats.setDodge(document.getDouble("dodge"));
-                }
-            }
-            if (document.getDouble("luck") != null) {
-                stats.setDodge(document.getDouble("luck"));
-            }
-            plugin.getLogger().info("Loaded data for offline player: " + playerName);
+        if (document == null) {
+            plugin.getLogger().info("No data found for offline player: " + playerName);
+            return null;
         }
+        PlayerStats stats = PlayerStats.playerStatsMap.computeIfAbsent(playerUUID, k -> new PlayerStats(playerUUID));
+        loadStatsFromDocument(stats, document);
+        plugin.getLogger().info("Loaded data for offline player: " + playerName);
         return stats;
     }
 
+    public static void loadStatsFromDocument(PlayerStats stats, Document document) {
+        stats.setLevel(document.getInteger("level", 1));
+        stats.setExp(document.getDouble("exp"));
+        stats.setDamage(document.getDouble("damage"));
+        stats.setArmor(document.getDouble("armor"));
+        stats.setMaxhp(document.getDouble("hp"));
+        stats.setMoney(document.getDouble("money"));
+        stats.setGem(document.getInteger("gem", 0));
+        stats.setSpeed(document.getDouble("speed"));
+        stats.setCritChance(document.getDouble("critchance"));
+        stats.setCritDmg(document.getDouble("critdmg"));
+        stats.setDodge(document.getDouble("dodge"));
+        stats.setLuck(document.getDouble("luck"));
+    }
+
+    public static void updatePlayerStats(Player player, PlayerStats stats) {
+        updateGearStats(player, stats);
+        stats.setHp(stats.getMaxhp());
+        player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(stats.getSpeed() * 0.1);
+
+        stats.syncHealthWithHearts(player);
+        stats.updateActionbar(player);
+    }
+
+    public static void updateGearStats(Player player, PlayerStats stats) {
+        PlayerStatsListener.updateSpecificGearStats(stats, player.getInventory().getHelmet(), PlayerArmorChangeEvent.SlotType.HEAD);
+        PlayerStatsListener.updateSpecificGearStats(stats, player.getInventory().getChestplate(), PlayerArmorChangeEvent.SlotType.CHEST);
+        PlayerStatsListener.updateSpecificGearStats(stats, player.getInventory().getLeggings(), PlayerArmorChangeEvent.SlotType.LEGS);
+        PlayerStatsListener.updateSpecificGearStats(stats, player.getInventory().getBoots(), PlayerArmorChangeEvent.SlotType.FEET);
+        PlayerStatsListener.updateOffhandStats(stats, player.getInventory().getItemInOffHand());
+        PlayerStatsListener.updateWeaponStats(stats, player.getInventory().getItemInMainHand());
+    }
+
+    private void useDefaultStats(Player player) {
+        UUID playerId = player.getUniqueId();
+        PlayerStats stats = new PlayerStats(playerId);
+        PlayerStats.playerStatsMap.put(playerId, stats);
+        updatePlayerStats(player, stats);
+    }
 
     public void savePlayerData(Player player) {
         UUID playerId = player.getUniqueId();
         PlayerStats stats = PlayerStats.playerStatsMap.get(playerId);
         if (stats != null) {
-            if (stats.getMoney() >= 1 || stats.getGem() >= 1) {
-                Document document = new Document();
-                document.put("uuid", player.getUniqueId().toString());
-                document.put("name", player.getName().toLowerCase());
-                document.put("level", stats.getLevel());
-                document.put("exp", stats.getExp());
-                document.put("hp", stats.getMaxhp());
-                document.put("damage", stats.getDamage());
-                document.put("armor", stats.getArmor());
-                document.put("critchance", stats.getCritChance());
-                document.put("critdmg", stats.getCritDmg());
-                document.put("luck", stats.getLuck());
-                document.put("speed", stats.getSpeed());
-                document.put("dodge", stats.getDodge());
-                document.put("money", stats.getMoney());
-                document.put("gem", stats.getGem());
-                collection.replaceOne(Filters.eq("uuid", player.getUniqueId().toString()),
-                        document, new ReplaceOptions().upsert(true));
-                plugin.getLogger().info("Saved data for player: " + player.getName());
-                // data inside playerStatMap will be deleted when player leaves
-                // via Leave.java (package: gachafight.listeners)
-            }
+            savePlayerStats(playerId, player.getName(), stats);
         } else {
-            System.out.println("Saved data for player: " + player.getName());
+            plugin.getLogger().warning("Failed to save data: PlayerStats not found for player " + player.getName());
         }
     }
 
-
     public void saveOfflinePlayerData(UUID playerUUID, String playerName, PlayerStats stats) {
         if (stats != null) {
-            if (stats.getMoney() >= 1 || stats.getGem() >= 1) {
-                Document document = new Document();
-                document.put("uuid", playerUUID.toString());
-                document.put("name", playerName.toLowerCase());
-                document.put("level", stats.getLevel());
-                document.put("exp", stats.getExp());
-                document.put("hp", stats.getMaxhp());
-                document.put("damage", stats.getDamage());
-                document.put("armor", stats.getArmor());
-                document.put("critchance", stats.getCritChance());
-                document.put("critdmg", stats.getCritDmg());
-                document.put("luck", stats.getLuck());
-                document.put("speed", stats.getSpeed());
-                document.put("dodge", stats.getDodge());
-                document.put("money", stats.getMoney());
-                document.put("gem", stats.getGem());
-                collection.replaceOne(Filters.eq("uuid", playerUUID.toString()), document, new ReplaceOptions().upsert(true));
-                plugin.getLogger().info("Saved data for player: " + playerName);
-            }
+            savePlayerStats(playerUUID, playerName, stats);
         } else {
             plugin.getLogger().warning("Failed to save data: PlayerStats not found for player " + playerName);
+        }
+    }
+
+    private void savePlayerStats(UUID playerUUID, String playerName, PlayerStats stats) {
+        if (stats.getMoney() < 1 && stats.getGem() < 1) {
+            return; // Skip saving if both money and gems are less than 1
+        }
+
+        Document document = new Document()
+                .append("uuid", playerUUID.toString())
+                .append("name", playerName.toLowerCase())
+                .append("level", stats.getLevel())
+                .append("exp", stats.getExp())
+                .append("hp", stats.getMaxhp())
+                .append("damage", stats.getDamage())
+                .append("armor", stats.getArmor())
+                .append("critchance", stats.getCritChance())
+                .append("critdmg", stats.getCritDmg())
+                .append("luck", stats.getLuck())
+                .append("speed", stats.getSpeed())
+                .append("dodge", stats.getDodge())
+                .append("money", stats.getMoney())
+                .append("gem", stats.getGem());
+
+        try {
+            collection.replaceOne(
+                    Filters.eq("uuid", playerUUID.toString()),
+                    document,
+                    new ReplaceOptions().upsert(true)
+            );
+            plugin.getLogger().info("Saved data for player: " + playerName);
+        } catch (Exception e) {
+            plugin.getLogger().severe("Failed to save data for player " + playerName + ": " + e.getMessage());
         }
     }
 

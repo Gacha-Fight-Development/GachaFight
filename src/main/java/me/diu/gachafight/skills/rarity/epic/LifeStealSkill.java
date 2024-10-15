@@ -44,7 +44,7 @@ public class LifeStealSkill implements Skill {
     @Override
     public double applySkillEffect(Player player, LivingEntity target) {
         UUID playerUUID = player.getUniqueId();
-        if (lifeStealActive.remove(playerUUID) != null) {
+        if (lifeStealActive.getOrDefault(playerUUID, false)) {
             double damage = target.getLastDamage();
             double healAmount = damage * healPercentage;
             player.setHealth(Math.min(player.getHealth() + healAmount, player.getMaxHealth()));
@@ -58,6 +58,7 @@ public class LifeStealSkill implements Skill {
                     0.5, 0.5, 0.5,
                     0.1
             );
+            lifeStealActive.remove(playerUUID);
 
             return 1.0; // No damage multiplier for Life Steal
         }
@@ -109,5 +110,9 @@ public class LifeStealSkill implements Skill {
                 0.7, 1, 0.7,
                 0.1
         );
+    }
+    @Override
+    public boolean hasActiveState() {
+        return true;
     }
 }

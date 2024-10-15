@@ -6,32 +6,45 @@ import me.diu.gachafight.scoreboard.Board;
 import me.diu.gachafight.services.MongoService;
 import me.diu.gachafight.services.MongoServiceImpl;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 public class DIContainer implements ServiceLocator {
     private final Map<Class<?>, Object> services = new HashMap<>();
+    private final GachaFight plugin;
 
     public DIContainer(GachaFight plugin) {
-        //MongoDB
+        this.plugin = plugin;
+        initializeServices();
+    }
+
+    private void initializeServices() {
+        // MongoDB
         FileConfiguration config = plugin.getConfig();
-        MongoService mongoService = new MongoServiceImpl(config);
+        MongoService mongoService = new MongoServiceImpl(plugin, config);
         services.put(MongoService.class, mongoService);
 
-        //PlayerDataManager
-        PlayerDataManager playerDataManager = new PlayerDataManager(plugin, this);
-        services.put(PlayerDataManager.class, playerDataManager);
-        //Board
+        // Connect to MongoDB asynchronously
+        mongoService.connect().thenRun(() -> {
+            plugin.getLogger().info("Connected to MongoDB successfully!");
+        }).exceptionally(e -> {
+            plugin.getLogger().severe("Failed to connect to MongoDB: " + e.getMessage());
+            return null;
+        });
+
+
+        // Initialize services that don't depend on MongoDB
         Board board = new Board(this);
         services.put(Board.class, board);
-        //damage calculator
-//        DamageCalculator damageCalculator = new DamageCalculator();
-//        services.put(DamageCalculator.class, damageCalculator);
-        //playerhologram
-        //AdvancementPacketListener advancementPacketListener = new AdvancementPacketListener((Core) plugin, this);
-        //services.put(AdvancementPacketListener.class, advancementPacketListener);
-        //sneaklistener
+
+        // Other services that don't depend on MongoDB can be initialized here
+    }
+
+    public <T> void registerService(Class<T> serviceClass, T serviceInstance) {
+        services.put(serviceClass, serviceInstance);
     }
 
     @Override
@@ -41,9 +54,24 @@ public class DIContainer implements ServiceLocator {
     }
 
     public void shutdown() {
+        for (Object service : services.values()) {
+            if (service instanceof AutoCloseable) {
+                try {
+                    ((AutoCloseable) service).close();
+                } catch (Exception e) {
+                    plugin.getLogger().warning("Error closing service: " + service.getClass().getSimpleName());
+                    e.printStackTrace();
+                }
+            }
+        }
+        services.clear();
+    }
+
+    public CompletableFuture<Void> waitForInitialization() {
         MongoService mongoService = getService(MongoService.class);
         if (mongoService != null) {
-            mongoService.close();
+            return mongoService.connect();
         }
+        return CompletableFuture.completedFuture(null);
     }
 }

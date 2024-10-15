@@ -59,7 +59,7 @@ public class DushSkill implements Skill {
         Vector direction = player.getLocation().getDirection().normalize();
         direction.setY(0.2);
         Set<LivingEntity> hitEntities = new HashSet<>();
-        player.setVelocity(direction.multiply(leapDistance * 0.28));
+        player.setVelocity(direction.multiply(leapDistance * 0.275));
 
         new BukkitRunnable() {
             double distanceTravelled = 0;
@@ -95,7 +95,7 @@ public class DushSkill implements Skill {
 
     @Override
     public double applySkillEffect(Player player, LivingEntity target) {
-        target.damage(damage * target.getMaxHealth(), SkillDamageSource.damageSource(player));
+        target.damage(damage, SkillDamageSource.damageSource(player));
         player.sendMessage(ColorChat.chat("&6Leaped through " + target.getName() + " dealing " +
                 String.format("%.1f", damage * 100) + "% damage!"));
         target.getWorld().spawnParticle(Particle.CRIT, target.getLocation().add(0, 1, 0), 20, 0.5, 0.5, 0.5, 0.1);

@@ -35,9 +35,9 @@ public class SwordChargeSkill implements Skill {
             plugin.saveResource("Skills/common.yml", false);
         }
         FileConfiguration config = YamlConfiguration.loadConfiguration(configFile);
-        damage = config.getDouble("sword charge.damage", 1.5);
-        cooldownDuration = config.getInt("sword charge.cooldown", 5);
-        skillDuration = config.getInt("sword charge.duration", 10);
+        damage = config.getDouble("sword charge.damage");
+        cooldownDuration = config.getInt("sword charge.cooldown");
+        skillDuration = config.getInt("sword charge.duration");
     }
 
     @Override
@@ -67,10 +67,12 @@ public class SwordChargeSkill implements Skill {
     @Override
     public double applySkillEffect(Player player, LivingEntity target) {
         UUID playerUUID = player.getUniqueId();
-        if (swordChargeActive.remove(playerUUID) != null) {
+        System.out.println(swordChargeActive.get(playerUUID));
+        if (swordChargeActive.getOrDefault(playerUUID, false)) {
             player.sendMessage(ChatColor.GOLD + "You used Sword Charge! Dealt " + damage*100 + "% damage.");
             player.getWorld().spawnParticle(Particle.FLAME, player.getLocation().add(0, 1, 0),
                     20, 0.3, 0.3, 0.3, 0.05);
+            swordChargeActive.remove(playerUUID);
             return damage;
         }
         return 1.0; // Default multiplier if skill is not active
@@ -79,6 +81,10 @@ public class SwordChargeSkill implements Skill {
     @Override
     public boolean isSkillActive(Player player) {
         return swordChargeActive.getOrDefault(player.getUniqueId(), false);
+    }
+    @Override
+    public boolean hasActiveState() {
+        return true;
     }
 
     @Override

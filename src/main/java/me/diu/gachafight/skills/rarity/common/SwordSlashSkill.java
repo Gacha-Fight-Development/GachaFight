@@ -85,7 +85,7 @@ public class SwordSlashSkill implements Skill {
 
     @Override
     public double applySkillEffect(Player player, LivingEntity target) {
-        target.damage(damage * target.getMaxHealth(), SkillDamageSource.damageSource(player));
+        target.damage(damage, SkillDamageSource.damageSource(player));
         player.sendMessage(ChatColor.GOLD + "Sword Slash hit " + target.getName() + " for " +
                 String.format("%.1f", damage * 100) + "% damage!");
         return 1.0; // This skill doesn't modify damage, it applies its own damage

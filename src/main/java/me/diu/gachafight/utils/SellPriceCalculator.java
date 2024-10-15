@@ -1,5 +1,6 @@
 package me.diu.gachafight.utils;
 
+import me.diu.gachafight.skills.utils.SkillItemUtils;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
@@ -16,7 +17,7 @@ public class SellPriceCalculator {
         double basePrice = getBasePriceByRarity(rarityIndex);
 
         // Modify the price based on the item's stats
-        if (item.hasItemMeta()) {
+        if (item.hasItemMeta() && !SkillItemUtils.isNetheriteUpgradeTemplate(item)) {
             ItemMeta meta = item.getItemMeta();
             if (meta != null && meta.hasLore()) {
                 // Extract and add damage and armor values to the base price

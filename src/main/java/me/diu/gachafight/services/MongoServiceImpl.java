@@ -4,24 +4,44 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import me.diu.gachafight.GachaFight;
 import org.bson.Document;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.scheduler.BukkitRunnable;
+
+import java.util.concurrent.CompletableFuture;
 
 public class MongoServiceImpl implements MongoService {
-    private final MongoClient mongoClient;
-    private final MongoDatabase mongoDatabase;
+    private MongoClient mongoClient;
+    private MongoDatabase mongoDatabase;
+    private final GachaFight plugin;
+    private final String uri;
+    private final String databaseName;
 
-    public MongoServiceImpl(FileConfiguration config) {
-        String uri = config.getString("mongodb.uri");
-        String databaseName = config.getString("mongodb.database");
-
-        mongoClient = MongoClients.create(uri);
-        mongoDatabase = mongoClient.getDatabase(databaseName);
+    public MongoServiceImpl(GachaFight plugin, FileConfiguration config) {
+        this.plugin = plugin;
+        this.uri = config.getString("mongodb.uri");
+        this.databaseName = config.getString("mongodb.database");
     }
 
     @Override
-    public void connect() {
-        // Connection is established in the constructor
+    public CompletableFuture<Void> connect() {
+        CompletableFuture<Void> future = new CompletableFuture<>();
+
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                try {
+                    mongoClient = MongoClients.create(uri);
+                    mongoDatabase = mongoClient.getDatabase(databaseName);
+                    future.complete(null);
+                } catch (Exception e) {
+                    future.completeExceptionally(e);
+                }
+            }
+        }.runTaskAsynchronously(plugin);
+
+        return future;
     }
 
     @Override

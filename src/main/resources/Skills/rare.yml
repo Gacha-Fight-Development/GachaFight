@@ -1,18 +1,18 @@
 thunder strike:
-  damage: 1.5
+  damage: 2.0
   cooldown: 7
   stunDuration: 2
   radius: 3
   description: "Summon a lightning strike that deals damage and stuns nearby enemies within a <radius> block radius for <stunDuration> seconds."
 
 dush:
-  cooldown: 8
-  damage: 1.0
+  cooldown: 10
+  damage: 0.5
   leapDistance: 6.0
   description: "Leap forward <leapDistance> blocks, dealing damage to enemies in your path."
 
 fire strike:
-  cooldown: 5
-  damage: 2.0
+  cooldown: 10
+  damage: 1.5
   burnDuration: 6
   description: "Ignite the ground, dealing damage to enemies in a <radius> block radius, and setting them ablaze for <burnDuration> seconds."
