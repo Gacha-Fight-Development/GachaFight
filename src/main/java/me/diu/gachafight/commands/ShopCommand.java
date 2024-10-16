@@ -9,6 +9,7 @@ import me.diu.gachafight.shop.buy.gui.BuyShopSelectionGUI;
 import me.diu.gachafight.shop.potion.gui.PotionRaritySelectionGUI;
 import me.diu.gachafight.shop.sell.ShopManager;
 import me.diu.gachafight.utils.ColorChat;
+import me.diu.gachafight.utils.DungeonUtils;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -30,7 +31,7 @@ public class ShopCommand implements CommandExecutor {
         }
         Player player = (Player) sender;
         if (player.hasPermission("gacha.shop") || player.hasPermission("gacha.vip")) {
-            if (!DamageListener.isSafezone(player.getLocation())) {
+            if (!DungeonUtils.isSafezone(player.getLocation())) {
                 player.sendMessage(ColorChat.chat("&cYou are not in safezone."));
             }
             if (args.length == 0) {

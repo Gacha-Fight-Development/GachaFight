@@ -45,6 +45,9 @@ public class SkillManager {
         plugin.saveResource("Skills/uncommon.yml", true);
         plugin.saveResource("Skills/rare.yml", true);
         plugin.saveResource("Skills/epic.yml", true);
+        //plugin.saveResource("Skills/unique.yml", true);
+        //plugin.saveResource("Skills/legendary.yml", true);
+        //plugin.saveResource("Skills/mythic.yml", true);
     }
 
     public void registerSkill(String name, Skill skill) {

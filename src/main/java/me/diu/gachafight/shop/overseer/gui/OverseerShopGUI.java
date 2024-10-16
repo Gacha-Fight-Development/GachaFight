@@ -33,7 +33,6 @@ public class OverseerShopGUI {
         for (int i = 0; i < inv.getSize(); i++) {
             inv.setItem(i, filler);  // Fill with stained glass
         }
-
         // Create the items with the cost in the lore
         inv.setItem(0+10, createStatItem(Material.RED_DYE, "<!i><red>HP", Calculations.overseerHPCost(stats.getMaxhp())));
         inv.setItem(1+10, createStatItem(Material.ORANGE_DYE, "<!i><gold>Damage", Calculations.overseerDamageCost(stats.getDamage())));

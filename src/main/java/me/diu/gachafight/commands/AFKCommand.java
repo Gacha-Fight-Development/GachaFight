@@ -4,6 +4,7 @@ import me.diu.gachafight.GachaFight;
 import me.diu.gachafight.combat.DamageListener;
 import me.diu.gachafight.listeners.PlayerZoneListener;
 import me.diu.gachafight.utils.ColorChat;
+import me.diu.gachafight.utils.DungeonUtils;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -18,7 +19,7 @@ public class AFKCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
         Player player = (Player) sender;
-        if (DamageListener.isSafezone(player.getLocation())) {
+        if (DungeonUtils.isSafezone(player.getLocation())) {
             player.teleport(new Location(player.getWorld(), -8, 177, 331));
             if (!PlayerZoneListener.playerTasks.containsKey(player.getUniqueId())) {
                 PlayerZoneListener.startRewardingPlayer(player);
