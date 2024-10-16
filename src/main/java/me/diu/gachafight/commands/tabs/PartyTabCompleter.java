@@ -3,6 +3,7 @@ package me.diu.gachafight.commands.tabs;
 import me.diu.gachafight.GachaFight;
 import me.diu.gachafight.party.PartyManager;
 import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
@@ -42,7 +43,7 @@ public class PartyTabCompleter implements TabCompleter {
                         }
                     }
                 } else if (args[0].equalsIgnoreCase("kick")) {
-                    for (Player partyMember : PartyManager.getPartyMembers(player)) {
+                    for (OfflinePlayer partyMember : PartyManager.getPartyMembers(player)) {
                         if (partyMember != player) {
                             String playerName = partyMember.getName();
                             if (playerName.toLowerCase().startsWith(args[1].toLowerCase())) {

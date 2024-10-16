@@ -2,10 +2,9 @@ package me.diu.gachafight.skills.managers;
 
 import lombok.Getter;
 import me.diu.gachafight.GachaFight;
-import me.diu.gachafight.dungeon.utils.DungeonUtils;
-import me.diu.gachafight.listeners.LootChestListener;
 import me.diu.gachafight.skills.utils.RandomSkillUtils;
 import me.diu.gachafight.utils.ColorChat;
+import me.diu.gachafight.utils.DungeonUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;

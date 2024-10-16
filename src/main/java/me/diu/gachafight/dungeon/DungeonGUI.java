@@ -2,17 +2,16 @@
 package me.diu.gachafight.dungeon;
 
 import me.diu.gachafight.GachaFight;
+import me.diu.gachafight.combat.DamageListener;
 import me.diu.gachafight.dungeon.Dungeon;
 import me.diu.gachafight.party.PartyManager;
 import me.diu.gachafight.playerstats.PlayerStats;
 import me.diu.gachafight.playerstats.PlayerStatsListener;
 import me.diu.gachafight.utils.ColorChat;
+import me.diu.gachafight.utils.DungeonUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -24,6 +23,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.metadata.FixedMetadataValue;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class DungeonGUI implements Listener {
 
@@ -131,67 +131,57 @@ public class DungeonGUI implements Listener {
                 Dungeon selectedDungeon = dungeons.get(dungeonName);
 
                 if (selectedDungeon != null) {
-                    Player partyLeader = PartyManager.getPartyLeader(player);
+                    OfflinePlayer partyLeader = PartyManager.getPartyLeader(player);
 
-                    if (partyLeader != null) {
-                        // Player is in a party
-                        if (partyLeader == player) {
-                            // Player is the party leader
-                            openPartyTeleportConfirmation(player, selectedDungeon);
+                    if (partyLeader == null) {
+                        // Solo player - teleport instantly
+                        System.out.println("Player is not in a party, teleporting alone");
+                        Location spawnLocation = selectedDungeon.getNextAvailableSpawn();
+                        if (spawnLocation != null) {
+                            teleportPlayerToDungeon(player, selectedDungeon, spawnLocation);
                         } else {
-                            openSelfTeleportConfirmation(player, selectedDungeon);}
+                            player.sendMessage(ColorChat.chat("&cNo available spawn points. Please try again later."));
+                        }
+                    } else if (partyLeader.equals(player)) {
+                        // Party leader - show confirmation GUI
+                        openPartyTeleportConfirmation(player, selectedDungeon);
                     } else {
-                        // Player is not in a party
-                        handleDungeonSelection(player, selectedDungeon);
+                        // Party member (not leader)
+                        Location spawnLocation = selectedDungeon.getNextAvailableSpawn();
+                        teleportPlayerToDungeon(player, selectedDungeon, spawnLocation);
                     }
+                } else {
+                    System.out.println("Selected dungeon is null");
                 }
             }
-            player.closeInventory();
         }
     }
 
-    private void openPartyTeleportConfirmation(Player player, Dungeon dungeon) {
+
+    public void openPartyTeleportConfirmation(Player player, Dungeon dungeon) {
         Inventory confirmGui = Bukkit.createInventory(null, 9, ColorChat.chat("&6Confirm Party Teleport"));
+
+        // Create and set confirm item
         ItemStack confirmItem = new ItemStack(Material.GREEN_WOOL);
         ItemMeta confirmMeta = confirmItem.getItemMeta();
         confirmMeta.setDisplayName(ColorChat.chat("&aConfirm Teleport Party"));
         confirmItem.setItemMeta(confirmMeta);
 
+        // Create and set cancel item
         ItemStack cancelItem = new ItemStack(Material.RED_WOOL);
         ItemMeta cancelMeta = cancelItem.getItemMeta();
         cancelMeta.setDisplayName(ColorChat.chat("&cCancel"));
         cancelItem.setItemMeta(cancelMeta);
 
+        // Place items in the inventory
         confirmGui.setItem(3, confirmItem);
         confirmGui.setItem(5, cancelItem);
-
-        player.openInventory(confirmGui);
-
-        // Store the selected dungeon for the confirmation handler
+        // Store metadata for the selected dungeon
         player.setMetadata("selectedDungeon", new FixedMetadataValue(plugin, dungeon));
+        // Now explicitly open the inventory for the player
+        player.openInventory(confirmGui);
     }
 
-    private void openSelfTeleportConfirmation(Player player, Dungeon dungeon) {
-        Inventory confirmGui = Bukkit.createInventory(null, 9, ColorChat.chat("&6Confirm Self Teleport"));
-
-        ItemStack confirmItem = new ItemStack(Material.GREEN_WOOL);
-        ItemMeta confirmMeta = confirmItem.getItemMeta();
-        confirmMeta.setDisplayName(ColorChat.chat("&aConfirm Teleport Self"));
-        confirmItem.setItemMeta(confirmMeta);
-
-        ItemStack cancelItem = new ItemStack(Material.RED_WOOL);
-        ItemMeta cancelMeta = cancelItem.getItemMeta();
-        cancelMeta.setDisplayName(ColorChat.chat("&cCancel"));
-        cancelItem.setItemMeta(cancelMeta);
-
-        confirmGui.setItem(3, confirmItem);
-        confirmGui.setItem(5, cancelItem);
-
-        player.openInventory(confirmGui);
-
-        // Store the selected dungeon for the confirmation handler
-        player.setMetadata("selectedDungeon", new FixedMetadataValue(plugin, dungeon));
-    }
 
     @EventHandler
     public void onConfirmationInventoryClick(InventoryClickEvent event) {
@@ -221,44 +211,59 @@ public class DungeonGUI implements Listener {
 
 
     private void handleDungeonSelection(Player player, Dungeon dungeon) {
-        Player partyLeader = PartyManager.getPartyLeader(player);
-        Set<Player> partyMembers = new HashSet<>();
+        OfflinePlayer partyLeader = PartyManager.getPartyLeader(player);
+        Set<OfflinePlayer> partyMembers;
 
         if (partyLeader != null) {
             partyMembers = PartyManager.getPartyMembers(partyLeader);
-            partyMembers.add(partyLeader); // Include the leader
         } else {
+            partyMembers = new HashSet<>();
             partyMembers.add(player); // Solo player
         }
 
-        for (Player member : partyMembers) {
-            Location spawnLocation = dungeon.getNextAvailableSpawn();
-            if (spawnLocation != null) {
-                teleportPlayerToDungeon(member, dungeon, spawnLocation);
-            } else {
-                member.sendMessage(ColorChat.chat("&cNo available spawn points. Please try again later."));
-                return; // Stop if there's no available spawn point
+        // Get a single spawn location for the entire party
+        Location spawnLocation = dungeon.getNextAvailableSpawn();
+        if (spawnLocation != null) {
+            for (OfflinePlayer member : partyMembers) {
+                if (member.isOnline()) {
+                    Player onlineMember = member.getPlayer();
+                    if (DungeonUtils.isSafezone(onlineMember.getLocation())) {
+                        teleportPlayerToDungeon(onlineMember, dungeon, spawnLocation);
+                    } else {
+                        onlineMember.sendMessage(ColorChat.chat("&cNot in Safezone, Party Leader left you."));
+                    }
+                }
+            }
+        } else {
+            System.out.println("No available spawn point for the party");
+            for (OfflinePlayer member : partyMembers) {
+                if (member.isOnline()) {
+                    member.getPlayer().sendMessage(ColorChat.chat("&cNo available spawn points. Please try again later."));
+                }
             }
         }
     }
 
     private void teleportPlayerToDungeon(Player player, Dungeon dungeon, Location spawnLocation) {
-        Player partyLeader = PartyManager.getPartyLeader(player);
-        boolean isPartyLeader = partyLeader == null || partyLeader == player;
+        OfflinePlayer partyLeader = PartyManager.getPartyLeader(player);
+        boolean isPartyLeader = partyLeader == null || partyLeader.equals(player);
 
-        if (isPartyLeader || player.hasPermission("gachafight.dungeon.teleport.self")) {
-            player.stopAllSounds();
-            player.teleport(spawnLocation);
-            player.sendMessage(ColorChat.chat("&aTeleported to " + dungeon.getName() + "!"));
-            player.sendMessage(ColorChat.chat("&cItems obtained inside dungeon drop on death!"));
-            player.sendMessage(ColorChat.chat("&6Find 4 exits to teleport back to spawn."));
-            player.setNoDamageTicks(30);
+        System.out.println("Teleporting " + player.getName() + " to " + dungeon.getName() + " at " + spawnLocation);
 
-            Bukkit.getScheduler().runTaskLater(plugin, () ->
-                    PlayerStatsListener.updateWeaponStats(PlayerStats.getPlayerStats(player), player.getItemInHand()), 20L);
-        } else {
-            player.sendMessage(ColorChat.chat("&cYou don't have permission to teleport yourself to a dungeon."));
+        player.stopAllSounds();
+        player.teleport(spawnLocation);
+        player.sendMessage(ColorChat.chat("&aTeleported to " + dungeon.getName() + "!"));
+        player.sendMessage(ColorChat.chat("&cItems obtained inside dungeon drop on death!"));
+        player.sendMessage(ColorChat.chat("&6Find 4 exits to teleport back to spawn."));
+        player.setNoDamageTicks(30);
+
+        Bukkit.getScheduler().runTaskLater(plugin, () ->
+                PlayerStatsListener.updateWeaponStats(PlayerStats.getPlayerStats(player), player.getItemInHand()), 20L);
+
+        if (isPartyLeader) {
+            player.sendMessage(ColorChat.chat("&aYou have entered the dungeon " + (partyLeader == null ? "alone" : "with your party") + "."));
         }
-    }
 
+        System.out.println(player.getName() + " teleported successfully");
+    }
 }

@@ -106,8 +106,8 @@ public class PlayerZoneListener implements Listener {
         if (Math.random() < 0.05) {
             GiveItemUtils.giveUncommonKey(player, 1);
         }
-        GiveItemUtils.giveGold(player, (int) Math.floor((Math.random() * 6)+1)); //should this increase? $0.6 per kill
-        GiveItemUtils.giveEXP(player, (stats.getLevel() * 0.2));//this? 1.33 exp per kill
+        GiveItemUtils.giveGold(player, (int) Math.floor((Math.random() * 6)+1));
+        GiveItemUtils.giveEXP(player, (stats.getLevel() * 0.2));
         GiveItemUtils.convertGold(player);
     }
 

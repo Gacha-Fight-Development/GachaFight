@@ -44,6 +44,7 @@ import me.diu.gachafight.shop.potion.managers.PotionItemManager;
 import me.diu.gachafight.skills.SkillSystem;
 import me.diu.gachafight.skills.managers.MobDropSelector;
 import me.diu.gachafight.utils.ColorChat;
+import me.diu.gachafight.utils.DungeonUtils;
 import me.diu.gachafight.utils.FurnitureDataManager;
 import me.diu.gachafight.utils.TextDisplayUtils;
 import net.luckperms.api.LuckPerms;
@@ -58,7 +59,9 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.File;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
@@ -150,6 +153,7 @@ public final class GachaFight extends JavaPlugin implements Listener {
             registerCommands();
             loadAllPlayerData();
             scheduleTimers();
+            scheduleInfoBroadcast();
             Bukkit.broadcastMessage(ColorChat.chat("&b&lGachaFight Fully Loaded"));
             Bukkit.broadcastMessage(ColorChat.chat("&aFull Heal from Reload"));
         } catch (Exception e) {
@@ -343,7 +347,7 @@ public final class GachaFight extends JavaPlugin implements Listener {
             public void run() {
                 for (Player player : Bukkit.getOnlinePlayers()) {
                     player.stopAllSounds();
-                    if (DamageListener.isSafezone(player.getLocation())) {
+                    if (DungeonUtils.isSafezone(player.getLocation())) {
                         player.playSound(player, "custom:celestrial", SoundCategory.MUSIC, 5, 1);
                     }
                 }
@@ -372,5 +376,24 @@ public final class GachaFight extends JavaPlugin implements Listener {
         onDisable();
         onEnable();
     }
+
+    private void scheduleInfoBroadcast() {
+        List<String> messages = Arrays.asList(
+                "&6TIP: &eBeing in a Party adds 0.05x Gold/EXP Boost for Each Player!",
+                "&6TIP: &eCannot Find NPC? use /guide!",
+                "&6TIP: &eConfused about something? use /help!"
+        );
+
+        new BukkitRunnable() {
+            int index = 0;
+
+            @Override
+            public void run() {
+                Bukkit.broadcastMessage(ColorChat.chat(messages.get(index)));
+                index = (index + 1) % messages.size();
+            }
+        }.runTaskTimer(this, 20 * 60 * 5, 20 * 60 * 15); // Start after 5 minutes, repeat every 15 minutes
+    }
+
 
 }

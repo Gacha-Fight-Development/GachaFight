@@ -10,6 +10,7 @@ import me.diu.gachafight.utils.ExtractLore;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -26,7 +27,7 @@ public class Leave implements Listener {
         Bukkit.getPluginManager().registerEvents(this, GachaFight.getInstance());
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGH)
     public void onLeave(PlayerQuitEvent event) {
         Player player = event.getPlayer();
         playerDataManager.savePlayerData(player);
