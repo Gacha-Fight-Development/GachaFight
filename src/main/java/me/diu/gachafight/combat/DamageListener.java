@@ -21,10 +21,7 @@ import me.diu.gachafight.utils.ColorChat;
 import me.diu.gachafight.utils.DungeonUtils;
 import me.diu.gachafight.utils.TextDisplayUtils;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.OfflinePlayer;
+import org.bukkit.*;
 import org.bukkit.damage.DamageType;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
@@ -434,13 +431,13 @@ public class DamageListener implements Listener {
     }
 
     private void handleRandomRewards(Player player, Entity entity) {
-        if (Math.random() < 0.0002 && entity.getName().equalsIgnoreCase(MobDropSelector.getMob())) {
+        if (Math.random() < 0.0002 && ChatColor.stripColor(entity.getName()).equalsIgnoreCase(MobDropSelector.getMob())) {
             player.getInventory().addItem(MobDropSelector.getDrop(player));
         }
         if (Math.random() < 0.0015) {
             giveSkillReward(player, RandomSkillUtils.getRandomCommonSkill(), "&f&lCommon");
         }
-        if (player.hasPermission("op") || Math.random() < 0.0005) {
+        if (Math.random() < 0.0005) {
             giveSkillReward(player, RandomSkillUtils.getRandomUncommonSkill(), "&7&lUncommon");
         }
     }

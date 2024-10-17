@@ -79,6 +79,7 @@ public class LootChestListener implements Listener {
         LootChestDrop.dropSmallHpPot(location, 0.3, 1);
         LootChestDrop.dropGold(location, 0.7, 7);
         LootChestDrop.dropUncommonKey(location, 0.1, 1);
+        LootChestDrop.dropGold(location, 1, 2);
     }
 
     // Spawn Goblin loot at the location
@@ -90,6 +91,7 @@ public class LootChestListener implements Listener {
         LootChestDrop.dropUncommonKey(location, 0.35, 1);
         LootChestDrop.dropUncommonKey(location, 0.35, 1);
         LootChestDrop.dropRareKey(location, 0.05, 1);
+        LootChestDrop.dropGold(location, 1, 2);
     }
 
     public void saveFurnitureState(Location location, String furnitureID) {

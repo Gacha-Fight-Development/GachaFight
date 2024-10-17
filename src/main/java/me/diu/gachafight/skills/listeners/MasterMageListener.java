@@ -52,9 +52,12 @@ public class MasterMageListener implements Listener {
         ColorChat.createItem(inv, Material.SEA_LANTERN, 1, 11, "&d&lMagical Orb (Private)", "&6Cost Per Use: &e$10k",
                 "&6Info: &7This Magical Orb will give you a private hint on", "&7which mob will drop a Rarity of Rare Or Higher",
                 "&7Skill Book for a High Price! You will only have", "&c30 Minutes &7To Obtain it after revealed", "&7Ends when a Player gets Skill Book.");
+
         ColorChat.createItem(inv, Material.ENDER_EYE, 1, 15, "&5&lForesee (Broadcast)", "&6Cost Per Use: &e$5k",
                 "&6Info: &7This Ender Eye will broadcast to all players", "&7which mob will drop a Rarity of Rare Or Higher",
                 "&7Skill Book! Everyone will have", "&c30 Minutes &7To Obtain it after revealed.", "&7Ends when a Player gets Skill Book.");
+        ColorChat.createItem(inv, Material.NETHER_STAR, 1, 13, "&6&lReroll Mob", "&6Cost: &e$2.5k",
+                "&6Info: &7Reroll the current mob for a new one.", "&cOnly works if you revealed the current mob.");
         player.openInventory(inv);
     }
 
@@ -71,6 +74,8 @@ public class MasterMageListener implements Listener {
                 handlePrivateOrb(player);
             } else if (event.getCurrentItem().getType().equals(Material.ENDER_EYE)) {
                 handleBroadcastOrb(player);
+            } else if (event.getCurrentItem().getType().equals(Material.NETHER_STAR)) {
+                handleRerollMob(player);
             }
         }
     }
@@ -85,7 +90,7 @@ public class MasterMageListener implements Listener {
             return;
         }
         VaultHook.withdraw(player, 10000);
-        MobDropSelector.changeMobs(player);
+        MobDropSelector.changeMobs(player, false);
         player.sendMessage(ColorChat.chat("&7[&dMagical Orb&7] &a" + MobDropSelector.getMob() + " &7will now drop Rare+ Skill Book"));
     }
 
@@ -99,8 +104,33 @@ public class MasterMageListener implements Listener {
             return;
         }
         VaultHook.withdraw(player, 5000);
-        MobDropSelector.changeMobs(player);
+        MobDropSelector.changeMobs(player, true);
         String message = ColorChat.chat("&7[&5Foresee&7] &a" + MobDropSelector.getMob() + " &7will now drop Rare+ Skill Book");
         Bukkit.broadcastMessage(message);
+    }
+    private void handleRerollMob(Player player) {
+        if (MobDropSelector.getMob() == null) {
+            player.sendMessage(ColorChat.chat("&cThere is no mob currently revealed to reroll!"));
+            return;
+        }
+        if (!MobDropSelector.getPlayername().equals(player.getName())) {
+            player.sendMessage(ColorChat.chat("&cYou can only reroll the mob if you revealed it!"));
+            return;
+        }
+
+        if (VaultHook.getBalance(player) < 2500) {
+            player.sendMessage(ColorChat.chat("&cYou need at least 2.5k to reroll the mob!"));
+            return;
+        }
+
+        VaultHook.withdraw(player, 2500);
+        MobDropSelector.changeMobs(player, MobDropSelector.isBroadcast());
+        if (MobDropSelector.isBroadcast()) {
+            String message = ColorChat.chat("&7[&5Foresee&7] &a" + MobDropSelector.getMob() + " &7will now drop Rare+ Skill Book");
+            Bukkit.broadcastMessage(message);
+        } else {
+            player.sendMessage(ColorChat.chat("&7[&dMagical Orb&7] &a" + MobDropSelector.getMob() + " &7will now drop Rare+ Skill Book"));
+        }
+        player.sendMessage(ColorChat.chat("&aYou have successfully rerolled the mob for 2.5k!"));
     }
 }

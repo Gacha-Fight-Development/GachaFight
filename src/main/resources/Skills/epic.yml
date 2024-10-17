@@ -4,3 +4,9 @@ life steal:
   heal_percentage: 0.5
   heal_display: 50
   description: "For the next <duration> seconds, your attacks will steal <heal_display>% of the damage dealt as health."
+ghost sword:
+  cooldown: 30
+  duration: 100
+  damage: 2.0
+  attack_range: 10.0
+  movement_speed: 0.5
