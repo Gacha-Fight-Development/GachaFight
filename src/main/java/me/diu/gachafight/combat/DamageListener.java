@@ -10,19 +10,18 @@ import me.diu.gachafight.GachaFight;
 import me.diu.gachafight.combat.mobdrops.BulbDeathReward;
 import me.diu.gachafight.combat.mobdrops.GoblinDeathReward;
 import me.diu.gachafight.combat.mobdrops.RPGDeathReward;
-import me.diu.gachafight.dungeon.utils.DungeonUtils;
 import me.diu.gachafight.hooks.VaultHook;
+import me.diu.gachafight.party.PartyManager;
 import me.diu.gachafight.playerstats.PlayerStats;
 import me.diu.gachafight.quest.listeners.QuestKillListener;
 import me.diu.gachafight.skills.managers.MobDropSelector;
 import me.diu.gachafight.skills.managers.SkillManager;
 import me.diu.gachafight.skills.utils.RandomSkillUtils;
 import me.diu.gachafight.utils.ColorChat;
+import me.diu.gachafight.utils.DungeonUtils;
 import me.diu.gachafight.utils.TextDisplayUtils;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Material;
+import org.bukkit.*;
 import org.bukkit.damage.DamageType;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
@@ -35,12 +34,15 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 
 public class DamageListener implements Listener {
 
-    private final int weaponDelay = 20;
+    private final int weaponDelay = 0;
+    public static List<String> BOSS_NAMES = List.of("rpg_sand_golem", "rpg_stone_golem", "Goblin King", "Shadow Sorcerer");
 
     public DamageListener(GachaFight plugin) {
         Bukkit.getPluginManager().registerEvents(this, plugin);
@@ -48,7 +50,7 @@ public class DamageListener implements Listener {
 
     @EventHandler
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
-        if (isSafezone(event.getEntity().getLocation())) {
+        if (DungeonUtils.isSafezone(event.getEntity().getLocation())) {
             if (event.getEntity().getType() == EntityType.PLAYER || event.getEntity().getType() == EntityType.PIG) {
                 event.setCancelled(true);
                 event.getDamager().sendMessage(ColorChat.chat("&aSafezone. &cPvP only in Dungeon."));
@@ -266,58 +268,55 @@ public class DamageListener implements Listener {
             double mobHp = ((LivingEntity) entity).getMaxHealth();
             double expGained = mobHp / 7.5;
             double moneyGained = mobHp / 20;
-            double rankMulti = 1;
-            double petExpMulti;
-            double petGoldMulti;
-            // Add EXP & $ to the player
+            double multi = calculateMultiplier(player);
+
+            OfflinePlayer offlinePlayer = player;
+            OfflinePlayer partyLeader = PartyManager.getPartyLeader(offlinePlayer);
+            Set<OfflinePlayer> partyMembers = new HashSet<>();
+
+            if (partyLeader != null) {
+                partyMembers = PartyManager.getPartyMembers(partyLeader);
+            }
+
             PlayerStats playerStats = PlayerStats.getPlayerStats(player);
-            if (player.hasPermission("gacha.vip")) {
-                rankMulti = 1.2;
-            }
-            playerStats.addExp( expGained * rankMulti, player);
-            VaultHook.addMoney(player, (moneyGained*rankMulti));
 
+            if (!partyMembers.isEmpty()) {
+                handlePartyRewards(offlinePlayer, entity, expGained, moneyGained, multi, partyMembers);
+            }
 
-            if (entity.getName().contains("Goblin")) {
-                GoblinDeathReward.MobDeath(entity.getName(), player);
-            } else if (entity.getName().contains("rpg")) {
-                RPGDeathReward.MobDeath(entity.getName(), player);
-            } else if (entity.getName().contains("Bulb")) {
-                BulbDeathReward.MobDeath(entity.getName(), player);
-            }
-            if (entity.getName().equalsIgnoreCase(MobDropSelector.getMob())) {
-                if (Math.random() < 0.0002) {
-                    player.getInventory().addItem(MobDropSelector.getDrop(player));
-                }
-            }
-            if (Math.random() < 0.0015) {
-                player.getInventory().addItem(RandomSkillUtils.getRandomCommonSkill());
-                player.sendMessage(ColorChat.chat("&a&l Received &f&lCommon &a&lSkill!"));
-            }
-            if (player.hasPermission("op")) {
-                player.getInventory().addItem(RandomSkillUtils.getRandomUncommonSkill());
-                player.sendMessage(ColorChat.chat("&a&l Received &7&lUncommon &a&lSkill!"));
-            }
-            if (Math.random() < 0.0005) {
-                player.getInventory().addItem(RandomSkillUtils.getRandomUncommonSkill());
-                player.sendMessage(ColorChat.chat("&a&l Received &7&lUncommon &a&lSkill!"));
-            }
-            if (Math.random() < 0.001) {
-                MythicMob mob = MythicBukkit.inst().getMobManager().getMythicMob("bulb_lilypad_pet").orElse(null);
-                ActiveMob lilypad = mob.spawn(BukkitAdapter.adapt(entity.getLocation()),1);
-                player.sendMessage(ColorChat.chat("&a&lLilypad Bulb Spawned!"));
-                player.sendMessage(ColorChat.chat("&aKill it before it despawn! (60s)"));
-                new BukkitRunnable() {
-                    public void run() {
-                        lilypad.despawn();
-                    }
-                }.runTaskLater(GachaFight.getInstance(), 1200);
-            }
+            playerStats.addExp(expGained * multi, player);
+            VaultHook.addMoney(player, (moneyGained * multi));
+
+            handleMobSpecificRewards(entity, player);
+            handleRandomRewards(player, entity);
 
             // Notify the player of the exp and money gained
             player.sendActionBar(MiniMessage.miniMessage().deserialize("<green>+ <dark_aqua>Exp: <aqua>" + String.format("%.2f", expGained) + "<black> | <gold> Money: <yellow>" + String.format("%.2f", moneyGained) + "</green>"));
         }
     }
+
+    private void handlePartyRewards(OfflinePlayer killer, Entity entity, double expGained, double moneyGained, double multi, Set<OfflinePlayer> partyMembers) {
+        if (isBoss(entity)) {
+            for (OfflinePlayer member : partyMembers) {
+                if (member.isOnline()) {
+                    Player onlineMember = member.getPlayer();
+                    if (onlineMember != null && isInSameDungeon(killer, onlineMember)) {
+                        PlayerStats memberStats = PlayerStats.getPlayerStats(onlineMember);
+                        memberStats.addExp(expGained * multi, onlineMember);
+                        VaultHook.addMoney(onlineMember, (moneyGained * multi));
+
+                        if (!member.equals(killer)) {
+                            onlineMember.sendMessage(ColorChat.chat("&aReceived Gold & XP from " + killer.getName() + " killing " + entity.getName()));
+                        }
+                    } else if (onlineMember != null) {
+                        onlineMember.sendMessage(ColorChat.chat("&cParty Member killed boss but you're not in the same Dungeon."));
+                    }
+                }
+                // You might want to handle offline players here, perhaps by storing their rewards for later
+            }
+        }
+    }
+
 
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent event) {
@@ -357,8 +356,8 @@ public class DamageListener implements Listener {
         for (ItemStack itemToRemove : itemsToRemove) {
             player.getInventory().remove(itemToRemove);
         }
-        event.setCancelled(true);
         Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "spawn " + player.getName());
+        event.setCancelled(true);
     }
     // ===============Grabs Mythic Mobs Armor Value================
     private double getMobArmor(Entity entity) {
@@ -384,22 +383,6 @@ public class DamageListener implements Listener {
                         player.getLocation().getBlock().getType() != Material.VINE;
     }
 
-    public static boolean isSafezone(Location location) {
-        // ===================Spawn==================
-        if (location.getX() > -259 && location.getX() < 220 && location.getZ() >-419 && location.getZ() < 502) {
-            return true;
-        }
-        // =================Tutorial================
-        if (location.getX() > -766 && location.getX() < -597 && location.getZ() > 30 && location.getZ() < 101) {
-            return true;
-        }
-        // ===================AFK====================
-        if (location.getX() > -12 && location.getX() < -3 && location.getZ() > 326 && location.getZ() < 335) {
-            return true;
-        }
-        return false;
-    }
-
     public static void handleFireTicks() {
         new BukkitRunnable() {
             public void run() {
@@ -416,4 +399,63 @@ public class DamageListener implements Listener {
             }
         }.runTaskTimer(GachaFight.getInstance(), 20, 20);
     }
+    private double calculateMultiplier(Player player) {
+        double multi = 1;
+        if (player.hasPermission("gacha.vip")) {
+            multi += 0.2;
+        }
+        return multi;
+    }
+    private void distributePartyRewards(Player player, Entity entity, double expGained, double moneyGained, double multi, Set<Player> partyMembers) {
+        for (Player member : partyMembers) {
+            if (DungeonUtils.getDungeonName(player.getLocation()).equals(DungeonUtils.getDungeonName(member.getLocation()))) {
+                PlayerStats memberStats = PlayerStats.getPlayerStats(member);
+                memberStats.addExp(expGained * multi, member);
+                VaultHook.addMoney(member, moneyGained * multi);
+                if (member != player) {
+                }
+            } else {
+                member.sendMessage(ColorChat.chat("&cParty Member killed boss but you're not in the same Dungeon."));
+            }
+        }
+    }
+    private void handleMobSpecificRewards(Entity entity, Player player) {
+        String entityName = entity.getName();
+        if (entityName.contains("Goblin")) {
+            GoblinDeathReward.MobDeath(entityName, player);
+        } else if (entityName.contains("rpg")) {
+            RPGDeathReward.MobDeath(entityName, player);
+        } else if (entityName.contains("Bulb")) {
+            BulbDeathReward.MobDeath(entityName, player);
+        }
+    }
+
+    private void handleRandomRewards(Player player, Entity entity) {
+        if (Math.random() < 0.0002 && ChatColor.stripColor(entity.getName()).equalsIgnoreCase(MobDropSelector.getMob())) {
+            player.getInventory().addItem(MobDropSelector.getDrop(player));
+        }
+        if (Math.random() < 0.0015) {
+            giveSkillReward(player, RandomSkillUtils.getRandomCommonSkill(), "&f&lCommon");
+        }
+        if (Math.random() < 0.0005) {
+            giveSkillReward(player, RandomSkillUtils.getRandomUncommonSkill(), "&7&lUncommon");
+        }
+    }
+
+    private void giveSkillReward(Player player, ItemStack skill, String rarity) {
+        player.getInventory().addItem(skill);
+        player.sendMessage(ColorChat.chat("&a&l Received " + rarity + " &a&lSkill!"));
+    }
+    private boolean isBoss(Entity entity) {
+        return BOSS_NAMES.stream().anyMatch(bossName -> entity.getName().contains(bossName));
+    }
+    private boolean isInSameDungeon(OfflinePlayer player1, Player player2) {
+        // Assuming both players are online
+        if (player1.isOnline() && player1.getPlayer() != null) {
+            return DungeonUtils.getDungeonName(player1.getPlayer().getLocation())
+                    .equals(DungeonUtils.getDungeonName(player2.getLocation()));
+        }
+        return false;
+    }
 }
+

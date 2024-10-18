@@ -2,10 +2,9 @@ package me.diu.gachafight.skills.managers;
 
 import lombok.Getter;
 import me.diu.gachafight.GachaFight;
-import me.diu.gachafight.dungeon.utils.DungeonUtils;
-import me.diu.gachafight.listeners.LootChestListener;
 import me.diu.gachafight.skills.utils.RandomSkillUtils;
 import me.diu.gachafight.utils.ColorChat;
+import me.diu.gachafight.utils.DungeonUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -23,6 +22,10 @@ import java.util.*;
 public class MobDropSelector {
     @Getter
     private static String mob;  // Current mob eligible for rare skill book drops
+    @Getter
+    private static String playername;
+    @Getter
+    private static boolean broadcast;
     private static final long THIRTY_MINUTES = 30 * 60 * 1000L; // 30 minutes in milliseconds
     private static File configFile;
     private static FileConfiguration config;
@@ -33,7 +36,7 @@ public class MobDropSelector {
             "goblin king", "goblin shaman", "Possessed Cinder Armor", "Possessed Ruin Armor", "Possessed Viking Armor", "Shadow Sorcerer",
             "Shadow Maskerer", "Shadow Pursued", "Shadow Mask", "Shadow Golem");
 
-    public static void changeMobs(Player player) {
+    public static void changeMobs(Player player, boolean broadcast) {
         long savedTime = config.getLong("timestamp");
         if (System.currentTimeMillis() - savedTime > THIRTY_MINUTES) {
             clearMobData();
@@ -42,10 +45,24 @@ public class MobDropSelector {
             Random random = new Random();
             int index = random.nextInt(listMobs.size());
             mob = listMobs.get(index);
+            playername = player.getName();
             config.set("mob", mob);
+            config.set("player", player.getName());
+            config.set("broadcast", broadcast);
             config.set("timestamp", System.currentTimeMillis());
             saveConfig();
             Bukkit.broadcastMessage(ColorChat.chat("&7[&dMagical Orb&7] &6" + player.getName() + "&7 Used Magical Orb."));
+        } else {
+            Random random = new Random();
+            int index = random.nextInt(listMobs.size());
+            mob = listMobs.get(index);
+            playername = player.getName();
+            config.set("mob", mob);
+            config.set("player", player.getName());
+            config.set("broadcast", broadcast);
+            config.set("timestamp", System.currentTimeMillis());
+            saveConfig();
+            Bukkit.broadcastMessage(ColorChat.chat("&7[&dMagical Orb&7] &6" + player.getName() + "&7 Rerolled Mob."));
         }
     }
     public static void init() {
@@ -71,6 +88,8 @@ public class MobDropSelector {
         // Load the mob and timestamp from the config file
         if (config.contains("mob") && config.contains("timestamp")) {
             mob = config.getString("mob");
+            playername = config.getString("player");
+            broadcast = config.getBoolean("broadcast");
             long savedTime = config.getLong("timestamp");
 
             // If 30 minutes haven't passed yet, keep the mob
@@ -92,18 +111,24 @@ public class MobDropSelector {
             centeredLocation = centerText("Location: " + location.getX() + " " + location.getY() + " " + location.getZ(), 63);
         }
         if (Math.random() < 0.1) {
-            String centeredName = centerText("&6&lPlayer: &e&l" + playerName + "&a&lReceived &d&lEpic &a&lSkill", 63);
+            String centeredName = centerText("&6&lPlayer: &e&l" + playerName + " &a&lReceived &d&lEpic &a&lSkill", 63);
             Bukkit.broadcastMessage(ColorChat.chat("&c&l&m---------------------------------------------"));
             Bukkit.broadcastMessage(ColorChat.chat(centeredName));
             Bukkit.broadcastMessage(ColorChat.chat("&6&l" + centeredLocation));
             Bukkit.broadcastMessage(ColorChat.chat("&c&l&m---------------------------------------------"));
+            if (!player.hasPermission("op")) {
+                clearMobData();
+            }
             return RandomSkillUtils.getRandomEpicSkill();
         } else {
-            String centeredName = centerText("&6&lPlayer: &e&l" + playerName + "&a&lReceived &a&lRare &a&lSkill", 63);
+            String centeredName = centerText("&6&lPlayer: &e&l" + playerName + " &a&lReceived &a&lRare &a&lSkill", 63);
             Bukkit.broadcastMessage(ColorChat.chat("&c&l&m---------------------------------------------"));
             Bukkit.broadcastMessage(ColorChat.chat(centeredName));
             Bukkit.broadcastMessage(ColorChat.chat("&6&l" + centeredLocation));
             Bukkit.broadcastMessage(ColorChat.chat("&c&l&m---------------------------------------------"));
+            if (!player.hasPermission("op")) {
+                clearMobData();
+            }
             return RandomSkillUtils.getRandomRareSkill();
         }
     }
@@ -133,7 +158,9 @@ public class MobDropSelector {
     private static void clearMobData() {
         Bukkit.broadcastMessage(ColorChat.chat("&6Mob: &e" + mob + " &7no longer drops rare skill book"));
         mob = null;
+        playername = null;
         config.set("mob", null);
+        config.set("player", null);
         config.set("timestamp", null);
         saveConfig();
     }

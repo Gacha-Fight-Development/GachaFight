@@ -45,8 +45,9 @@ public class Join implements Listener {
         // ============PLAYER STATS=============
         playerDataManager.loadPlayerData(player);
         PlayerStats stats = playerDataManager.getPlayerStats(player.getUniqueId());
+        player.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(stats.getSpeed() * 0.1);
         // ============NEW PLAYERS===============
-        if (!player.hasPlayedBefore() || VaultHook.getBalance(player) < 0.1) {
+        if (!player.hasPlayedBefore() || VaultHook.getBalance(player) < 0.1 || stats.getGem() < 1) {
             new BukkitRunnable() {
                 @Override
                 public void run() {

@@ -4,6 +4,7 @@ import me.diu.gachafight.GachaFight;
 import me.diu.gachafight.combat.DamageListener;
 import me.diu.gachafight.guides.TutorialGuideSystem;
 import me.diu.gachafight.utils.ColorChat;
+import me.diu.gachafight.utils.DungeonUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
@@ -61,7 +62,7 @@ public class GuideCommand implements CommandExecutor {
             sender.sendMessage("Location '" + locationName + "' not found. Available locations: " + preSetLocations.keySet());
             return true;
         }
-        if (!DamageListener.isSafezone(player.getLocation())) {
+        if (!DungeonUtils.isSafezone(player.getLocation())) {
             player.sendMessage(ColorChat.chat("&cNot in Safe Zone!"));
         }
 

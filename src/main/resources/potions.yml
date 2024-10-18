@@ -1,0 +1,17 @@
+potions:
+  small_hp:
+    name: "Small HP Potion"
+    type: "hp"
+    value: 6
+    cooldown: 60
+  small_speed:
+    name: "Small Speed Potion"
+    type: "speed"
+    value: 2
+    cooldown: 10
+    duration: 30
+  medium_hp:
+    name: "Medium HP Potion"
+    type: "hp"
+    value: 12
+    cooldown: 60

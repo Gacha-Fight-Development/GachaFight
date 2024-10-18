@@ -3,6 +3,7 @@ package me.diu.gachafight.skills.managers;
 import me.diu.gachafight.GachaFight;
 import me.diu.gachafight.skills.rarity.common.SwordChargeSkill;
 import me.diu.gachafight.skills.rarity.common.SwordSlashSkill;
+import me.diu.gachafight.skills.rarity.epic.GhostSwordSkill;
 import me.diu.gachafight.skills.rarity.epic.LifeStealSkill;
 import me.diu.gachafight.skills.rarity.rare.DushSkill;
 import me.diu.gachafight.skills.rarity.rare.FireStrikeSkill;
@@ -38,6 +39,7 @@ public class SkillManager {
         registerSkill("fire strike", new FireStrikeSkill(plugin));
         registerSkill("dush", new DushSkill(plugin));
         registerSkill("life steal", new LifeStealSkill(plugin));
+        registerSkill("ghost sword", new GhostSwordSkill(plugin));
     }
 
     private void updateConfigFiles() {
@@ -45,6 +47,9 @@ public class SkillManager {
         plugin.saveResource("Skills/uncommon.yml", true);
         plugin.saveResource("Skills/rare.yml", true);
         plugin.saveResource("Skills/epic.yml", true);
+        //plugin.saveResource("Skills/unique.yml", true);
+        //plugin.saveResource("Skills/legendary.yml", true);
+        //plugin.saveResource("Skills/mythic.yml", true);
     }
 
     public void registerSkill(String name, Skill skill) {

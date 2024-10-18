@@ -3,15 +3,13 @@ package me.diu.gachafight;
 import lombok.Getter;
 import me.diu.gachafight.Pets.PetCommand;
 import me.diu.gachafight.commands.*;
-import me.diu.gachafight.commands.tabs.AdminPlayerDataTabCompleter;
+import me.diu.gachafight.commands.tabs.*;
 import me.diu.gachafight.combat.DamageListener;
-import me.diu.gachafight.commands.tabs.GuideTabCompleter;
-import me.diu.gachafight.commands.tabs.ShopTabCompleter;
-import me.diu.gachafight.commands.tabs.SkillTabCompleter;
 import me.diu.gachafight.dungeon.DungeonGUI;
 import me.diu.gachafight.guides.TutorialGuideSystem;
 import me.diu.gachafight.hooks.VaultHook;
 import me.diu.gachafight.listeners.*;
+import me.diu.gachafight.party.PartyManager;
 import me.diu.gachafight.playerstats.PlayerDataManager;
 import me.diu.gachafight.playerstats.PlayerStats;
 import me.diu.gachafight.di.DIContainer;
@@ -46,6 +44,7 @@ import me.diu.gachafight.shop.potion.managers.PotionItemManager;
 import me.diu.gachafight.skills.SkillSystem;
 import me.diu.gachafight.skills.managers.MobDropSelector;
 import me.diu.gachafight.utils.ColorChat;
+import me.diu.gachafight.utils.DungeonUtils;
 import me.diu.gachafight.utils.FurnitureDataManager;
 import me.diu.gachafight.utils.TextDisplayUtils;
 import net.luckperms.api.LuckPerms;
@@ -60,7 +59,9 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.File;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
@@ -152,6 +153,7 @@ public final class GachaFight extends JavaPlugin implements Listener {
             registerCommands();
             loadAllPlayerData();
             scheduleTimers();
+            scheduleInfoBroadcast();
             Bukkit.broadcastMessage(ColorChat.chat("&b&lGachaFight Fully Loaded"));
             Bukkit.broadcastMessage(ColorChat.chat("&aFull Heal from Reload"));
         } catch (Exception e) {
@@ -167,20 +169,36 @@ public final class GachaFight extends JavaPlugin implements Listener {
     }
 
     private void initializeServices() {
+        System.out.println("playerDataManager");
         this.playerDataManager = new PlayerDataManager(this, diContainer.getService(MongoService.class));
+        System.out.println("dicontainer");
         diContainer.registerService(PlayerDataManager.class, this.playerDataManager);
+        System.out.println("score");
         this.scoreboard = new Board(diContainer);
+        System.out.println("gacha");
         this.GachaLootTableManager = new GachaLootTableManager(this);
+        System.out.println("potion");
         this.potionItemManager = new PotionItemManager(this);
+        System.out.println("money");
         this.moneyLeaderboard = new MoneyLeaderboard(this);
+        System.out.println("levelleader");
         this.levelLeaderboard = new LevelLeaderboard(this);
+        System.out.println("quest");
         this.questManager = new QuestManager(this, getDataFolder(), databaseManager);
+        System.out.println("quest 2");
         QuestUtils.initialize(questManager);
+        System.out.println("gachamanager");
         this.gachaManager = new GachaManager(this, luckPerms, questManager);
+        System.out.println("furniture");
         this.furnitureDataManager = new FurnitureDataManager(this);
+        System.out.println("questgui");
         this.questGUI = new QuestGUI(questManager);
+        System.out.println("buyitem");
         this.buyItemManager = new BuyItemManager(this);
+        System.out.println("guide");
         this.guideSystem = new TutorialGuideSystem(this);
+        System.out.println("party");
+        PartyManager.initialize(this);
 
         File skillsDir = new File(getDataFolder(), "Skills");
         if (!skillsDir.exists()) {
@@ -292,6 +310,8 @@ public final class GachaFight extends JavaPlugin implements Listener {
         new SkillCommand(this);
         new SkillTabCompleter(this);
         new PetCommand(this);
+        new PartyCommand(this);
+        new PartyTabCompleter(this);
     }
 
     private void registerEvents() {
@@ -327,7 +347,7 @@ public final class GachaFight extends JavaPlugin implements Listener {
             public void run() {
                 for (Player player : Bukkit.getOnlinePlayers()) {
                     player.stopAllSounds();
-                    if (DamageListener.isSafezone(player.getLocation())) {
+                    if (DungeonUtils.isSafezone(player.getLocation())) {
                         player.playSound(player, "custom:celestrial", SoundCategory.MUSIC, 5, 1);
                     }
                 }
@@ -356,5 +376,24 @@ public final class GachaFight extends JavaPlugin implements Listener {
         onDisable();
         onEnable();
     }
+
+    private void scheduleInfoBroadcast() {
+        List<String> messages = Arrays.asList(
+                "&6TIP: &eBeing in a Party adds 0.05x Gold/EXP Boost for Each Player!",
+                "&6TIP: &eCannot Find NPC? use /guide!",
+                "&6TIP: &eConfused about something? use /help!"
+        );
+
+        new BukkitRunnable() {
+            int index = 0;
+
+            @Override
+            public void run() {
+                Bukkit.broadcastMessage(ColorChat.chat(messages.get(index)));
+                index = (index + 1) % messages.size();
+            }
+        }.runTaskTimer(this, 20 * 60 * 5, 20 * 60 * 15); // Start after 5 minutes, repeat every 15 minutes
+    }
+
 
 }

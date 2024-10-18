@@ -11,12 +11,12 @@ import java.util.List;
 public class SkillFileUtils {
     public static final List<String> SKILL_NAMES = List.of(
             "Sword Charge", "Sword Slash", "Sword Spin", "Sword Burst",
-            "Thunder Strike", "Fire Strike", "Dush", "Life Steal"
+            "Thunder Strike", "Fire Strike", "Dush", "Life Steal", "Ghost Sword"
     );
     public static final List<String> COMMON_SKILLS = List.of("Sword Charge", "Sword Slash");
     public static final List<String> UNCOMMON_SKILLS = List.of("Sword Spin", "Sword Burst");
     public static final List<String> RARE_SKILLS = List.of("Thunder Strike", "Fire Strike", "Dush");
-    public static final List<String> EPIC_SKILLS = List.of("Life Steal");
+    public static final List<String> EPIC_SKILLS = List.of("Life Steal", "Ghost Sword");
 
     public static FileConfiguration loadSkillConfig(String skillName) {
         for (String rarity : RaritySelectionGUI.RARITY_NAMES) {
