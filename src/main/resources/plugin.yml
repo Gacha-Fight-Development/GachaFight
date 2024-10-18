@@ -11,8 +11,6 @@ commands:
     description: Admin command to manage player data
     usage: /<command> <player> <action> [value]
     permission: gacha.dev
-  discord:
-    usage: /discord
   gachareload:
     usage: /gachareload
     permission: gacha.admin
@@ -70,6 +68,8 @@ commands:
     permission: gacha.dev
   party:
     usage: /party
+  guild:
+    usage: /guild
 libraries:
   - org.mongodb:mongodb-driver-sync:5.1.2
   - org.mongodb:mongodb-driver-core:5.1.2

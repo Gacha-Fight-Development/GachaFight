@@ -2,6 +2,7 @@ package me.diu.gachafight.listeners;
 
 import me.clip.placeholderapi.PlaceholderAPI;
 import me.diu.gachafight.GachaFight;
+import me.diu.gachafight.guild.GuildManager;
 import me.diu.gachafight.hooks.PlaceholderAPIHook;
 import me.diu.gachafight.playerstats.PlayerStats;
 import me.diu.gachafight.utils.ColorChat;
@@ -41,6 +42,8 @@ public class ChatListener implements Listener {
             prefix = "%img_builder%";
         } else if (event.getPlayer().hasPermission("gacha.helper")) {
             prefix = "%img_helper%";
+        } else if (event.getPlayer().hasPermission("gacha.twitch")) {
+            prefix = "%img_twitch%";
         } else if (event.getPlayer().hasPermission("gacha.youtube")) {
             prefix = "%img_youtube%";
         } else if (event.getPlayer().hasPermission("gacha.tiktok")) {
@@ -55,15 +58,22 @@ public class ChatListener implements Listener {
             prefix = "%img_vip%";
         }
 
+        String guildIcon = "";
+        if (GuildManager.isInGuild(event.getPlayer())) {
+            String guildId = GuildManager.getGuildId(event.getPlayer());
+            guildIcon = GuildManager.getGuildChatIcon(guildId);
+            guildIcon = guildIcon + " ";
+        }
+
         // Modify the format to include prefix and properly handle the player's name and message
         prefix = PlaceholderAPI.setPlaceholders(event.getPlayer(), prefix);
         String rawSuffix = PlaceholderAPI.setPlaceholders(event.getPlayer(), "%luckperms_suffix%");
         if (rawSuffix.isEmpty()) {
-            event.setFormat(prefix + " §8[§6" + playerStats.getLevel() + "§8] §f%1$s: %2$s");
+            event.setFormat(prefix + " " + guildIcon + "§8[§6" + playerStats.getLevel() + "§8] §f%1$s: %2$s");
         } else {
             // Parse the suffix using MiniMessage for color codes
             rawSuffix = rawSuffix.replace("&", "§");
-            event.setFormat(prefix + " §8[§6" + playerStats.getLevel() + "§8] §f%1$s " + rawSuffix +  "§f: %2$s");
+            event.setFormat(prefix + " " + guildIcon + "§8[§6" + playerStats.getLevel() + "§8] §f%1$s " + rawSuffix + "§f: %2$s");
         }
     }
 }

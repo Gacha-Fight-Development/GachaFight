@@ -129,7 +129,7 @@ public class PlayerDataManager {
     }
 
     private void savePlayerStats(Player player, String playerName, PlayerStats stats) {
-        if (VaultHook.getBalance(player) < 1|| stats.getGem() < 1) {
+        if ((VaultHook.getBalance(player) < 1 && stats.getGem() < 1) || stats.getLevel() == 1) {
             return; // Skip saving if both money and gems are less than 1
         }
         UUID playerUUID = player.getUniqueId();

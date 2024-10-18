@@ -11,7 +11,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.concurrent.CompletableFuture;
 
-public class MongoServiceImpl implements MongoService {
+public class MongoServiceImpl implements MongoService, AutoCloseable {
     private MongoClient mongoClient;
     private MongoDatabase mongoDatabase;
     private final GachaFight plugin;
@@ -58,6 +58,7 @@ public class MongoServiceImpl implements MongoService {
     public void close() {
         if (mongoClient != null) {
             mongoClient.close();
+            plugin.getLogger().info("MongoDB connection closed.");
         }
     }
 }
