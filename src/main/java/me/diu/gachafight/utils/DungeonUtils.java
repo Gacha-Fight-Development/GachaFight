@@ -35,7 +35,7 @@ public class DungeonUtils {
             return true;
         }
         // ===================AFK====================
-        if (location.getX() > -12 && location.getX() < -3 && location.getZ() > 326 && location.getZ() < 335) {
+        if (location.getX() > -772 && location.getX() < -680 && location.getZ() > -104 && location.getZ() < -24) {
             return true;
         }
         return false;

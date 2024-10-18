@@ -15,10 +15,13 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Transformation;
 import org.bukkit.util.Vector;
+import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public class GhostSwordSkill implements Skill {
@@ -30,6 +33,7 @@ public class GhostSwordSkill implements Skill {
     private static double damage;
     private static double attackRange;
     private static double movementSpeed;
+    private static final List<ItemDisplay> activeGhostSwords = new ArrayList<>();
 
     public GhostSwordSkill(GachaFight plugin) {
         this.plugin = plugin;
@@ -43,11 +47,11 @@ public class GhostSwordSkill implements Skill {
         }
         config = YamlConfiguration.loadConfiguration(configFile);
 
-        cooldownDuration = config.getInt("ghost sword.cooldown", 30);
-        skillDuration = config.getInt("ghost sword.duration", 100);
-        damage = config.getDouble("ghost sword.damage", 2.0);
-        attackRange = config.getDouble("ghost sword.attack_range", 10.0);
-        movementSpeed = config.getDouble("ghost sword.movement_speed", 0.5);
+        cooldownDuration = config.getInt("ghost sword.cooldown");
+        skillDuration = config.getInt("ghost sword.duration");
+        damage = config.getDouble("ghost sword.damage");
+        attackRange = config.getDouble("ghost sword.attack_range");
+        movementSpeed = config.getDouble("ghost sword.movement_speed");
     }
 
     @Override
@@ -74,7 +78,7 @@ public class GhostSwordSkill implements Skill {
         swordItem.setItemMeta(swordMeta);
         ghostSword.setItemStack(swordItem);
 
-        float baseScale = 1.0f;
+        float baseScale = 2.5f;
         ghostSword.setTransformation(new Transformation(
                 new Vector3f(0, 0, 0),
                 new Quaternionf(0, 0, 0, 1),
@@ -109,29 +113,29 @@ public class GhostSwordSkill implements Skill {
                     direction.normalize();
 
                     if (distanceToTarget > ATTACK_DISTANCE) {
-                        ghostSword.teleport(ghostSword.getLocation().add(direction.multiply(movementSpeed)));
+                        smoothTeleport(ghostSword, ghostSword.getLocation().add(direction.multiply(movementSpeed)));
                     }
 
                     if (attackCooldown == 0) {
                         if (!isSwinging) {
                             isSwinging = true;
                             angle = 0;
-                            updateSwordScale(ghostSword, baseScale * 1.2f);
+                            smoothUpdateSwordScale(ghostSword, baseScale * 1.2f);
                         }
                         angle += SWING_SPEED;
                         if (angle > Math.PI) {
                             angle = 0;
                             isSwinging = false;
                             double damageMultiplier = applySkillEffect(player, target);
-                            target.damage(damage * damageMultiplier, SkillDamageSource.damageSource(player));
-                            updateSwordScale(ghostSword, baseScale);
+                            target.damage(damage, SkillDamageSource.damageSource(player));
+                            smoothUpdateSwordScale(ghostSword, baseScale);
                             attackCooldown = ATTACK_COOLDOWN_MAX;
                         }
                         updateSwordRotation(ghostSword, angle, direction);
                     } else {
                         float idleAngle = (float) (Math.sin(ticks * 0.05) * 0.2);
-                        updateSwordRotation(ghostSword, idleAngle, direction);
-                        updateSwordScale(ghostSword, baseScale);
+                        smoothUpdateSwordRotation(ghostSword, idleAngle, direction);
+                        smoothUpdateSwordScale(ghostSword, baseScale);
                     }
                 } else {
                     Location playerLoc = player.getLocation();
@@ -144,12 +148,12 @@ public class GhostSwordSkill implements Skill {
 
                     if (distanceToIdle > 0.1) {
                         toIdle.normalize().multiply(Math.min(distanceToIdle, movementSpeed));
-                        ghostSword.teleport(ghostSword.getLocation().add(toIdle));
+                        smoothTeleport(ghostSword, ghostSword.getLocation().add(toIdle));
                     }
 
                     float idleAngle = (float) (Math.sin(ticks * 0.05) * 0.2);
-                    updateSwordRotation(ghostSword, idleAngle, playerDir);
-                    updateSwordScale(ghostSword, baseScale);
+                    smoothUpdateSwordRotation(ghostSword, idleAngle, playerDir);
+                    smoothUpdateSwordScale(ghostSword, baseScale);
                 }
 
                 if (attackCooldown > 0) {
@@ -160,7 +164,13 @@ public class GhostSwordSkill implements Skill {
             }
         }.runTaskTimer(plugin, 0L, 1L);
     }
-    private void updateSwordRotation(ItemDisplay ghostSword, float angle, Vector direction) {
+
+    // Smoothly teleport the sword with interpolation
+    public static void smoothTeleport(ItemDisplay ghostSword, Location newLocation) {
+        ghostSword.setTeleportDuration(1);
+        ghostSword.teleport(newLocation);
+    }
+    public static void updateSwordRotation(ItemDisplay ghostSword, float angle, Vector direction) {
         Vector rotationAxis = direction.getCrossProduct(new Vector(0, 1, 0)).normalize();
 
         Quaternionf rotation = new Quaternionf().rotationAxis(-angle,
@@ -168,28 +178,47 @@ public class GhostSwordSkill implements Skill {
                 (float) rotationAxis.getY(),
                 (float) rotationAxis.getZ());
 
-        Transformation currentTransform = ghostSword.getTransformation();
-        Transformation newTransform = new Transformation(
-                currentTransform.getTranslation(),
-                rotation,
-                currentTransform.getScale(),
-                currentTransform.getRightRotation()
-        );
-        ghostSword.setTransformation(newTransform);
+        Matrix4f matrix = new Matrix4f()
+                .translate(ghostSword.getTransformation().getTranslation())
+                .rotate(rotation)
+                .scale(2f); // 10x scale
+
+        ghostSword.setTransformationMatrix(matrix);
     }
 
-    private void updateSwordScale(ItemDisplay ghostSword, float scale) {
-        Transformation currentTransform = ghostSword.getTransformation();
-        ghostSword.setTransformation(new Transformation(
-                currentTransform.getTranslation(),
-                currentTransform.getLeftRotation(),
-                new Vector3f(scale, scale, scale),
-                currentTransform.getRightRotation()
-        ));
+    // Smoothly update the sword's rotation
+    public static void smoothUpdateSwordRotation(ItemDisplay ghostSword, float angle, Vector direction) {
+        Vector rotationAxis = direction.getCrossProduct(new Vector(0, 1, 0)).normalize();
+
+        Quaternionf rotation = new Quaternionf().rotationAxis(-angle,
+                (float) rotationAxis.getX(),
+                (float) rotationAxis.getY(),
+                (float) rotationAxis.getZ());
+
+        Matrix4f matrix = new Matrix4f()
+                .translate(ghostSword.getTransformation().getTranslation())
+                .rotate(rotation)
+                .scale(2f); // Example scale
+
+        ghostSword.setTransformationMatrix(matrix);
+        ghostSword.setInterpolationDuration(10); // Smooth over 10 ticks
+        ghostSword.setInterpolationDelay(0); // No delay
+    }
+
+    // Smoothly update the sword's scale
+    public static void smoothUpdateSwordScale(ItemDisplay ghostSword, float scale) {
+        Matrix4f matrix = new Matrix4f()
+                .translate(ghostSword.getTransformation().getTranslation())
+                .rotate(ghostSword.getTransformation().getLeftRotation())
+                .scale(2.5f * scale); // Example scale
+
+        ghostSword.setTransformationMatrix(matrix);
+        ghostSword.setInterpolationDuration(10); // Smooth scaling over 10 ticks
+        ghostSword.setInterpolationDelay(0); // No delay
     }
 
 
-    private LivingEntity findNearestEnemy(Player player, double range) {
+    public static LivingEntity findNearestEnemy(Player player, double range) {
         LivingEntity nearest = null;
         double nearestDistanceSquared = Double.MAX_VALUE;
 
@@ -224,5 +253,13 @@ public class GhostSwordSkill implements Skill {
     @Override
     public void deactivateSkill(Player player) {
         // No deactivation needed
+    }
+    public static void removeAllGhostSwords() {
+        for (ItemDisplay ghostSword : activeGhostSwords) {
+            if (ghostSword != null && !ghostSword.isDead()) {
+                ghostSword.remove();
+            }
+        }
+        activeGhostSwords.clear();
     }
 }

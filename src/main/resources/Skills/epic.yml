@@ -5,8 +5,9 @@ life steal:
   heal_display: 50
   description: "For the next <duration> seconds, your attacks will steal <heal_display>% of the damage dealt as health."
 ghost sword:
-  cooldown: 30
-  duration: 100
+  cooldown: 45
+  duration: 30
   damage: 2.0
-  attack_range: 10.0
+  attack_range: 8.0
   movement_speed: 0.5
+  description: "Summon a spectral blade for <duration> seconds. The ghost sword autonomously attacks nearby enemies within <attack_range> blocks, dealing <damage> times your normal damage."

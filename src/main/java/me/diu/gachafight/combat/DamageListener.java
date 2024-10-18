@@ -7,6 +7,7 @@ import io.lumine.mythic.bukkit.adapters.BukkitEntity;
 import io.lumine.mythic.bukkit.events.MythicDamageEvent;
 import io.lumine.mythic.core.mobs.ActiveMob;
 import me.diu.gachafight.GachaFight;
+import me.diu.gachafight.afk.AFKManager;
 import me.diu.gachafight.combat.mobdrops.BulbDeathReward;
 import me.diu.gachafight.combat.mobdrops.GoblinDeathReward;
 import me.diu.gachafight.combat.mobdrops.RPGDeathReward;
@@ -19,6 +20,7 @@ import me.diu.gachafight.skills.managers.SkillManager;
 import me.diu.gachafight.skills.utils.RandomSkillUtils;
 import me.diu.gachafight.utils.ColorChat;
 import me.diu.gachafight.utils.DungeonUtils;
+import me.diu.gachafight.utils.GiveItemUtils;
 import me.diu.gachafight.utils.TextDisplayUtils;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.*;
@@ -79,6 +81,12 @@ public class DamageListener implements Listener {
     // Handle Player vs Entity (PvE)
     private void handlePlayerVsEntity(EntityDamageByEntityEvent event, Player player, LivingEntity entity) {
         PlayerStats stats = PlayerStats.getPlayerStats(player);
+        //AFK Dummy
+        if (entity.getName().equals("AFK Dummy")) {
+            event.setCancelled(true);
+            return;
+        }
+
         // Retrieve player's damage stat
         if (player.getCooldown(player.getInventory().getItemInMainHand().getType()) != 0) {
             if (!event.getDamageSource().getDamageType().equals(DamageType.CACTUS)) {
@@ -281,7 +289,7 @@ public class DamageListener implements Listener {
             PlayerStats playerStats = PlayerStats.getPlayerStats(player);
 
             if (!partyMembers.isEmpty()) {
-                handlePartyRewards(offlinePlayer, entity, expGained, moneyGained, multi, partyMembers);
+                handlePartyBossRewards(offlinePlayer, entity, expGained, moneyGained, multi, partyMembers);
             }
 
             playerStats.addExp(expGained * multi, player);
@@ -295,7 +303,7 @@ public class DamageListener implements Listener {
         }
     }
 
-    private void handlePartyRewards(OfflinePlayer killer, Entity entity, double expGained, double moneyGained, double multi, Set<OfflinePlayer> partyMembers) {
+    private void handlePartyBossRewards(OfflinePlayer killer, Entity entity, double expGained, double moneyGained, double multi, Set<OfflinePlayer> partyMembers) {
         if (isBoss(entity)) {
             for (OfflinePlayer member : partyMembers) {
                 if (member.isOnline()) {
@@ -388,7 +396,6 @@ public class DamageListener implements Listener {
             public void run() {
                 for (Player player : Bukkit.getServer().getOnlinePlayers()) {
                     if (player.getFireTicks() > 1) {
-                        player.sendMessage("a");
                         PlayerStats stats = PlayerStats.getPlayerStats(player);
                         player.damage(0);
                         double damage = stats.getMaxhp()/40;
@@ -403,6 +410,18 @@ public class DamageListener implements Listener {
         double multi = 1;
         if (player.hasPermission("gacha.vip")) {
             multi += 0.2;
+        }
+        if (PartyManager.isInParty(player)) {
+            for (OfflinePlayer offlinePlayer : PartyManager.getPartyMembers(PartyManager.getPartyLeader(player))) {
+                if (offlinePlayer.isOnline()) {
+                    Player onlinePlayer = offlinePlayer.getPlayer();
+                    if (onlinePlayer.hasPermission("gacha.vip")) {
+                        multi += 0.1;
+                    } else {
+                        multi += 0.05;
+                    }
+                }
+            }
         }
         return multi;
     }
@@ -457,5 +476,6 @@ public class DamageListener implements Listener {
         }
         return false;
     }
+
 }
 
