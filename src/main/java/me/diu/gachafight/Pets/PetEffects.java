@@ -1,11 +1,15 @@
 package me.diu.gachafight.Pets;
 
 import me.diu.gachafight.GachaFight;
+import me.diu.gachafight.utils.ColorChat;
 import me.diu.gachafight.utils.Prefix;
+import me.diu.gachafight.Pets.PetCommand;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.ChatColor;
@@ -14,9 +18,10 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.ListIterator;
 
 
-public class PetEffects {
+public class PetEffects{
 
 
     private GachaFight plugin;
@@ -121,6 +126,23 @@ public class PetEffects {
         }
 
 
+    }
+
+    private void updatePetStats(Player player) {
+    }
+
+    public static double getPetStat(Player player, String stat, int slot){
+        double result = 0.0;
+        List<String> petLore = PetCommand.getPetLore(player,slot);
+
+        for(String lore : petLore) {
+            if(!lore.contains(stat)){
+                break;
+            }
+            String[] str = lore.split(" ");
+            result = Double.parseDouble(str[str.length-1]);
+        }
+        return result;
     }
 
     public static int randInt(int min, int max){

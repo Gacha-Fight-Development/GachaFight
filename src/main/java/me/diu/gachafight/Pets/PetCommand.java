@@ -2,9 +2,13 @@ package me.diu.gachafight.Pets;
 
 
 import me.diu.gachafight.GachaFight;
+import me.diu.gachafight.playerstats.PlayerStats;
 import me.diu.gachafight.utils.ColorChat;
+import me.diu.gachafight.utils.Prefix;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -86,8 +90,8 @@ public class PetCommand implements CommandExecutor, Listener {
             ArmorStand petHolder = (ArmorStand) player.getWorld().spawnEntity(player.getLocation(), EntityType.ARMOR_STAND);
             TextComponent armorStandName = text("Pet Holder[3]");
             petHolder.customName(armorStandName);
-            petHolder.setVisible(true);
-            petHolder.setInvulnerable(false);
+            petHolder.setVisible(false);
+            petHolder.setInvulnerable(true);
             player.addPassenger(petHolder);
         }
     }
@@ -121,6 +125,7 @@ public class PetCommand implements CommandExecutor, Listener {
                     case 1:
                         removedPet = armorStand.getEquipment().getHelmet();
                         armorStand.setItem(EquipmentSlot.HEAD, null);
+
                         break;
                     case 2:
                         removedPet = armorStand.getEquipment().getItemInMainHand();
@@ -133,9 +138,13 @@ public class PetCommand implements CommandExecutor, Listener {
                 }
                 player.sendMessage(ColorChat.chat("&cYour " + removedPet.getItemMeta().getDisplayName() + " &chas been un-equip!"));
                 player.getInventory().setItemInMainHand(removedPet);
+                // Remove stats from players stats given by old pet
+                updatePlayer(player, removedPet,-1);
             }
         }
     }
+
+
 
     // Call this when a player uses a pet license.  If they are not at the max slot count, it will increase their slots each time its called
     private void addPetSlot(Player player){
@@ -182,7 +191,7 @@ public class PetCommand implements CommandExecutor, Listener {
     }
 
     // Returns the number of current pet slots a player has unlocked
-    private int checkPetSlots(Player player) {
+    public static int checkPetSlots(Player player) {
         List<Entity> passengerList = player.getPassengers();
         int petCount = 0;
         for(Entity passenger : passengerList){
@@ -236,6 +245,12 @@ public class PetCommand implements CommandExecutor, Listener {
                         break;
                 }
                 player.sendMessage(ColorChat.chat("&cYour " + heldPet.getItemMeta().getDisplayName() + " &chas been equip!"));
+                // Remove stats from players stats given by old pet if there was one
+                if(!(currentPet.isEmpty())) {
+                    updatePlayer(player, currentPet, -1);
+                }
+                // Add new stats to player stats from newly equip pet
+                updatePlayer(player, heldPet,1);
             }
         }
         // give previously equip pet back to player
@@ -298,7 +313,7 @@ public class PetCommand implements CommandExecutor, Listener {
         // Check for armor stand holding pets, and build string for output
         List<Entity> passengerList = player.getPassengers();
         for(Entity passenger : passengerList){
-            if(passenger.getType() == EntityType.ARMOR_STAND && passenger.getName().equals("Pet Holder")){
+            if(passenger.getType() == EntityType.ARMOR_STAND && passenger.getName().contains("Pet Holder")){
                 ArmorStand armorStand = (ArmorStand) passenger;
                 List<ItemStack> petList = new ArrayList<>();
                 petList.add(armorStand.getEquipment().getHelmet());
@@ -340,6 +355,7 @@ public class PetCommand implements CommandExecutor, Listener {
     }
 
     // ToString method to pass pet information to player
+    // unused as of right now
     public void petToString(Player player, ItemStack pet){
         ItemMeta petMeta = pet.getItemMeta();
         String petName = petMeta.displayName().toString();
@@ -349,6 +365,92 @@ public class PetCommand implements CommandExecutor, Listener {
         for(String meta: petMeta.getLore()){
             player.sendMessage(ColorChat.chat("&c" + meta + ""));
         }
+    }
+
+    // Call this method when adding or removing a pet.  int mod should be +1 when adding a pet, and -1 when removing
+    public static void updatePlayer(Player player, ItemStack petItem, int mod){
+        PlayerStats stats = PlayerStats.getPlayerStats(player.getUniqueId());
+        ItemMeta meta = petItem.getItemMeta();
+        for (Component lore : meta.lore()) {
+            if (!(lore.toString().toLowerCase().contains("pet"))) {
+                String[] stat = (PlainTextComponentSerializer.plainText().serialize(lore)).split(" ");
+                switch (stat[1]){
+                    case "Damage:":
+                        stats.setDamage(stats.getDamage() + mod*Double.parseDouble(stat[stat.length-1]));
+                        break;
+                    case "Armor:":
+                        stats.setArmor(stats.getArmor() + mod*Double.parseDouble(stat[stat.length-1]));
+                        break;
+                    case "HP:":
+                        stats.setMaxhp(stats.getMaxhp() + mod*Double.parseDouble(stat[stat.length-1]));
+                        break;
+                    case "Speed:":
+                        stats.setSpeed(stats.getSpeed() + mod*Double.parseDouble(stat[stat.length-1]));
+                        break;
+                    case "Luck:":
+                        stats.setLuck(stats.getLuck() + mod*Double.parseDouble(stat[stat.length-1]));
+                        break;
+                    case "Crit Chance:":
+                        stats.setCritChance(stats.getCritChance() + mod*Double.parseDouble(stat[stat.length-1]));
+                        break;
+                    case "Crit Dmg:":
+                        stats.setCritDmg(stats.getCritDmg() + mod*Double.parseDouble(stat[stat.length-1]));
+                        break;
+                    case "Dodge:":
+                        stats.setDodge(stats.getDodge() + mod*Double.parseDouble(stat[stat.length-1]));
+                        break;
+                }
+            }
+        }
+    }
+
+
+    // unused as of right now
+    public static List<String> getPetLore(Player player, int slot){
+        // Check if player can even equip pets
+        if(checkPetSlots(player) == 0){
+            player.sendMessage(ColorChat.chat("&cYou currently have no pets equip"));
+            return null;
+        }
+
+        // Check for armor stand holding pets, and build string for output
+        List<Entity> passengerList = player.getPassengers();
+        List<String> petLore = new ArrayList<>();
+        for(Entity passenger : passengerList){
+            if(passenger.getType() == EntityType.ARMOR_STAND && passenger.getName().contains("Pet Holder")){
+                ArmorStand armorStand = (ArmorStand) passenger;
+                switch (slot) {
+                    case 1:
+                        if (!(armorStand.getEquipment().getHelmet().isEmpty())) {
+                            for (Component lore : armorStand.getEquipment().getHelmet().getItemMeta().lore()) {
+                                if (!(lore.toString().toLowerCase().contains("pet"))) {
+                                    petLore.add(PlainTextComponentSerializer.plainText().serialize(lore));
+                                }
+                            }
+                        }
+                        break;
+                    case 2:
+                        if (!(armorStand.getEquipment().getItemInMainHand().isEmpty())) {
+                            for (Component lore : armorStand.getEquipment().getItemInMainHand().getItemMeta().lore()) {
+                                if (!(lore.toString().toLowerCase().contains("pet"))) {
+                                    petLore.add(PlainTextComponentSerializer.plainText().serialize(lore));
+                                }
+                            }
+                        }
+                        break;
+                    case 3:
+                        if (!(armorStand.getEquipment().getItemInOffHand().isEmpty())) {
+                            for (Component lore : armorStand.getEquipment().getItemInOffHand().getItemMeta().lore()) {
+                                if (!(lore.toString().toLowerCase().contains("pet"))) {
+                                    petLore.add(PlainTextComponentSerializer.plainText().serialize(lore));
+                                }
+                            }
+                        }
+                        break;
+                }
+            }
+        }
+        return petLore;
     }
 
 
