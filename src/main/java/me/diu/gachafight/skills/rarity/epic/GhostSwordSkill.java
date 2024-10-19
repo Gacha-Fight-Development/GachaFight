@@ -181,7 +181,7 @@ public class GhostSwordSkill implements Skill {
         Matrix4f matrix = new Matrix4f()
                 .translate(ghostSword.getTransformation().getTranslation())
                 .rotate(rotation)
-                .scale(2f); // 10x scale
+                .scale(2f);
 
         ghostSword.setTransformationMatrix(matrix);
     }
@@ -210,7 +210,7 @@ public class GhostSwordSkill implements Skill {
         Matrix4f matrix = new Matrix4f()
                 .translate(ghostSword.getTransformation().getTranslation())
                 .rotate(ghostSword.getTransformation().getLeftRotation())
-                .scale(2.5f * scale); // Example scale
+                .scale(2f * scale); // Example scale
 
         ghostSword.setTransformationMatrix(matrix);
         ghostSword.setInterpolationDuration(10); // Smooth scaling over 10 ticks

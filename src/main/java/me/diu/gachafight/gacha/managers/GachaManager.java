@@ -159,7 +159,19 @@ public class GachaManager {
                             .map(Node::getKey)
                             .collect(Collectors.joining(", "));
                     // Double value of what the player set.  gacha.autosell.rarity.X <<<
-                    double autoSellCutoff = ((double)(Integer.parseInt(autoSellPerms.split("\\.")[3])));
+                    double autoSellCutoff = 0.0; // Default value
+                    String[] parts = autoSellPerms.split("\\.");
+                    if (parts.length > 3) {
+                        try {
+                            autoSellCutoff = Double.parseDouble(parts[3]);
+                        } catch (NumberFormatException e) {
+                            // Handle the case where the 4th part isn't a valid number
+                            player.sendMessage("Invalid auto-sell configuration. Please check your permissions OR Report to Staff.");
+                        }
+                    } else {
+                        // Handle the case where there aren't enough parts
+                        player.sendMessage("Incomplete auto-sell configuration. Please check your permissions OR Report to Staff.");
+                    }
                     // If the items percent is less then or equal to the player set percent, autosell item
                     if (autoSellCutoff >= statMedium) {
                         // Auto-sell the item

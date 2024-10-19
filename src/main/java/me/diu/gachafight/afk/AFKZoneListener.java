@@ -95,20 +95,6 @@ public class AFKZoneListener implements Listener {
         }
     }
 
-    @EventHandler
-    public void onChunkUnload(ChunkUnloadEvent event) {
-        if (event.getChunk().getX() == -772 >> -680 && event.getChunk().getZ() == -104 >> -24) {
-            removeAFKDummy();
-        }
-    }
-    private void removeAFKDummy() {
-        if (afkDummy != null) {
-            afkDummy.remove();
-            afkDummy = null;
-            Bukkit.getLogger().info("AFK Dummy removed.");
-        }
-    }
-
     private static void spawnAFKDummy(Chunk chunk) {
 
         // Ensure the chunk is loaded
@@ -136,7 +122,7 @@ public class AFKZoneListener implements Listener {
     public void onPlayerItemHeld(PlayerItemHeldEvent event) {
         Player player = event.getPlayer();
         if (AFKManager.afkTasks.containsKey(player.getUniqueId())) {
-            AFKManager.updateAFKSwordItem(player);
+            AFKManager.updateAFKSwordItem(player, player.getInventory().getItem(event.getNewSlot()));
         }
     }
 }

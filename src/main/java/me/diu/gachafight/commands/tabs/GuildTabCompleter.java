@@ -3,6 +3,7 @@ package me.diu.gachafight.commands.tabs;
 import me.diu.gachafight.GachaFight;
 import me.diu.gachafight.guild.GuildManager;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -10,12 +11,13 @@ import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class GuildTabCompleter implements TabCompleter {
 
-    private static final List<String> SUBCOMMANDS = List.of("create", "invite", "accept", "leave", "kick", "list", "info", "upgrade", "promote", "demote");
+    private static final List<String> SUBCOMMANDS = List.of("help", "create", "invite", "accept", "leave", "kick", "list", "info", "upgrade", "promote", "demote", "changeicon", "changelogo");
 
 
     public GuildTabCompleter(GachaFight plugin) {
@@ -45,7 +47,8 @@ public class GuildTabCompleter implements TabCompleter {
                             .map(OfflinePlayer::getName)
                             .filter(name -> name != null && name.toLowerCase().startsWith(args[1].toLowerCase()))
                             .collect(Collectors.toList());
-                case "upgrade":
+                case "changelogo":
+                    return getMaterialNames(args[1]);
             }
         }
 
@@ -56,6 +59,12 @@ public class GuildTabCompleter implements TabCompleter {
         return Bukkit.getOnlinePlayers().stream()
                 .map(Player::getName)
                 .filter(name -> name.toLowerCase().startsWith(prefix.toLowerCase()))
+                .collect(Collectors.toList());
+    }
+    private List<String> getMaterialNames(String prefix) {
+        return Arrays.stream(Material.values())
+                .map(Material::name)  // Get the name of each Material as a String
+                .filter(name -> name.toLowerCase().startsWith(prefix.toLowerCase()))  // Filter by prefix (case-insensitive)
                 .collect(Collectors.toList());
     }
 }
