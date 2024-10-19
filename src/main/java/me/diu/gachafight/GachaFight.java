@@ -2,18 +2,21 @@ package me.diu.gachafight;
 
 import lombok.Getter;
 import me.diu.gachafight.Pets.PetCommand;
+import me.diu.gachafight.afk.AFKManager;
+import me.diu.gachafight.afk.AFKZoneListener;
 import me.diu.gachafight.commands.*;
 import me.diu.gachafight.commands.tabs.*;
 import me.diu.gachafight.combat.DamageListener;
 import me.diu.gachafight.dungeon.DungeonGUI;
 import me.diu.gachafight.guides.TutorialGuideSystem;
+import me.diu.gachafight.guild.GuildManager;
+import me.diu.gachafight.guild.GuildRequestManager;
 import me.diu.gachafight.hooks.VaultHook;
 import me.diu.gachafight.listeners.*;
 import me.diu.gachafight.party.PartyManager;
 import me.diu.gachafight.playerstats.PlayerDataManager;
 import me.diu.gachafight.playerstats.PlayerStats;
 import me.diu.gachafight.di.DIContainer;
-import me.diu.gachafight.di.ServiceLocator;
 import me.diu.gachafight.display.Blocks;
 import me.diu.gachafight.gacha.listeners.GachaChestListener;
 import me.diu.gachafight.gacha.managers.GachaManager;
@@ -43,13 +46,13 @@ import me.diu.gachafight.shop.potion.listeners.PotionShopListener;
 import me.diu.gachafight.shop.potion.managers.PotionItemManager;
 import me.diu.gachafight.skills.SkillSystem;
 import me.diu.gachafight.skills.managers.MobDropSelector;
+import me.diu.gachafight.skills.rarity.epic.GhostSwordSkill;
 import me.diu.gachafight.utils.ColorChat;
 import me.diu.gachafight.utils.DungeonUtils;
 import me.diu.gachafight.utils.FurnitureDataManager;
 import me.diu.gachafight.utils.TextDisplayUtils;
 import net.luckperms.api.LuckPerms;
 import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.SoundCategory;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
@@ -58,7 +61,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.File;
-import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -101,10 +103,13 @@ public final class GachaFight extends JavaPlugin implements Listener {
     public void onDisable() {
         // Plugin shutdown logic
         Bukkit.broadcastMessage(ColorChat.chat("&b&lGachaFight Reloading..."));
+        AFKManager.stopAllAFKSessions();
         removeAllDisplay();
+        GuildRequestManager.saveRequests();
         playerDataManager.saveAll();
         playerDataManager.deleteCache();
         guideSystem.cleanupAll();
+        GhostSwordSkill.removeAllGhostSwords();
         TextDisplayUtils.removeAllDisplays();
         cancelAllPlayerTasks();
         Bukkit.getScheduler().cancelTasks(this);
@@ -112,6 +117,7 @@ public final class GachaFight extends JavaPlugin implements Listener {
             diContainer.shutdown();
         }
         diContainer.shutdown();
+
         saveConfig();
         if (databaseManager != null) {
             databaseManager.disconnect();
@@ -221,7 +227,7 @@ public final class GachaFight extends JavaPlugin implements Listener {
             PlayerStats stats = playerDataManager.getPlayerStats(player.getUniqueId());
             int scoreboardTask = Bukkit.getScheduler().runTaskTimer(this, () -> scoreboard.setScoreBoard(player), 20, 60).getTaskId();
             scoreboardTasks.put(player, scoreboardTask);
-            PlayerZoneListener.startRewardingPlayer(player);
+            AFKManager.startAFKSession(player);
         }
     }
 
@@ -263,24 +269,13 @@ public final class GachaFight extends JavaPlugin implements Listener {
         if (Blocks.tutorialGachaChest != null) {
             Blocks.tutorialGachaChest.remove();
         }
-    }
-
-
-    public static void loadAllPlayerData(ServiceLocator serviceLocator) {
-        Board scoreboard = serviceLocator.getService(Board.class);
-        PlayerDataManager playerDataManager = serviceLocator.getService(PlayerDataManager.class);
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            playerDataManager.loadPlayerData(player);
-            PlayerStats stats = playerDataManager.getPlayerStats(player.getUniqueId());
-            int scoreboardTask = Bukkit.getScheduler().runTaskTimer(GachaFight.getInstance(), () -> scoreboard.setScoreBoard(player), 20, 60).getTaskId();
-            ((GachaFight) Bukkit.getPluginManager().getPlugin("GachaFight")).getScoreboardTasks().put(player, scoreboardTask);
-            PlayerZoneListener.startRewardingPlayer(player);
+        if (AFKZoneListener.afkDummy != null) {
+            AFKZoneListener.afkDummy.remove();
         }
     }
 
     private void registerCommands() {
         new PlayerDataCommand(this, diContainer);
-        new Discord(this, diContainer);
         new UpdateScoreboard(this,new Board(diContainer));
         new AdminPlayerDataCommand(this, diContainer);
         new AdminPlayerDataTabCompleter(this);
@@ -310,8 +305,12 @@ public final class GachaFight extends JavaPlugin implements Listener {
         new SkillCommand(this);
         new SkillTabCompleter(this);
         new PetCommand(this);
+        PartyManager.initialize(this);
+        GuildManager.initialize(this);
         new PartyCommand(this);
         new PartyTabCompleter(this);
+        new GuildCommand(this);
+        new GuildTabCompleter(this);
     }
 
     private void registerEvents() {
@@ -337,7 +336,7 @@ public final class GachaFight extends JavaPlugin implements Listener {
         new OverseerManager(this);
         new ShopItemUseListener(this);
         new FoodConsumeListener(this);
-        new PlayerZoneListener(this);
+        new AFKZoneListener(this);
         new SkillSystem(this);
         new ChunkUnloadListener(this);
     }

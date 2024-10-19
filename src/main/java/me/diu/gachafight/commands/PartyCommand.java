@@ -35,7 +35,7 @@ public class PartyCommand implements CommandExecutor {
         Player player = (Player) sender;
 
         if (args.length == 0) {
-            player.sendMessage(ColorChat.chat("&cUsage: /party <create|invite|accept|leave|kick|list>"));
+            player.sendMessage(ColorChat.chat("&a/party "));
             return true;
         }
 
@@ -58,7 +58,15 @@ public class PartyCommand implements CommandExecutor {
                 break;
             case "kick":
                 if (args.length < 2) {
-                    player.sendMessage(ColorChat.chat("&cUsage: /party kick <player>"));
+                    player.sendMessage(ColorChat.chat("&6/party create &eCreates Party."));
+                    player.sendMessage(ColorChat.chat("&6/party invite <player> &eInvites a player to your party."));
+                    player.sendMessage(ColorChat.chat("&6/party accept &eAccepts an invitation."));
+                    player.sendMessage(ColorChat.chat("&6/party leave &eLeaves the current party."));
+                    player.sendMessage(ColorChat.chat("&6/party kick <player> &eKicks a player from the party."));
+                    player.sendMessage(ColorChat.chat("&6/party list &eLists all party members."));
+                    player.sendMessage(ColorChat.chat("&6Party MAX: &e4 Players"));
+                    player.sendMessage(ColorChat.chat("&6Party Bonus: &e5% Extra Gold/EXP Per Player"));
+                    player.sendMessage(ColorChat.chat("&6Rank Bonus: &eVIP: +5%, VIP+: +10%, MVP: +15%, MVP+: 20%"));
                     return true;
                 }
                 kickFromParty(player, args[1]);

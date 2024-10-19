@@ -58,6 +58,8 @@ public class DIContainer implements ServiceLocator {
             if (service instanceof AutoCloseable) {
                 try {
                     ((AutoCloseable) service).close();
+                    plugin.getLogger().info("Closed service: " + service.getClass().getSimpleName());
+
                 } catch (Exception e) {
                     plugin.getLogger().warning("Error closing service: " + service.getClass().getSimpleName());
                     e.printStackTrace();

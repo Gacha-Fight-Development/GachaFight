@@ -126,6 +126,7 @@ public class MasterMageListener implements Listener {
         VaultHook.withdraw(player, 2500);
         MobDropSelector.changeMobs(player, MobDropSelector.isBroadcast());
         if (MobDropSelector.isBroadcast()) {
+            System.out.println(MobDropSelector.isBroadcast());
             String message = ColorChat.chat("&7[&5Foresee&7] &a" + MobDropSelector.getMob() + " &7will now drop Rare+ Skill Book");
             Bukkit.broadcastMessage(message);
         } else {
