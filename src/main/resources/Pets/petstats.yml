@@ -20,3 +20,8 @@ snowy_owl:
   maxDamage: 100
   minDefence: -100
   maxDefence: 0
+
+emerald:
+  lore: "A Large Emerald Pet!"
+  minGold: 1.1
+  maxGold: 1.5

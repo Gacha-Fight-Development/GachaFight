@@ -19,6 +19,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.concurrent.ThreadLocalRandom;
+
+import static io.lumine.mythic.bukkit.utils.numbers.Numbers.round;
 
 
 public class PetEffects{
@@ -77,12 +80,10 @@ public class PetEffects{
                 addLore(lore, petName, "Damage");
                 addLore(lore, petName, "Armor");
                 break;
-
-
-
-
-
-
+            case "emerald" :
+                addLore(lore, petName, "Lore");
+                addLore(lore, petName, "Gold");
+                break;
         }
         meta.lore(lore);
         petItemModified.setItemMeta(meta);
@@ -123,12 +124,15 @@ public class PetEffects{
             case "Dodge":
                 lore.add(MiniMessage.miniMessage().deserialize(Prefix.getDodgePrefix() + randInt(config.getInt(petName +".minDodge"), config.getInt(petName +".maxDodge"))));
                 break;
+            case "Gold":
+                lore.add(MiniMessage.miniMessage().deserialize(Prefix.getGoldPrefix() + randDouble(config.getInt(petName +".minGold"), config.getInt(petName +".maxGold"))));
+                break;
+            case "Exp":
+                lore.add(MiniMessage.miniMessage().deserialize(Prefix.getExpPrefix() + randDouble(config.getInt(petName +".minExp"), config.getInt(petName +".maxExp"))));
+                break;
         }
 
 
-    }
-
-    private void updatePetStats(Player player) {
     }
 
     public static double getPetStat(Player player, String stat, int slot){
@@ -147,5 +151,9 @@ public class PetEffects{
 
     public static int randInt(int min, int max){
         return min + (int)(Math.random() * ((max - min) + 1));
+    }
+
+    public static double randDouble(double min, double max){
+        return round(ThreadLocalRandom.current().nextDouble(min, max),2);
     }
 }
