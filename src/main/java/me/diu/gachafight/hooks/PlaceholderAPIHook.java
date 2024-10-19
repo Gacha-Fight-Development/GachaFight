@@ -8,6 +8,8 @@ import me.diu.gachafight.playerstats.leaderboard.LevelEntry;
 import me.diu.gachafight.playerstats.leaderboard.MoneyLeaderboard;
 import me.diu.gachafight.playerstats.leaderboard.LevelLeaderboard;
 import me.diu.gachafight.skills.managers.MobDropSelector;
+import me.diu.gachafight.utils.ColorChat;
+import me.diu.gachafight.utils.GiveItemUtils;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -16,6 +18,8 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
+import java.util.function.Consumer;
 
 public class PlaceholderAPIHook extends PlaceholderExpansion {
     private final MoneyLeaderboard moneyLeaderboard = GachaFight.getInstance().getMoneyLeaderboard();
@@ -27,6 +31,10 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
 
     private long lastCacheUpdateTime = 0;
     private final long cacheExpirationTime = 60000; // Cache for 1 minute (60000 ms)
+
+    private final Map<UUID, String[]> afkRewardCache = new HashMap<>();
+    private final Map<UUID, Long> afkRewardCacheTime = new HashMap<>();
+    private static final long AFK_REWARD_CACHE_DURATION = 60000; // 1 minute in milliseconds
 
     @Override
     public String getIdentifier() {
@@ -117,6 +125,11 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
                     case "level_top5":
                         return getCachedLevelLeaderboardEntry(4);
 
+                    case "afk_gold":
+                    case "afk_exp":
+                    case "afk_reward":
+                        return getAFKRewardPlaceholder(player, arg.toLowerCase());
+
                     default:
                         return null;
                 }
@@ -189,6 +202,67 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
         lastCacheUpdateTime = System.currentTimeMillis(); // Update the cache timestamp
     }
 
+    public static void getAFKRewardAsync(Player player, Consumer<String[]> callback) {
+        Bukkit.getScheduler().runTaskAsynchronously(GachaFight.getInstance(), () -> {
+            PlayerStats stats = PlayerStats.getPlayerStats(player);
+            double damage = stats.getDamage() + stats.getWeaponStats().getDamage() + stats.getGearStats().getTotalDamage();
+            double keyChance = Math.min(damage / 1000, 0.15);
+
+            StringBuilder rewardMessage = new StringBuilder();
+            double rareKeyChance = 0;
+            double uncommonKeyChance = 0;
+            double commonKeyChance = 0;
+
+            if (keyChance >= 0.1) {
+                rareKeyChance = Math.max(0.001, keyChance - 0.1);
+                rewardMessage.append(ColorChat.chat("&aRare Key: ")).append(String.format("%.2f", rareKeyChance * 100)).append("%");
+            } else if (keyChance >= 0.05) {
+                uncommonKeyChance = Math.max(0.001, keyChance - 0.05);
+                rewardMessage.append(ColorChat.chat("&aUncommon Key: ")).append(String.format("%.2f", uncommonKeyChance * 100)).append("%");
+            } else if (keyChance >= 0.001) {
+                commonKeyChance = keyChance;
+                rewardMessage.append(ColorChat.chat("&aCommon Key: ")).append(String.format("%.2f", commonKeyChance * 100)).append("%");
+            }
+
+            double goldAmount = (damage/18);
+            String goldPlaceholder = String.format("%.2f", goldAmount);
+            double expAmount = stats.getLevel() * 0.05;
+            String expPlaceholder = String.format("%.2f", expAmount);
+            String rewardPlaceholder = rewardMessage.toString();
+
+            String[] result = new String[]{goldPlaceholder, expPlaceholder, rewardPlaceholder};
+
+            // Run the callback on the main thread
+            Bukkit.getScheduler().runTask(GachaFight.getInstance(), () -> callback.accept(result));
+        });
+    }
+    private String getAFKRewardPlaceholder(Player player, String placeholderType) {
+        UUID playerUUID = player.getUniqueId();
+        long currentTime = System.currentTimeMillis();
+
+        // Check if cache exists and is still valid
+        if (afkRewardCache.containsKey(playerUUID) &&
+                currentTime - afkRewardCacheTime.getOrDefault(playerUUID, 0L) < AFK_REWARD_CACHE_DURATION) {
+            String[] cachedRewards = afkRewardCache.get(playerUUID);
+            switch (placeholderType) {
+                case "afk_gold":
+                    return cachedRewards[0];
+                case "afk_exp":
+                    return cachedRewards[1];
+                case "afk_reward":
+                    return cachedRewards[2];
+            }
+        }
+
+        // If cache doesn't exist or is expired, calculate new values asynchronously
+        getAFKRewardAsync(player, result -> {
+            afkRewardCache.put(playerUUID, result);
+            afkRewardCacheTime.put(playerUUID, currentTime);
+        });
+
+        // Return a temporary value while calculation is in progress
+        return "Calculating...";
+    }
     // Static method to register the PlaceholderAPI hook
     public static void registerHook() {
         new PlaceholderAPIHook().register();

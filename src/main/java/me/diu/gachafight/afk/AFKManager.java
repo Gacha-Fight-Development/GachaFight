@@ -3,6 +3,8 @@ package me.diu.gachafight.afk;
 import lombok.Getter;
 import lombok.Setter;
 import me.diu.gachafight.GachaFight;
+import me.diu.gachafight.hooks.PlaceholderAPIHook;
+import me.diu.gachafight.hooks.VaultHook;
 import me.diu.gachafight.playerstats.PlayerStats;
 import me.diu.gachafight.skills.rarity.epic.GhostSwordSkill;
 import me.diu.gachafight.utils.ColorChat;
@@ -34,8 +36,6 @@ public class AFKManager {
     public static void startAFKSession(Player player) {
         if (isInAFKZone(player.getLocation())) {
             summonAFKSword(player);
-        } else {
-            player.sendMessage("not in afk");
         }
     }
 
@@ -62,8 +62,33 @@ public class AFKManager {
     public static void giveAFKReward(Player player, double damage) {
         PlayerStats stats = PlayerStats.getPlayerStats(player);
 
+        // changing keyChance Calculation Requires you to Change PlaceholderAPIHook.getAFKRewardAsync()
+        double keyChance = Math.min(damage / 1000, 0.125);
 
-        double keyChance = damage / 10000.0;
+        String rewardMessage = "";
+        double rareKeyChance = 0;
+        double uncommonKeyChance = 0;
+        double commonKeyChance = 0;
+
+        if (keyChance >= 0.1) {
+            rareKeyChance = Math.max(0.001, keyChance - 0.1);
+            if (Math.random() < rareKeyChance) {
+                GiveItemUtils.giveRareKey(player, 1);
+                rewardMessage += ColorChat.chat("&aRare Key: " + String.format("%.2f", rareKeyChance * 100) + "%");
+            }
+        } else if (keyChance >= 0.05) {
+            uncommonKeyChance = Math.max(0.001, keyChance - 0.05);
+            if (Math.random() < uncommonKeyChance) {
+                GiveItemUtils.giveUncommonKey(player, 1);
+                rewardMessage += ColorChat.chat("&aUncommon Key: " + String.format("%.2f", uncommonKeyChance * 100) + "%");
+            }
+        } else if (keyChance >= 0.001) {
+            commonKeyChance = keyChance;
+            if (Math.random() < commonKeyChance) {
+                GiveItemUtils.giveCommonKey(player, 1);
+                rewardMessage += ColorChat.chat("&aCommon Key: " + String.format("%.2f", commonKeyChance * 100) + "%");
+            }
+        }
 
 
         if (keyChance >= 0.1) {
@@ -80,20 +105,17 @@ public class AFKManager {
             }
         }
 
-        // Calculate gold based on damage
-        double goldAmount = Math.random() * (damage/10);
+        // changing goldAmount Calculation Requires you to Change PlaceholderAPIHook.getAFKRewardAsync()
+        double goldAmount = Math.random() * (damage/18);
+        VaultHook.addMoney(player, goldAmount);
 
-        // Calculate EXP based on damage and level
-        double expAmount = stats.getLevel() * 0.01;
-        GiveItemUtils.giveEXP(player, expAmount);
-
-        GiveItemUtils.convertGold(player);
-
+        // changing expAmount Calculation Requires you to Change PlaceholderAPIHook.getAFKRewardAsync()
+        double expAmount = stats.getLevel() * 0.05;
+        stats.setExp(stats.getExp() + expAmount);
         // Inform the player about the rewards
         player.sendActionBar(MiniMessage.miniMessage().deserialize("<green>+ <dark_aqua>Exp: <aqua>" + String.format("%.2f", expAmount) + "<black> | <gold> Gold: <yellow>" + String.format("%.2f", goldAmount) + "</green>"));
 
     }
-    //player.sendActionBar(MiniMessage.miniMessage().deserialize("<green>+ <dark_aqua>Exp: <aqua>" + String.format("%.2f", expGained) + "<black> | <gold> Money: <yellow>" + String.format("%.2f", moneyGained) + "</green>"));
 
     public static boolean isInAFKZone(Location loc) {
         return loc.getBlockX() >= -772 && loc.getBlockX() <= -680 &&
@@ -109,7 +131,7 @@ public class AFKManager {
 
     public static void summonAFKSword(Player player) {
         PlayerStats stats = PlayerStats.getPlayerStats(player);
-        final double ATTACK_RANGE = 15.0;
+        final double ATTACK_RANGE = 35.0;
         final double MOVEMENT_SPEED = 0.5;
 
         Location loc = player.getLocation().add(0, 1, 0);
@@ -118,7 +140,7 @@ public class AFKManager {
         ItemStack swordItem = player.getInventory().getItemInMainHand();
         afkSword.setItemStack(swordItem);
 
-        float baseScale = 1f;
+        float baseScale = 0.2f;
         afkSword.setTransformation(new Transformation(
                 new Vector3f(0, 0, 0),
                 new Quaternionf(0, 0, 0, 1),
@@ -133,7 +155,7 @@ public class AFKManager {
             float angle = 0;
             boolean isSwinging = false;
             int attackCooldown = 0; //do not change
-            final int ATTACK_COOLDOWN_MAX = 60;
+            final int ATTACK_COOLDOWN_MAX = 80;
             final double ATTACK_DISTANCE = 1.5;
             final float SWING_SPEED = 0.3f;
             final double IDLE_DISTANCE = 2.0;
@@ -265,15 +287,14 @@ public class AFKManager {
         Bukkit.getLogger().info("All AFK sessions have been stopped.");
     }
 
-    public static void updateAFKSwordItem(Player player) {
+    public static void updateAFKSwordItem(Player player, ItemStack item) {
         ItemDisplay afkSword = afkSwords.get(player.getUniqueId());
         if (afkSword != null && !afkSword.isDead()) {
-            ItemStack newItem = player.getInventory().getItemInMainHand().clone();
-            if (newItem.getType().isAir()) {
+            if (item == null || item.getType().isAir()) {
                 // If the player's hand is empty, use a default item (e.g., a stick)
-                newItem = new ItemStack(Material.STICK);
+                item = new ItemStack(Material.STICK);
             }
-            afkSword.setItemStack(newItem);
+            afkSword.setItemStack(item);
         }
     }
 

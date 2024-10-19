@@ -3,11 +3,13 @@ package me.diu.gachafight.guild;
 import me.diu.gachafight.GachaFight;
 import me.diu.gachafight.utils.ColorChat;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
@@ -49,6 +51,7 @@ public class GuildManager {
         config.set(guildId + ".upgrades", new HashMap<String, Integer>());
         config.set(guildId + ".chatIcon", "&fG");
         config.set(guildId + ".lastLeaderActivity", System.currentTimeMillis());
+        config.set(guildId + ".logo", "OAK_SIGN"); // Default logo
         saveConfig();
     }
 
@@ -413,5 +416,18 @@ public class GuildManager {
             return "";
         }
         return ColorChat.chat("&6[&r" + config.getString(guildId + ".chatIcon", "") + "&6]");
+    }
+
+    public static void setGuildLogo(String guildId, String materialName) {
+        config.set(guildId + ".logo", materialName);
+        saveConfig();
+    }
+    public static String getGuildLogo(String guildId) {
+        return config.getString(guildId + ".logo", "GRASS_BLOCK");
+    }
+    public static void changeGuildLogo(String guildId, String newLogoMaterial) {
+        if (Material.valueOf(newLogoMaterial) != null) {
+            setGuildLogo(guildId, newLogoMaterial);
+        }
     }
 }

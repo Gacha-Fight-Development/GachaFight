@@ -1,9 +1,12 @@
 package me.diu.gachafight.commands;
 
 import me.diu.gachafight.GachaFight;
+import me.diu.gachafight.guild.GuildGUI;
 import me.diu.gachafight.guild.GuildManager;
+import me.diu.gachafight.hooks.VaultHook;
 import me.diu.gachafight.utils.ColorChat;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -22,6 +25,7 @@ public class GuildCommand implements CommandExecutor {
 
     public GuildCommand(GachaFight plugin) {
         this.plugin = plugin;
+        new GuildGUI(plugin);
         plugin.getCommand("guild").setExecutor(this);
     }
 
@@ -35,11 +39,23 @@ public class GuildCommand implements CommandExecutor {
         Player player = (Player) sender;
 
         if (args.length == 0) {
-            player.sendMessage(ColorChat.chat("&cUsage: /guild <create|invite|accept|leave|kick|list|info|upgrade>"));
+            GuildGUI.openMainMenu(player);
             return true;
         }
 
         switch (args[0].toLowerCase()) {
+            case "help":
+                player.sendMessage(ColorChat.chat("&cUsage: /guild <create|invite|accept|leave|kick|list|info|upgrade>"));
+                player.sendMessage(ColorChat.chat("&6/guild create <name> &eCreates Guild."));
+                player.sendMessage(ColorChat.chat("&6/guild invite <player> &eInvites a Specific Player."));
+                player.sendMessage(ColorChat.chat("&6/guild accept &eAccepts a Guild Invite"));
+                player.sendMessage(ColorChat.chat("&6/guild leave &eleaves a Guild"));
+                player.sendMessage(ColorChat.chat("&6/guild kick &eKicks a Specific Player out of Guild."));
+                player.sendMessage(ColorChat.chat("&6/guild list &eOpens Guild Member List Menu"));
+                player.sendMessage(ColorChat.chat("&6/guild info &eOpens Guild Information."));
+                player.sendMessage(ColorChat.chat("&6/guild upgrade &eOpens Guild Upgrade Menu"));
+                player.sendMessage(ColorChat.chat("&6/guild settings &eOpens Guilds Setting"));
+                break;
             case "create":
                 if (args.length < 2) {
                     player.sendMessage(ColorChat.chat("&cUsage: /guild create <name>"));
@@ -87,12 +103,33 @@ public class GuildCommand implements CommandExecutor {
                 }
                 promoteToCoLeader(player, args[1]);
                 break;
+            case "makeleader":
+                if (args.length < 2) {
+                    player.sendMessage(ColorChat.chat("&cUsage: /guild makeleader <player>"));
+                    return true;
+                }
+                promoteToLeader(player, args[1]);
+                break;
             case "demote":
                 if (args.length < 2) {
                     player.sendMessage(ColorChat.chat("&cUsage: /guild demote <player>"));
                     return true;
                 }
                 demoteCoLeader(player, args[1]);
+                break;
+            case "changelogo":
+                if (args.length < 2) {
+                    player.sendMessage(ColorChat.chat("&cUsage: /guild changelogo <material>"));
+                    return true;
+                }
+                changeGuildLogo(player, args[1]);
+                break;
+            case "changeicon":
+                if (args.length < 2) {
+                    player.sendMessage(ColorChat.chat("&cUsage: /guild changeicon <icon>"));
+                    return true;
+                }
+                changeGuildIcon(player, args[1]);
                 break;
             default:
                 player.sendMessage(ColorChat.chat("&cUnknown subcommand. Use /guild for help."));
@@ -225,7 +262,7 @@ public class GuildCommand implements CommandExecutor {
         }
     }
 
-    private void promoteToLeader(Player promoter, String promotedName) {
+    private void promoteToLeader(Player promoter, String newLeaderName) {
         String guildId = GuildManager.getGuildId(promoter);
         if (guildId == null) {
             promoter.sendMessage(ColorChat.chat("&cYou are not in a guild."));
@@ -233,42 +270,35 @@ public class GuildCommand implements CommandExecutor {
         }
 
         if (!GuildManager.isGuildLeader(promoter, guildId)) {
-            promoter.sendMessage(ColorChat.chat("&cOnly the guild leader can promote members."));
+            promoter.sendMessage(ColorChat.chat("&cOnly the guild leader can promote a new leader."));
             return;
         }
 
-        OfflinePlayer promoted = Bukkit.getOfflinePlayer(promotedName);
-        if (promoted == null || !GuildManager.isInGuild(promoted) || !GuildManager.getGuildId(promoted).equals(guildId)) {
+        Player newLeader = Bukkit.getPlayer(newLeaderName);
+        if (newLeader == null || !GuildManager.isInGuild(newLeader) || !GuildManager.getGuildId(newLeader).equals(guildId)) {
             promoter.sendMessage(ColorChat.chat("&cPlayer not found in your guild."));
             return;
         }
 
-        GuildManager.promoteToLeader(guildId, promoted);
-        promoter.sendMessage(ColorChat.chat("&a" + promoted.getName() + " has been promoted to guild leader."));
-        if (promoted.isOnline()) {
-            promoted.getPlayer().sendMessage(ColorChat.chat("&aYou have been promoted to guild leader!"));
-        }
-    }
+        // Store the current leader (promoter) before changing leadership
+        Player currentLeader = promoter;
 
-    private void setGuildIcon(Player player, String icon) {
-        String guildId = GuildManager.getGuildId(player);
-        if (guildId == null) {
-            player.sendMessage(ColorChat.chat("&cYou are not in a guild."));
-            return;
-        }
+        // Set the new leader
+        GuildManager.setGuildLeader(guildId, newLeader);
+        // If successful, set the previous leader (promoter) as co-leader
+        GuildManager.setCoLeader(guildId, currentLeader);
 
-        if (!GuildManager.isGuildLeader(player, guildId)) {
-            player.sendMessage(ColorChat.chat("&cOnly the guild leader can change the guild icon."));
-            return;
-        }
+        promoter.sendMessage(ColorChat.chat("&a" + newLeader.getName() + " is now the guild leader."));
+        newLeader.sendMessage(ColorChat.chat("&aYou are now the leader of the guild."));
+        promoter.sendMessage(ColorChat.chat("&aYou are now the co-leader of the guild."));
 
-        if (icon.length() > 10) {
-            player.sendMessage(ColorChat.chat("&cThe guild icon must be 10 characters or less."));
-            return;
+        // Notify other guild members
+        for (OfflinePlayer member : GuildManager.getGuildMembers(guildId)) {
+            if (member.isOnline() && !member.getUniqueId().equals(promoter.getUniqueId()) && !member.getUniqueId().equals(newLeader.getUniqueId())) {
+                member.getPlayer().sendMessage(ColorChat.chat("&a" + newLeader.getName() + " is now the guild leader."));
+                member.getPlayer().sendMessage(ColorChat.chat("&a" + promoter.getName() + " is now the guild co-leader."));
+            }
         }
-
-        GuildManager.setChatIcon(guildId, icon);
-        player.sendMessage(ColorChat.chat("&aGuild icon has been updated to: " + icon));
     }
 
     private void showGuildInfo(Player player) {
@@ -374,5 +404,64 @@ public class GuildCommand implements CommandExecutor {
         } else {
             player.sendMessage(ColorChat.chat("&cFailed to upgrade. Make sure you have enough resources and the upgrade is valid."));
         }
+    }
+    private void changeGuildLogo(Player player, String materialName) {
+        String guildId = GuildManager.getGuildId(player);
+        if (guildId == null) {
+            player.sendMessage(ColorChat.chat("&cYou are not in a guild."));
+            return;
+        }
+
+        if (!GuildManager.isGuildLeader(player, guildId) && !GuildManager.isCoLeader(player, guildId)) {
+            player.sendMessage(ColorChat.chat("&cOnly the guild leader or co-leader can change the guild logo."));
+            return;
+        }
+
+        // Check if the player has enough money
+        if (!(VaultHook.getBalance(player) > 50000)) {
+            player.sendMessage(ColorChat.chat("&cChanging the guild logo costs 50,000. You don't have enough money."));
+            return;
+        }
+
+        try {
+            Material.valueOf(materialName.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            player.sendMessage(ColorChat.chat("&cInvalid material name. Please use a valid Minecraft material."));
+            return;
+        }
+
+        // Deduct the money and change the logo
+        VaultHook.withdraw(player, 50000);
+        GuildManager.setGuildLogo(guildId, materialName.toUpperCase());
+        player.sendMessage(ColorChat.chat("&aGuild logo has been changed to " + materialName + ". 50,000 has been deducted from your account."));
+    }
+
+    private void changeGuildIcon(Player player, String icon) {
+        String guildId = GuildManager.getGuildId(player);
+        if (guildId == null) {
+            player.sendMessage(ColorChat.chat("&cYou are not in a guild."));
+            return;
+        }
+
+        if (!GuildManager.isGuildLeader(player, guildId) && !GuildManager.isCoLeader(player, guildId)) {
+            player.sendMessage(ColorChat.chat("&cOnly the guild leader or co-leader can change the guild icon."));
+            return;
+        }
+
+        // Check if the player has enough money
+        if (!(VaultHook.getBalance(player) > 50000)) {
+            player.sendMessage(ColorChat.chat("&cChanging the guild icon costs 50,000. You don't have enough money."));
+            return;
+        }
+
+        if (ColorChat.strip(ColorChat.chat(icon)).length() != 1) {
+            player.sendMessage(ColorChat.chat("&cThe guild icon must be a single character."));
+            return;
+        }
+
+        // Deduct the money and change the icon
+        VaultHook.withdraw(player, 50000);
+        GuildManager.setChatIcon(guildId, icon);
+        player.sendMessage(ColorChat.chat("&aGuild icon has been changed to " + icon + ". 50,000 has been deducted from your account."));
     }
 }
