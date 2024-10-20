@@ -25,3 +25,5 @@ emerald:
   lore: "A Large Emerald Pet!"
   minGold: 1.1
   maxGold: 1.5
+  minExp: 1.1
+  maxExp: 1.5

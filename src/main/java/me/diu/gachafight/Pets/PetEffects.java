@@ -62,7 +62,7 @@ public class PetEffects{
         ItemMeta meta = petItem.getItemMeta();
         String petName = ChatColor.stripColor(petItem.getItemMeta().getDisplayName().toLowerCase());
         List<Component> lore = new ArrayList<>();
-
+        double randDouble = Math.random();
         switch (petName){
             case "turtle" :
                 addLore(lore, petName,"Lore");
@@ -80,9 +80,13 @@ public class PetEffects{
                 addLore(lore, petName, "Damage");
                 addLore(lore, petName, "Armor");
                 break;
+            // Makes use of randDouble to determine if the pet gets the gold multiplier
             case "emerald" :
                 addLore(lore, petName, "Lore");
-                addLore(lore, petName, "Gold");
+                if(randDouble > .9) {
+                    addLore(lore, petName, "Gold");
+                }
+                addLore(lore, petName, "Exp");
                 break;
         }
         meta.lore(lore);
@@ -145,6 +149,36 @@ public class PetEffects{
             }
             String[] str = lore.split(" ");
             result = Double.parseDouble(str[str.length-1]);
+        }
+        return result;
+    }
+
+    public static double checkGoldMulti(Player player){
+        double result = 1.0;
+        List<String> petLore = PetCommand.getPetLore(player, 1);
+        petLore.addAll(PetCommand.getPetLore(player, 2));
+        petLore.addAll(PetCommand.getPetLore(player, 3));
+        for(String lore : petLore) {
+            if(!lore.contains("Gold Multi:")){
+                break;
+            }
+            String[] str = lore.split(" ");
+            result = result + Double.parseDouble(str[str.length-1]);
+        }
+        return result;
+    }
+
+    public static double checkExpMulti(Player player){
+        double result = 1.0;
+        List<String> petLore = PetCommand.getPetLore(player, 1);
+        petLore.addAll(PetCommand.getPetLore(player, 2));
+        petLore.addAll(PetCommand.getPetLore(player, 3));
+        for(String lore : petLore) {
+            if(!lore.contains("Exp Multi:")){
+                break;
+            }
+            String[] str = lore.split(" ");
+            result = result + Double.parseDouble(str[str.length-1]);
         }
         return result;
     }

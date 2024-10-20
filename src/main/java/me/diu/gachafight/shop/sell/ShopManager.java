@@ -82,6 +82,12 @@ public class ShopManager implements Listener {
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
+
+        double petGoldMulti = 1.0;
+        // Uncomment these to activate if pets effect gold rewards
+        // petGoldMulti = PetEffects.checkGoldMulti(player);
+
+
         if (event.getInventory().getHolder() instanceof ShopInventoryHolder) {
             Player player = (Player) event.getWhoClicked();
 
@@ -103,7 +109,7 @@ public class ShopManager implements Listener {
 
             // Handle item selling
             if (slot == 49 && event.getCurrentItem().getType() == Material.EMERALD) {
-                double totalMoney = sellItems(event.getInventory());
+                double totalMoney = sellItems(event.getInventory()) * petGoldMulti;
                 player.sendMessage(MiniMessage.miniMessage().deserialize("<green>You sold your items for <gold>" + String.format("%.1f", totalMoney) + " <green>money!"));
                 VaultHook.addMoney(player, totalMoney);
                 player.closeInventory();

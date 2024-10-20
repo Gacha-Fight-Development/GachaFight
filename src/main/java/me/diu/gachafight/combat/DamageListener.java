@@ -273,9 +273,16 @@ public class DamageListener implements Listener {
     // New method to handle mob death and give rewards
     private void handleMobDeath(Player player, Entity entity) {
         if (entity instanceof LivingEntity) {
+
+            double petGoldMulti = 1.0;
+            double petExpMulti = 1.0;
+            // Uncomment these to activate if pets effect gold/exp rewards
+            // petGoldMulti = PetEffects.checkGoldMulti(player);
+            // petExpMulti = PetEffects.checkExpMulti(player);
+
             double mobHp = ((LivingEntity) entity).getMaxHealth();
-            double expGained = mobHp / 7.5;
-            double moneyGained = mobHp / 20;
+            double expGained = mobHp / 7.5 * petExpMulti;
+            double moneyGained = mobHp / 20 * petGoldMulti;
             double multi = calculateMultiplier(player);
 
             OfflinePlayer offlinePlayer = player;
