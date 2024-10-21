@@ -4,8 +4,9 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import lombok.Getter;
 import lombok.Setter;
+import me.diu.gachafight.Pets.PetEffects;
 import me.diu.gachafight.hooks.VaultHook;
-import me.diu.gachafight.playerstats.leaderboard.LeaderboardUtils;
+import me.diu.gachafight.party.PartyManager;
 import me.diu.gachafight.utils.ColorChat;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -123,6 +124,23 @@ public class PlayerStats {
             this.level++;
             syncPlayerLevelWithMinecraft(player);  // Sync Minecraft level
         }
+    }
+
+    public double addExpWithMulti(double amount, Player player) {
+        double petMultiplier = PetEffects.checkGoldMultiplier((Player) player);
+        double vipMultiplier = 0.0;
+        double partyMultiplier = PartyManager.checkPartyMultiplier((Player) player);
+
+        if (player.hasPermission("gacha.vip")) {
+            vipMultiplier += 0.2;
+        }
+
+        // Multipliers above are returned as decimal values (a 1.5x multiplier would return as .5)
+        // Therefor the final multiplier would be 1 plus their respective values.
+        double finalMultiplier = 1 + petMultiplier + vipMultiplier + partyMultiplier;
+        amount = amount * finalMultiplier;
+        addExp(amount, player);
+        return amount;
     }
 
     public int getRequiredExp() {

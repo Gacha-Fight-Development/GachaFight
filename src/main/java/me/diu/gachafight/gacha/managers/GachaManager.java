@@ -2,7 +2,6 @@ package me.diu.gachafight.gacha.managers;
 
 import me.diu.gachafight.GachaFight;
 import me.diu.gachafight.commands.GuideCommand;
-import me.diu.gachafight.guides.TutorialGuideSystem;
 import me.diu.gachafight.hooks.VaultHook;
 import me.diu.gachafight.playerstats.PlayerStats;
 import me.diu.gachafight.gacha.gui.RaritySelectionGUI;
@@ -148,6 +147,10 @@ public class GachaManager {
 
                 User user = luckPerms.getUserManager().getUser(player.getUniqueId());
 
+                double petGoldMulti = 1.0;
+                // Uncomment these to activate if pets effect gold rewards
+                // petGoldMulti = PetEffects.checkGoldMulti(player);
+
                 boolean itemSold = false;
 
                 // checks rarity (string) and the item percent -statMedium-  (double 0.0 to 100.0) against autoSellCutoff.  if autoSellCutoff is larger, sell the item
@@ -175,10 +178,9 @@ public class GachaManager {
                     // If the items percent is less then or equal to the player set percent, autosell item
                     if (autoSellCutoff >= statMedium) {
                         // Auto-sell the item
-                        double sellPrice = SellPriceCalculator.calculateSellPrice(customizedReward, rarityIndex);
+                        double sellPrice = SellPriceCalculator.calculateSellPrice(customizedReward, rarityIndex) * petGoldMulti;
                         player.sendMessage(MiniMessage.miniMessage().deserialize("<green>Auto-sold " + RaritySelectionGUI.RARITY_NAMES[rarityIndex] + " item for " + String.format("%.1f", sellPrice) + " money!"));
-                        PlayerStats playerStats = PlayerStats.getPlayerStats(player);
-                        VaultHook.addMoney(player, sellPrice);
+                        VaultHook.addMoneyWithMulti(player, sellPrice);
 
                         // Reduce keys by 1
                         key.setAmount(key.getAmount() - 1);
