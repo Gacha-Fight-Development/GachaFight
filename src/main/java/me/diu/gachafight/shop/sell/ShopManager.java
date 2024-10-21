@@ -110,8 +110,9 @@ public class ShopManager implements Listener {
             // Handle item selling
             if (slot == 49 && event.getCurrentItem().getType() == Material.EMERALD) {
                 double totalMoney = sellItems(event.getInventory()) * petGoldMulti;
+                totalMoney = VaultHook.addMoneyWithMulti(player, totalMoney);
                 player.sendMessage(MiniMessage.miniMessage().deserialize("<green>You sold your items for <gold>" + String.format("%.1f", totalMoney) + " <green>money!"));
-                VaultHook.addMoney(player, totalMoney);
+
                 player.closeInventory();
             }
         }

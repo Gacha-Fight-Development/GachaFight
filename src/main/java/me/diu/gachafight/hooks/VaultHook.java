@@ -1,10 +1,13 @@
 package me.diu.gachafight.hooks;
 
+import me.diu.gachafight.Pets.PetEffects;
+import me.diu.gachafight.party.PartyManager;
 import me.diu.gachafight.playerstats.leaderboard.LeaderboardUtils;
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
 import java.text.DecimalFormat;
@@ -91,4 +94,33 @@ public class VaultHook {
         LeaderboardUtils.markPlayerDirty(player.getUniqueId());
         return response.transactionSuccess();
     }
+
+    // This method should only be called when money is effected by multipliers
+    public static double addMoneyWithMulti(OfflinePlayer player, double amount) {
+        if (!isEconomySetup()) {
+            throw new UnsupportedOperationException("Vault Economy not found");
+        }
+        double petMultiplier = PetEffects.checkGoldMultiplier((Player) player);
+        double vipMultiplier = checkVipMultiplier((Player) player);
+        double partyMultiplier = PartyManager.checkPartyMultiplier((Player) player);
+
+        // Multipliers above are returned as decimal values (a 1.5x multiplier would return as .5)
+        // Therefor the final multiplier would be 1 plus their respective values.
+        double finalMultiplier = 1 + petMultiplier + vipMultiplier + partyMultiplier;
+        amount = amount * finalMultiplier;
+
+        addMoney(player, amount);
+
+        return amount;
+    }
+
+    private static double checkVipMultiplier(Player player) {
+        double result = 0.0;
+        if (player.hasPermission("gacha.vip")) {
+            result += 0.2;
+        }
+        return result;
+    }
+
+
 }

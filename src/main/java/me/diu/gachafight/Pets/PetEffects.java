@@ -153,8 +153,8 @@ public class PetEffects{
         return result;
     }
 
-    public static double checkGoldMulti(Player player){
-        double result = 1.0;
+    public static double checkGoldMultiplier(Player player){
+        double result = 0.0;
         List<String> petLore = PetCommand.getPetLore(player, 1);
         petLore.addAll(PetCommand.getPetLore(player, 2));
         petLore.addAll(PetCommand.getPetLore(player, 3));
@@ -163,13 +163,13 @@ public class PetEffects{
                 break;
             }
             String[] str = lore.split(" ");
-            result = result + Double.parseDouble(str[str.length-1]);
+            result = result + Double.parseDouble(str[str.length-1]) - 1;
         }
         return result;
     }
 
-    public static double checkExpMulti(Player player){
-        double result = 1.0;
+    public static double checkExpMultiplier(Player player){
+        double result = 0.0;
         List<String> petLore = PetCommand.getPetLore(player, 1);
         petLore.addAll(PetCommand.getPetLore(player, 2));
         petLore.addAll(PetCommand.getPetLore(player, 3));
