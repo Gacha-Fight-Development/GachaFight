@@ -3,6 +3,7 @@ package me.diu.gachafight.afk;
 import lombok.Getter;
 import lombok.Setter;
 import me.diu.gachafight.GachaFight;
+import me.diu.gachafight.Pets.PetEffects;
 import me.diu.gachafight.hooks.PlaceholderAPIHook;
 import me.diu.gachafight.hooks.VaultHook;
 import me.diu.gachafight.playerstats.PlayerStats;
@@ -64,11 +65,11 @@ public class AFKManager {
 
         // changing keyChance Calculation Requires you to Change PlaceholderAPIHook.getAFKRewardAsync()
         double keyChance = Math.min(damage / 1000, 0.125);
-
         String rewardMessage = "";
         double rareKeyChance = 0;
         double uncommonKeyChance = 0;
         double commonKeyChance = 0;
+
 
         if (keyChance >= 0.1) {
             rareKeyChance = Math.max(0.001, keyChance - 0.1);
@@ -107,11 +108,11 @@ public class AFKManager {
 
         // changing goldAmount Calculation Requires you to Change PlaceholderAPIHook.getAFKRewardAsync()
         double goldAmount = Math.random() * (damage/18);
-        VaultHook.addMoney(player, goldAmount);
+        goldAmount = VaultHook.addMoneyWithMulti(player, goldAmount);
 
         // changing expAmount Calculation Requires you to Change PlaceholderAPIHook.getAFKRewardAsync()
         double expAmount = stats.getLevel() * 0.05;
-        stats.setExp(stats.getExp() + expAmount);
+        expAmount = stats.addExpWithMulti(expAmount, player);
         // Inform the player about the rewards
         player.sendActionBar(MiniMessage.miniMessage().deserialize("<green>+ <dark_aqua>Exp: <aqua>" + String.format("%.2f", expAmount) + "<black> | <gold> Gold: <yellow>" + String.format("%.2f", goldAmount) + "</green>"));
 

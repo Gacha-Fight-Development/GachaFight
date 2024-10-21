@@ -273,10 +273,9 @@ public class DamageListener implements Listener {
     // New method to handle mob death and give rewards
     private void handleMobDeath(Player player, Entity entity) {
         if (entity instanceof LivingEntity) {
-            double mobHp = ((LivingEntity) entity).getMaxHealth();
+                        double mobHp = ((LivingEntity) entity).getMaxHealth();
             double expGained = mobHp / 7.5;
             double moneyGained = mobHp / 20;
-            double multi = calculateMultiplier(player);
 
             OfflinePlayer offlinePlayer = player;
             OfflinePlayer partyLeader = PartyManager.getPartyLeader(offlinePlayer);
@@ -289,11 +288,11 @@ public class DamageListener implements Listener {
             PlayerStats playerStats = PlayerStats.getPlayerStats(player);
 
             if (!partyMembers.isEmpty()) {
-                handlePartyBossRewards(offlinePlayer, entity, expGained, moneyGained, multi, partyMembers);
+                handlePartyBossRewards(offlinePlayer, entity, expGained, moneyGained, partyMembers);
             }
 
-            playerStats.addExp(expGained * multi, player);
-            VaultHook.addMoney(player, (moneyGained * multi));
+            playerStats.addExpWithMulti(expGained, player);
+            VaultHook.addMoneyWithMulti(player, moneyGained);
 
             handleMobSpecificRewards(entity, player);
             handleRandomRewards(player, entity);
@@ -303,15 +302,15 @@ public class DamageListener implements Listener {
         }
     }
 
-    private void handlePartyBossRewards(OfflinePlayer killer, Entity entity, double expGained, double moneyGained, double multi, Set<OfflinePlayer> partyMembers) {
+    private void handlePartyBossRewards(OfflinePlayer killer, Entity entity, double expGained, double moneyGained, Set<OfflinePlayer> partyMembers) {
         if (isBoss(entity)) {
             for (OfflinePlayer member : partyMembers) {
                 if (member.isOnline()) {
                     Player onlineMember = member.getPlayer();
                     if (onlineMember != null && isInSameDungeon(killer, onlineMember)) {
                         PlayerStats memberStats = PlayerStats.getPlayerStats(onlineMember);
-                        memberStats.addExp(expGained * multi, onlineMember);
-                        VaultHook.addMoney(onlineMember, (moneyGained * multi));
+                        memberStats.addExpWithMulti(expGained, onlineMember);
+                        VaultHook.addMoneyWithMulti(onlineMember, moneyGained);
 
                         if (!member.equals(killer)) {
                             onlineMember.sendMessage(ColorChat.chat("&aReceived Gold & XP from " + killer.getName() + " killing " + entity.getName()));
@@ -406,7 +405,7 @@ public class DamageListener implements Listener {
             }
         }.runTaskTimer(GachaFight.getInstance(), 20, 20);
     }
-    private double calculateMultiplier(Player player) {
+    public static double calculateMultiplier(Player player) {
         double multi = 1;
         if (player.hasPermission("gacha.vip")) {
             multi += 0.2;
@@ -425,12 +424,12 @@ public class DamageListener implements Listener {
         }
         return multi;
     }
-    private void distributePartyRewards(Player player, Entity entity, double expGained, double moneyGained, double multi, Set<Player> partyMembers) {
+    private void distributePartyRewards(Player player, Entity entity, double expGained, double moneyGained, Set<Player> partyMembers) {
         for (Player member : partyMembers) {
             if (DungeonUtils.getDungeonName(player.getLocation()).equals(DungeonUtils.getDungeonName(member.getLocation()))) {
                 PlayerStats memberStats = PlayerStats.getPlayerStats(member);
-                memberStats.addExp(expGained * multi, member);
-                VaultHook.addMoney(member, moneyGained * multi);
+                memberStats.addExpWithMulti(expGained, member);
+                VaultHook.addMoneyWithMulti(member, moneyGained);
                 if (member != player) {
                 }
             } else {

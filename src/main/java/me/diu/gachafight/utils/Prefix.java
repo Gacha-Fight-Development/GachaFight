@@ -18,6 +18,8 @@ public class Prefix {
     public static String getCritChancePrefix() {return "<!i><color:#FFA500>🌠 <gray>Crit Chance: <color:#FFA500>:";}
     public static String getCritDmgPrefix() {return "<!i><color:#9B870C>💥 <gray>Crit Dmg: <color:#9B870C>";}
     public static String getDodgePrefix() {return "<!i><gray>👻 <gray>Dodge: <gray>";}
+    public static String getGoldPrefix() {return "<!i><#E0AC23>💵 <gray>Gold Multi: <#E0AC23>";}
+    public static String getExpPrefix() {return "<!i><#69E03E>✨ <gray>Exp Multi: <#69E03E>";}
     public static String getPrefixForStat(String statType) {
         switch (statType.toLowerCase()) {
             case "damage":

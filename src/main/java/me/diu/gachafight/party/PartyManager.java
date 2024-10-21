@@ -6,6 +6,7 @@
     import org.bukkit.OfflinePlayer;
     import org.bukkit.configuration.file.FileConfiguration;
     import org.bukkit.configuration.file.YamlConfiguration;
+    import org.bukkit.entity.Player;
 
     import java.io.File;
     import java.io.IOException;
@@ -162,5 +163,22 @@
                 leaders.add(leader);
             }
             return leaders;
+        }
+
+        public static double checkPartyMultiplier(Player player) {
+            double result = 0.0;
+            if (isInParty(player)) {
+                for (OfflinePlayer offlinePlayer : getPartyMembers(getPartyLeader(player))) {
+                    if (offlinePlayer.isOnline()) {
+                        Player onlinePlayer = offlinePlayer.getPlayer();
+                        if (onlinePlayer.hasPermission("gacha.vip")) {
+                            result += 0.1;
+                        } else {
+                            result += 0.05;
+                        }
+                    }
+                }
+            }
+            return result;
         }
     }
