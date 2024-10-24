@@ -4,6 +4,7 @@ import me.diu.gachafight.GachaFight;
 import me.diu.gachafight.commands.GuideCommand;
 import me.diu.gachafight.hooks.VaultHook;
 import me.diu.gachafight.playerstats.PlayerStats;
+import me.diu.gachafight.utils.DungeonUtils;
 import me.diu.gachafight.utils.GiveItemUtils;
 import me.diu.gachafight.utils.TutorialBossBar;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -65,6 +66,9 @@ public class RPGDeathReward {
             }
             if (Math.random() < (0.03 + (stats.getLuck() * 0.001))) {
                 GiveItemUtils.giveRareKey(player, 1);
+            }
+            if (Math.random() < 0.2 + (stats.getLuck() * 0.001) && DungeonUtils.isRPG(player.getLocation())) {
+                GiveItemUtils.giveArenaKey(player, 1);
             }
             player.sendMessage(MiniMessage.miniMessage().deserialize("<aqua>Boss Bonus:"));
             player.sendMessage(MiniMessage.miniMessage().deserialize(" <green>+ <yellow>$100"));

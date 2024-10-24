@@ -18,7 +18,7 @@ public class LevelLeaderboard {
     private final GachaFight plugin;
     private final PlayerDataManager playerDataManager;
     public static Map<UUID, Integer> levelData;
-    private List<LevelEntry> leaderboard;
+    public static List<LevelEntry> leaderboard;
     public static File leaderboardFile;
     public static FileConfiguration leaderboardConfig;
     private String cachedLeaderboardDisplay = "";

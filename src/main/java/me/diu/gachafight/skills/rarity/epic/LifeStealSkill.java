@@ -22,7 +22,7 @@ public class LifeStealSkill implements Skill {
     private static int cooldownDuration;
     private static int skillDuration;
     private static double healPercentage;
-    private static final HashMap<UUID, Boolean> lifeStealActive = new HashMap<>();
+    public static final HashMap<UUID, Boolean> lifeStealActive = new HashMap<>();
 
     public LifeStealSkill(GachaFight plugin) {
         this.plugin = plugin;

@@ -24,7 +24,7 @@ import java.util.Map;
 public class PotionUseListener implements Listener {
 
     private final GachaFight plugin;
-    private final Map<String, PotionConfig> potionConfigs = new HashMap<>();
+    public static final Map<String, PotionConfig> potionConfigs = new HashMap<>();
     private File potionsFile;
 
     public PotionUseListener(GachaFight plugin) {

@@ -8,6 +8,7 @@ import me.diu.gachafight.skills.rarity.epic.LifeStealSkill;
 import me.diu.gachafight.skills.rarity.rare.DushSkill;
 import me.diu.gachafight.skills.rarity.rare.FireStrikeSkill;
 import me.diu.gachafight.skills.rarity.rare.ThunderStrikeSkill;
+import me.diu.gachafight.skills.rarity.uncommon.SwiftyHandsSkill;
 import me.diu.gachafight.skills.rarity.uncommon.SwordBurstSkill;
 import me.diu.gachafight.skills.rarity.uncommon.SwordSpinSkill;
 import me.diu.gachafight.skills.utils.Skill;
@@ -40,6 +41,7 @@ public class SkillManager {
         registerSkill("dush", new DushSkill(plugin));
         registerSkill("life steal", new LifeStealSkill(plugin));
         registerSkill("ghost sword", new GhostSwordSkill(plugin));
+        registerSkill("swifty hands", new SwiftyHandsSkill(plugin));
     }
 
     private void updateConfigFiles() {

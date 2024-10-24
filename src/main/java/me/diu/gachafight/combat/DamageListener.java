@@ -307,7 +307,7 @@ public class DamageListener implements Listener {
             for (OfflinePlayer member : partyMembers) {
                 if (member.isOnline()) {
                     Player onlineMember = member.getPlayer();
-                    if (onlineMember != null && isInSameDungeon(killer, onlineMember)) {
+                    if (onlineMember != null && isInSameDungeon(killer.getLocation(), onlineMember.getLocation())) {
                         PlayerStats memberStats = PlayerStats.getPlayerStats(onlineMember);
                         memberStats.addExpWithMulti(expGained, onlineMember);
                         VaultHook.addMoneyWithMulti(onlineMember, moneyGained);
@@ -467,13 +467,15 @@ public class DamageListener implements Listener {
     private boolean isBoss(Entity entity) {
         return BOSS_NAMES.stream().anyMatch(bossName -> entity.getName().contains(bossName));
     }
-    private boolean isInSameDungeon(OfflinePlayer player1, Player player2) {
-        // Assuming both players are online
-        if (player1.isOnline() && player1.getPlayer() != null) {
-            return DungeonUtils.getDungeonName(player1.getPlayer().getLocation())
-                    .equals(DungeonUtils.getDungeonName(player2.getLocation()));
+    private boolean isInSameDungeon(Location location1, Location location2) {
+        String dungeonName1 = DungeonUtils.getDungeonName(location1);
+        String dungeonName2 = DungeonUtils.getDungeonName(location2);
+
+        if (dungeonName1 == null || dungeonName2 == null) {
+            return false; // or throw an exception, depending on your requirements
         }
-        return false;
+
+        return dungeonName1.equals(dungeonName2);
     }
 
 }

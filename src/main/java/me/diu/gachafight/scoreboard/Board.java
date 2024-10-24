@@ -6,6 +6,8 @@ import me.diu.gachafight.party.PartyManager;
 import me.diu.gachafight.playerstats.PlayerDataManager;
 import me.diu.gachafight.playerstats.PlayerStats;
 import me.diu.gachafight.di.ServiceLocator;
+import me.diu.gachafight.siege.Arena;
+import me.diu.gachafight.siege.SiegeGameMode;
 import me.diu.gachafight.utils.ColorChat;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
@@ -13,6 +15,7 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.*;
 
+import java.util.Map;
 import java.util.Set;
 
 public class Board {
@@ -39,6 +42,38 @@ public class Board {
         } else {
             setSoloScoreboard(obj, formattedMoney, stats);
         }
+        if (SiegeGameMode.playerWave.containsKey(player.getUniqueId())) {
+            System.out.println("Player Wave: " + SiegeGameMode.playerWave.get(player.getUniqueId()));
+            Map<Integer, Integer> arenaWaves = SiegeGameMode.playerWave.get(player.getUniqueId());
+            for (Integer arenaId : arenaWaves.keySet()) {
+                System.out.println("Arena ID: " + arenaId);
+                if (SiegeGameMode.activeMonsters.containsKey(player.getUniqueId())) {
+                    System.out.println("true");
+                    obj.getScore("").setScore(8);
+                    obj.getScore(ColorChat.chat("&b&l| &bArena ID: &7" + arenaId)).setScore(7);
+                    obj.getScore(ColorChat.chat("&b&l| &bWave: &7" + arenaWaves.get(arenaId))).setScore(7);
+                    obj.getScore(ColorChat.chat("&b&l| &bRemaining Mobs: &7" + SiegeGameMode.activeMonsters.get(player.getUniqueId()).size())).setScore(7);
+                    obj.getScore("").setScore(6);
+                }
+            }
+        } else {
+            if (partyLeader != null) {
+                for (OfflinePlayer member : PartyManager.getPartyMembers(partyLeader)) {
+                    if (SiegeGameMode.playerWave.containsKey(member.getUniqueId())) {
+                        Map<Integer, Integer> memberArenaWaves = SiegeGameMode.playerWave.get(member.getUniqueId());
+                        for (Integer arenaId : memberArenaWaves.keySet()) {
+                            if (SiegeGameMode.activeMonsters.containsKey(player.getUniqueId())) {
+                                obj.getScore("").setScore(8);
+                                obj.getScore(ColorChat.chat("&b&l| &bArena ID: &7" + arenaId)).setScore(7);
+                                obj.getScore(ColorChat.chat("&b&l| &bWave: &7" + memberArenaWaves.get(arenaId))).setScore(7);
+                                obj.getScore(ColorChat.chat("&b&l| &bRemaining Mobs: &7" + SiegeGameMode.activeMonsters.get(player.getUniqueId()).size())).setScore(7);
+                                obj.getScore("").setScore(6);
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         player.setScoreboard(board);
     }
@@ -64,7 +99,7 @@ public class Board {
     private void setPartyScoreboard(Objective obj, Player player, PlayerStats stats, String formattedMoney, OfflinePlayer partyLeader) {
         obj.getScore(ColorChat.chat("&3&l| &7Statistics")).setScore(10);
         obj.getScore(ColorChat.chat("&3&l| &6⛃ &e" + formattedMoney) + ColorChat.chat(" &6Gold")).setScore(9);
-        obj.getScore(ColorChat.chat("&3&l| &b❖ &e" + stats.getGem() +" &bGems")).setScore(8);
+        obj.getScore(ColorChat.chat("&3&l| &b❖ &e" + stats.getGem() +" &bGems")).setScore(9);
         obj.getScore(ColorChat.chat("")).setScore(7);
         obj.getScore(ColorChat.chat("&6&l| &7Party")).setScore(6);
 
@@ -83,11 +118,11 @@ public class Board {
     }
 
     private void setSoloScoreboard(Objective obj, String formattedMoney, PlayerStats stats) {
-        obj.getScore(ColorChat.chat("&3&l| &7Statistics")).setScore(6);
-        obj.getScore(ColorChat.chat("&3&l| &6⛃ &e" + formattedMoney) + ColorChat.chat(" &6Gold")).setScore(5);
-        obj.getScore(ColorChat.chat("&3&l| &b❖ &e" + stats.getGem() +" &bGems")).setScore(4);
-        obj.getScore(ColorChat.chat("")).setScore(3);
-        obj.getScore(ColorChat.chat("&3Found Bugs? &b/Discord")).setScore(2);
+        obj.getScore(ColorChat.chat("&3&l| &7Statistics")).setScore(9);
+        obj.getScore(ColorChat.chat("&3&l| &6⛃ &e" + formattedMoney) + ColorChat.chat(" &6Gold")).setScore(9);
+        obj.getScore(ColorChat.chat("&3&l| &b❖ &e" + stats.getGem() +" &bGems")).setScore(9);
+        obj.getScore(ColorChat.chat("")).setScore(2);
+        obj.getScore(ColorChat.chat("&3Found Bugs? &b/Discord")).setScore(1);
         obj.getScore(ColorChat.chat(SERVER_ADDRESS)).setScore(1);
     }
 }

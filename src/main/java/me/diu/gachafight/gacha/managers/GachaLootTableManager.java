@@ -15,13 +15,12 @@ import java.util.Map;
 public class GachaLootTableManager {
 
     private final GachaFight plugin;
-    private static Map<Integer, List<ItemStack>> lootTables;
+    public static Map<Integer, List<ItemStack>> lootTables = new HashMap<>();
     private final File lootTableFile;
     private FileConfiguration lootTableConfig;
 
     public GachaLootTableManager(GachaFight plugin) {
         this.plugin = plugin;
-        this.lootTables = new HashMap<>();
         this.lootTableFile = new File(plugin.getDataFolder(), "loottables.yml");
 
         // Create the directory if it doesn't exist

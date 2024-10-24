@@ -7,6 +7,7 @@
     import org.bukkit.configuration.file.FileConfiguration;
     import org.bukkit.configuration.file.YamlConfiguration;
     import org.bukkit.entity.Player;
+    import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 
     import java.io.File;
     import java.io.IOException;
@@ -74,11 +75,11 @@
 
             saveConfig();
         }
-
+        @RequiresNonNull("leader")
         public static Set<OfflinePlayer> getPartyMembers(OfflinePlayer leader) {
             return getPartyMembers(leader.getUniqueId().toString());
         }
-
+        @RequiresNonNull("leaderUUID")
         private static Set<OfflinePlayer> getPartyMembers(String leaderUUID) {
             Set<OfflinePlayer> members = new HashSet<>();
 
@@ -111,6 +112,7 @@
             return false;  // Player is not in any party
         }
 
+        @RequiresNonNull("player")
         public static OfflinePlayer getPartyLeader(OfflinePlayer player) {
             String playerUUID = player.getUniqueId().toString();
 

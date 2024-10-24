@@ -18,7 +18,7 @@ import java.util.UUID;
 public class PartyCommand implements CommandExecutor {
 
     private final GachaFight plugin;
-    private final Map<UUID, UUID> partyInvitations = new HashMap<>();
+    public static final Map<UUID, UUID> partyInvitations = new HashMap<>();
 
     public PartyCommand(GachaFight plugin) {
         this.plugin = plugin;

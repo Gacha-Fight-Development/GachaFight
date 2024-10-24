@@ -27,19 +27,20 @@ import java.util.stream.Collectors;
 @Getter
 @Setter
 public class QuestManager {
-    private static final Map<Integer, Quest> quests = new HashMap<>();
-    private final GachaFight plugin;
+    public static final Map<Integer, Quest> quests = new HashMap<>();
+    private static GachaFight plugin;
     private final DatabaseManager databaseManager;
 
 
     public QuestManager(GachaFight plugin, File dataFolder, DatabaseManager databaseManager) {
         this.databaseManager = databaseManager;
-        this.plugin = plugin;
+        QuestManager.plugin = plugin;
         loadQuestsFromConfig(dataFolder);
     }
 
     public static void loadQuestsFromConfig(File dataFolder) {
         File configFile = new File(dataFolder, "quests.yml");
+        plugin.saveResource("quests.yml", true);
         if (!configFile.exists()) {
             throw new IllegalStateException("quests.yml file not found!");
         }

@@ -73,16 +73,16 @@ public class PlayerDataManager {
 
     public static void loadStatsFromDocument(PlayerStats stats, Document document) {
         stats.setLevel(document.getInteger("level", 1));
-        stats.setExp(document.getDouble("exp"));
-        stats.setDamage(document.getDouble("damage"));
-        stats.setArmor(document.getDouble("armor"));
-        stats.setMaxhp(document.getDouble("hp"));
         stats.setGem(document.getInteger("gem", 0));
-        stats.setSpeed(document.getDouble("speed"));
-        stats.setCritChance(document.getDouble("critchance"));
-        stats.setCritDmg(document.getDouble("critdmg"));
-        stats.setDodge(document.getDouble("dodge"));
-        stats.setLuck(document.getDouble("luck"));
+        if (document.getDouble("exp") != null) stats.setExp(document.getDouble("exp"));
+        if (document.getDouble("hp") != null) stats.setMaxhp(document.getDouble("hp"));
+        if (document.getDouble("damage") != null) stats.setDamage(document.getDouble("damage"));
+        if (document.getDouble("armor") != null) stats.setArmor(document.getDouble("armor"));
+        if (document.getDouble("speed") != null) stats.setSpeed(document.getDouble("speed"));
+        if (document.getDouble("dodge") != null) stats.setDodge(document.getDouble("dodge"));
+        if (document.getDouble("luck") != null) stats.setLuck(document.getDouble("luck"));
+        if (document.getDouble("critchance") != null) stats.setCritChance(document.getDouble("critchance"));
+        if (document.getDouble("critdmg") != null) stats.setCritDmg(document.getDouble("critdmg"));
     }
 
     public static void updatePlayerStats(Player player, PlayerStats stats) {
