@@ -1,6 +1,7 @@
 package me.diu.gachafight.commands;
 
 import me.diu.gachafight.GachaFight;
+import me.diu.gachafight.guild.GuildContributionManager;
 import me.diu.gachafight.guild.GuildGUI;
 import me.diu.gachafight.guild.GuildManager;
 import me.diu.gachafight.hooks.VaultHook;
@@ -13,15 +14,12 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 public class GuildCommand implements CommandExecutor {
 
     private final GachaFight plugin;
-    private final Map<UUID, String> guildInvitations = new HashMap<>();
+    public static final Map<UUID, String> guildInvitations = new HashMap<>();
 
     public GuildCommand(GachaFight plugin) {
         this.plugin = plugin;
@@ -131,6 +129,12 @@ public class GuildCommand implements CommandExecutor {
                 }
                 changeGuildIcon(player, args[1]);
                 break;
+            case "deposit":
+                deposit(player, args);
+                break;
+            case "withdraw":
+                withdraw(player, args);
+                break;
             default:
                 player.sendMessage(ColorChat.chat("&cUnknown subcommand. Use /guild for help."));
         }
@@ -141,6 +145,10 @@ public class GuildCommand implements CommandExecutor {
     private void createGuild(Player leader, String guildName) {
         if (GuildManager.isInGuild(leader)) {
             leader.sendMessage(ColorChat.chat("&cYou are already in a guild."));
+            return;
+        }
+        if (guildName.length() > 15) {
+            leader.sendMessage(ColorChat.chat("&cGuild name cannot exceed 15 characters."));
             return;
         }
         GuildManager.createGuild(leader, guildName);
@@ -449,13 +457,21 @@ public class GuildCommand implements CommandExecutor {
         }
 
         // Check if the player has enough money
-        if (!(VaultHook.getBalance(player) > 50000)) {
+        if (VaultHook.getBalance(player) < 50000) {
             player.sendMessage(ColorChat.chat("&cChanging the guild icon costs 50,000. You don't have enough money."));
             return;
         }
 
-        if (ColorChat.strip(ColorChat.chat(icon)).length() != 1) {
+        String strippedIcon = ColorChat.strip(ColorChat.chat(icon));
+        if (strippedIcon.length() != 1) {
             player.sendMessage(ColorChat.chat("&cThe guild icon must be a single character."));
+            return;
+        }
+
+        // Check if the icon is already in use
+        List<String> allIcons = GuildManager.getAllGuildIcons();
+        if (allIcons.contains(icon)) {
+            player.sendMessage(ColorChat.chat("&cThis icon is already being used by another guild. Please choose a different icon."));
             return;
         }
 
@@ -463,5 +479,82 @@ public class GuildCommand implements CommandExecutor {
         VaultHook.withdraw(player, 50000);
         GuildManager.setChatIcon(guildId, icon);
         player.sendMessage(ColorChat.chat("&aGuild icon has been changed to " + icon + ". 50,000 has been deducted from your account."));
+    }
+    private void deposit(Player player, String[] args) {
+        String guildId = GuildManager.getGuildId(player);
+        if (guildId == null) {
+            player.sendMessage(ColorChat.chat("&cYou are not in a guild."));
+            return;
+        }
+
+        if (args.length < 2) {
+            player.sendMessage(ColorChat.chat("&cUsage: /guild deposit <amount>"));
+            return;
+        }
+
+        int amount;
+        try {
+            amount = Integer.parseInt(args[1]);
+        } catch (NumberFormatException e) {
+            player.sendMessage(ColorChat.chat("&cInvalid amount."));
+            return;
+        }
+
+        if (amount <= 0) {
+            player.sendMessage(ColorChat.chat("&cAmount must be greater than 0."));
+            return;
+        }
+
+        if (VaultHook.getBalance(player) < amount) {
+            player.sendMessage(ColorChat.chat("&cYou don't have enough gold to deposit that amount."));
+            return;
+        }
+
+        VaultHook.withdraw(player, amount);
+        GuildManager.addGuildGold(guildId, amount);
+        GuildContributionManager.addGoldContribution(guildId, player.getUniqueId(), amount);
+        player.sendMessage(ColorChat.chat("&aYou deposited &e" + amount + " &agold to the guild."));
+    }
+
+    private void withdraw(Player player, String[] args) {
+        String guildId = GuildManager.getGuildId(player);
+        if (guildId == null) {
+            player.sendMessage(ColorChat.chat("&cYou are not in a guild."));
+            return;
+        }
+
+        if (!GuildManager.isGuildLeader(player, guildId) && !GuildManager.isCoLeader(player, guildId)) {
+            player.sendMessage(ColorChat.chat("&cOnly leaders and co-leaders can withdraw from the guild."));
+            return;
+        }
+
+        if (args.length < 2) {
+            player.sendMessage(ColorChat.chat("&cUsage: /guild withdraw <amount>"));
+            return;
+        }
+
+        int amount;
+        try {
+            amount = Integer.parseInt(args[1]);
+        } catch (NumberFormatException e) {
+            player.sendMessage(ColorChat.chat("&cInvalid amount."));
+            return;
+        }
+
+        if (amount <= 0) {
+            player.sendMessage(ColorChat.chat("&cAmount must be greater than 0."));
+            return;
+        }
+
+        if (GuildManager.getGuildGold(guildId) < amount) {
+            player.sendMessage(ColorChat.chat("&cThe guild doesn't have enough gold to withdraw that amount."));
+            return;
+        }
+
+        GuildManager.removeGuildGold(guildId, amount);
+        VaultHook.deposit(player, amount);
+        int currentContribution = GuildContributionManager.getGoldContribution(guildId, player.getUniqueId());
+        GuildContributionManager.addGoldContribution(guildId, player.getUniqueId(), -Math.min(amount, currentContribution));
+        player.sendMessage(ColorChat.chat("&aYou withdrew &e" + amount + " &agold from the guild."));
     }
 }

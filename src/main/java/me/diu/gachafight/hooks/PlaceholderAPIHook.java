@@ -26,14 +26,14 @@ public class PlaceholderAPIHook extends PlaceholderExpansion {
     private final LevelLeaderboard levelLeaderboard = GachaFight.getInstance().getLevelLeaderboard();  // Add reference to LevelLeaderboard
 
     // Caching leaderboard display
-    private final Map<Integer, String> moneyLeaderboardCache = new HashMap<>();
-    private final Map<Integer, String> levelLeaderboardCache = new HashMap<>();  // Cache for level leaderboard
+    public static final Map<Integer, String> moneyLeaderboardCache = new HashMap<>();
+    public static final Map<Integer, String> levelLeaderboardCache = new HashMap<>();  // Cache for level leaderboard
 
     private long lastCacheUpdateTime = 0;
     private final long cacheExpirationTime = 60000; // Cache for 1 minute (60000 ms)
 
-    private final Map<UUID, String[]> afkRewardCache = new HashMap<>();
-    private final Map<UUID, Long> afkRewardCacheTime = new HashMap<>();
+    public static final Map<UUID, String[]> afkRewardCache = new HashMap<>();
+    public static final Map<UUID, Long> afkRewardCacheTime = new HashMap<>();
     private static final long AFK_REWARD_CACHE_DURATION = 60000; // 1 minute in milliseconds
 
     @Override

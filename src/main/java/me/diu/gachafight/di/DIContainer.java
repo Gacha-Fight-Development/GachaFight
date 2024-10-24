@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 public class DIContainer implements ServiceLocator {
-    private final Map<Class<?>, Object> services = new HashMap<>();
+    public static final Map<Class<?>, Object> services = new HashMap<>();
     private final GachaFight plugin;
 
     public DIContainer(GachaFight plugin) {

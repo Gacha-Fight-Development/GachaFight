@@ -77,21 +77,19 @@ public class GuildRequestManager {
     }
 
     public static void saveRequests() {
-        GachaFight.getInstance().getServer().getScheduler().runTaskAsynchronously(GachaFight.getInstance(), () -> {
-            for (Map.Entry<String, Map<UUID, GuildRequest>> entry : guildRequests.entrySet()) {
-                String guildId = entry.getKey();
-                for (GuildRequest request : entry.getValue().values()) {
-                    String path = guildId + "." + request.getPlayerUUID();
-                    requestConfig.set(path + ".name", request.getPlayerName());
-                    requestConfig.set(path + ".time", request.getRequestTime().getEpochSecond());
-                }
+        for (Map.Entry<String, Map<UUID, GuildRequest>> entry : guildRequests.entrySet()) {
+            String guildId = entry.getKey();
+            for (GuildRequest request : entry.getValue().values()) {
+                String path = guildId + "." + request.getPlayerUUID();
+                requestConfig.set(path + ".name", request.getPlayerName());
+                requestConfig.set(path + ".time", request.getRequestTime().getEpochSecond());
             }
-            try {
-                requestConfig.save(requestFile);
-            } catch (IOException e) {
-                GachaFight.getInstance().getLogger().severe("Could not save guild requests: " + e.getMessage());
-            }
-        });
+        }
+        try {
+            requestConfig.save(requestFile);
+        } catch (IOException e) {
+            GachaFight.getInstance().getLogger().severe("Could not save guild requests: " + e.getMessage());
+        }
     }
 
     public static void loadRequests() {

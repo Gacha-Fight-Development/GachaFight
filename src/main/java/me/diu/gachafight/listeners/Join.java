@@ -9,6 +9,7 @@ import me.diu.gachafight.playerstats.PlayerStats;
 import me.diu.gachafight.di.ServiceLocator;
 import me.diu.gachafight.quest.utils.QuestUtils;
 import me.diu.gachafight.scoreboard.Board;
+import me.diu.gachafight.siege.SiegeGameMode;
 import me.diu.gachafight.utils.ColorChat;
 import me.diu.gachafight.utils.TutorialBossBar;
 import org.bukkit.Bukkit;
@@ -82,6 +83,7 @@ public class Join implements Listener {
         for (int i = 1; i < 9; i++) {
             QuestUtils.loadQuestProgress(player, i);
         }
+        SiegeGameMode.resumeScheduledTasks(player);
         // =========Scoreboard===========
         scoreboard.setScoreBoard(player);
         Bukkit.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, () -> scoreboard.setScoreBoard(player), 20, 60);

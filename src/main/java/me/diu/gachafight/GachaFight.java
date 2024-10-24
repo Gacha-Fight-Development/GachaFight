@@ -1,5 +1,7 @@
 package me.diu.gachafight;
 
+import io.lumine.mythic.bukkit.MythicBukkit;
+import io.lumine.mythic.core.mobs.ActiveMob;
 import lombok.Getter;
 import me.diu.gachafight.Pets.PetCommand;
 import me.diu.gachafight.afk.AFKManager;
@@ -44,9 +46,15 @@ import me.diu.gachafight.shop.potion.listeners.PotionUseListener;
 import me.diu.gachafight.shop.sell.ShopManager;
 import me.diu.gachafight.shop.potion.listeners.PotionShopListener;
 import me.diu.gachafight.shop.potion.managers.PotionItemManager;
+import me.diu.gachafight.siege.Arena;
+import me.diu.gachafight.siege.ArenaGateListener;
+import me.diu.gachafight.siege.SiegeGameMode;
 import me.diu.gachafight.skills.SkillSystem;
 import me.diu.gachafight.skills.managers.MobDropSelector;
+import me.diu.gachafight.skills.managers.SkillCooldownManager;
+import me.diu.gachafight.skills.rarity.common.SwordChargeSkill;
 import me.diu.gachafight.skills.rarity.epic.GhostSwordSkill;
+import me.diu.gachafight.skills.rarity.epic.LifeStealSkill;
 import me.diu.gachafight.utils.ColorChat;
 import me.diu.gachafight.utils.DungeonUtils;
 import me.diu.gachafight.utils.FurnitureDataManager;
@@ -54,6 +62,8 @@ import me.diu.gachafight.utils.TextDisplayUtils;
 import net.luckperms.api.LuckPerms;
 import org.bukkit.Bukkit;
 import org.bukkit.SoundCategory;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.RegisteredServiceProvider;
@@ -61,11 +71,10 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.File;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.IOException;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.logging.Level;
 
 @Getter
 public final class GachaFight extends JavaPlugin implements Listener {
@@ -79,8 +88,8 @@ public final class GachaFight extends JavaPlugin implements Listener {
     private GachaLootTableManager GachaLootTableManager;
     private PotionItemManager potionItemManager;
     private LuckPerms luckPerms;
-    private final Map<Player, Integer> scoreboardTasks = new HashMap<>();
-    private final Map<Player, Integer> saveTasks = new HashMap<>();
+    public static final Map<Player, Integer> scoreboardTasks = new HashMap<>();
+    public static final Map<Player, Integer> saveTasks = new HashMap<>();
     private MoneyLeaderboard moneyLeaderboard;
     private LevelLeaderboard levelLeaderboard;
     private FurnitureDataManager furnitureDataManager;
@@ -123,6 +132,116 @@ public final class GachaFight extends JavaPlugin implements Listener {
             databaseManager.disconnect();
             getLogger().info("Successfully disconnected from the database.");
         }
+        saveHashMaps();
+    }
+
+    private void saveHashMaps() {
+        File configFile = new File(getDataFolder(), "hashmaps.yml");
+        if (!configFile.exists()) {
+            saveResource("hashmaps.yml", true);
+            saveConfig();
+        }
+        YamlConfiguration config = YamlConfiguration.loadConfiguration(configFile);
+        // Store activeMonsters hashmap
+        for (UUID uuid : SiegeGameMode.activeMonsters.keySet()) {
+            List<UUID> mobs = SiegeGameMode.activeMonsters.get(uuid);
+            config.set("activeMonsters." + uuid.toString() + ".List", mobs);
+        }
+        SiegeGameMode.activeMonsters.clear();
+
+        // Store playerUsedKey hashmap
+        for (UUID uuid : ArenaGateListener.playerUsedKey.keySet()) {
+            Arena arena = ArenaGateListener.playerUsedKey.get(uuid);
+            config.set("playerUsedKey." + uuid.toString() + ".Arena", arena.toString());
+        }
+        ArenaGateListener.playerUsedKey.clear();
+
+        for (UUID uuid : SiegeGameMode.playerWave.keySet()) {
+            Map<Integer, Integer> waveMap = SiegeGameMode.playerWave.get(uuid);
+            for (Integer arenaId : waveMap.keySet()) {
+                Integer wave = waveMap.get(arenaId);
+                config.set("playerWave." + uuid.toString() + ".ArenaId", arenaId);
+                config.set("playerWave." + uuid.toString() + ".Wave", wave.toString());
+            }
+        }
+        SiegeGameMode.playerWave.clear();
+        try {
+            config.save(configFile);
+        } catch (IOException e) {
+            getLogger().severe("Failed to save hashmaps: " + e.getMessage());
+        }
+        // Fix Memory Leak Here
+        HelpCommand.helpTopics.clear();
+        PlaceholderAPIHook.afkRewardCache.clear();
+        PlaceholderAPIHook.afkRewardCacheTime.clear();
+        PlaceholderAPIHook.levelLeaderboardCache.clear();
+        PlaceholderAPIHook.moneyLeaderboardCache.clear();
+        PlayerStats.playerStatsMap.clear();
+        PotionItemManager.potions.clear();
+        QuestManager.quests.clear();
+        TutorialGuideSystem.guidingDisplays.clear();
+        TutorialGuideSystem.guidingTasks.clear();
+        DungeonGUI.dungeons.clear();
+        DungeonGUI.dungeonSlots.clear();
+        me.diu.gachafight.gacha.managers.GachaLootTableManager.lootTables.clear();
+        DIContainer.services.clear();
+        PotionUseListener.potionConfigs.clear();
+        LevelLeaderboard.leaderboard.clear();
+        LevelLeaderboard.levelData.clear();
+        SkillCooldownManager.cooldowns.clear();
+        TextDisplayUtils.activeDisplays.clear();
+        LifeStealSkill.lifeStealActive.clear();
+        SwordChargeSkill.swordChargeActive.clear();
+        AFKManager.afkSwords.clear();
+        AFKManager.afkTasks.clear();
+        PartyCommand.partyInvitations.clear();
+        GuildCommand.guildInvitations.clear();
+
+    }
+
+    private void loadHashMaps() {
+        File configFile = new File(getDataFolder(), "hashmaps.yml");
+        if (!configFile.exists()) saveResource("hashmaps.yml", true);
+        YamlConfiguration config = YamlConfiguration.loadConfiguration(configFile);
+        ConfigurationSection activeMonstersSection = config.getConfigurationSection("activeMonsters");
+        if (activeMonstersSection != null) {
+            for (String uuid : activeMonstersSection.getKeys(false)) {
+                List<?> mobsString = activeMonstersSection.getList(uuid + ".List");
+                if (mobsString != null) {
+                    List<UUID> mobs = new ArrayList<>();
+                    for (Object mobString : mobsString) {
+                        mobs.add(UUID.fromString(mobString.toString()));
+                    }
+                    SiegeGameMode.activeMonsters.put(UUID.fromString(uuid), mobs);
+                } else {
+                    // Handle the case where mobsString is null
+                    // For example, you could log a warning message
+                    getLogger().warning("No mobs found for UUID " + uuid);
+                }
+            }
+        }
+        ConfigurationSection playerUsedKeySection = config.getConfigurationSection("playerUsedKey");
+        if (playerUsedKeySection != null) {
+            for (String uuid : playerUsedKeySection.getKeys(false)) {
+                int arenaString = playerUsedKeySection.getInt(uuid + ".Arena");
+                Arena arena = SiegeGameMode.getArena(arenaString);
+                System.out.println(uuid + " " + arena);
+                ArenaGateListener.playerUsedKey.put(UUID.fromString(uuid), arena);
+            }
+        }
+        ConfigurationSection playerWaveSection = config.getConfigurationSection("playerWave");
+        if (playerWaveSection != null) {
+            for (String uuid : playerWaveSection.getKeys(false)) {
+                String arenaIdString = playerWaveSection.getString(uuid + ".ArenaId");
+                String waveString = playerWaveSection.getString(uuid + ".Wave");
+                Integer arenaId = Integer.parseInt(arenaIdString);
+                Integer wave = Integer.parseInt(waveString);
+                Map<Integer, Integer> waveMap = new HashMap<>();
+                waveMap.put(arenaId, wave);
+                SiegeGameMode.playerWave.put(UUID.fromString(uuid), waveMap);
+            }
+        }
+        resumeScheduleTask();
     }
 
     private void initializeLuckPerms() {
@@ -158,6 +277,7 @@ public final class GachaFight extends JavaPlugin implements Listener {
             registerEvents();
             registerCommands();
             loadAllPlayerData();
+            loadHashMaps();
             scheduleTimers();
             scheduleInfoBroadcast();
             Bukkit.broadcastMessage(ColorChat.chat("&b&lGachaFight Fully Loaded"));
@@ -175,35 +295,20 @@ public final class GachaFight extends JavaPlugin implements Listener {
     }
 
     private void initializeServices() {
-        System.out.println("playerDataManager");
         this.playerDataManager = new PlayerDataManager(this, diContainer.getService(MongoService.class));
-        System.out.println("dicontainer");
         diContainer.registerService(PlayerDataManager.class, this.playerDataManager);
-        System.out.println("score");
         this.scoreboard = new Board(diContainer);
-        System.out.println("gacha");
         this.GachaLootTableManager = new GachaLootTableManager(this);
-        System.out.println("potion");
         this.potionItemManager = new PotionItemManager(this);
-        System.out.println("money");
         this.moneyLeaderboard = new MoneyLeaderboard(this);
-        System.out.println("levelleader");
         this.levelLeaderboard = new LevelLeaderboard(this);
-        System.out.println("quest");
         this.questManager = new QuestManager(this, getDataFolder(), databaseManager);
-        System.out.println("quest 2");
         QuestUtils.initialize(questManager);
-        System.out.println("gachamanager");
         this.gachaManager = new GachaManager(this, luckPerms, questManager);
-        System.out.println("furniture");
         this.furnitureDataManager = new FurnitureDataManager(this);
-        System.out.println("questgui");
         this.questGUI = new QuestGUI(questManager);
-        System.out.println("buyitem");
         this.buyItemManager = new BuyItemManager(this);
-        System.out.println("guide");
         this.guideSystem = new TutorialGuideSystem(this);
-        System.out.println("party");
         PartyManager.initialize(this);
 
         File skillsDir = new File(getDataFolder(), "Skills");
@@ -225,8 +330,6 @@ public final class GachaFight extends JavaPlugin implements Listener {
         for (Player player : Bukkit.getOnlinePlayers()) {
             playerDataManager.loadPlayerData(player);
             PlayerStats stats = playerDataManager.getPlayerStats(player.getUniqueId());
-            int scoreboardTask = Bukkit.getScheduler().runTaskTimer(this, () -> scoreboard.setScoreBoard(player), 20, 60).getTaskId();
-            scoreboardTasks.put(player, scoreboardTask);
             AFKManager.startAFKSession(player);
         }
     }
@@ -259,6 +362,12 @@ public final class GachaFight extends JavaPlugin implements Listener {
         }.runTaskTimerAsynchronously(this, 0L, 20L);
 
         scheduleSound();
+        startScoreboard();
+    }
+    private void resumeScheduleTask() {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            SiegeGameMode.resumeScheduledTasks(player);
+        }
     }
 
     private void removeAllDisplay() {
@@ -339,6 +448,7 @@ public final class GachaFight extends JavaPlugin implements Listener {
         new AFKZoneListener(this);
         new SkillSystem(this);
         new ChunkUnloadListener(this);
+        new ArenaGateListener(this);
     }
     public void scheduleSound() {
         new BukkitRunnable() {
@@ -370,6 +480,7 @@ public final class GachaFight extends JavaPlugin implements Listener {
             cancelPlayerTasks(player);
             player.closeInventory();
         }
+        Bukkit.getScheduler().cancelTasks(this);
     }
     public void reloadPlugin() {
         onDisable();
@@ -393,6 +504,11 @@ public final class GachaFight extends JavaPlugin implements Listener {
             }
         }.runTaskTimer(this, 20 * 60 * 5, 20 * 60 * 15); // Start after 5 minutes, repeat every 15 minutes
     }
-
+    public void startScoreboard() {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            int scoreboardTask = Bukkit.getScheduler().runTaskTimer(this, () -> scoreboard.setScoreBoard(player), 20, 60).getTaskId();
+            scoreboardTasks.put(player, scoreboardTask);
+        }
+    }
 
 }

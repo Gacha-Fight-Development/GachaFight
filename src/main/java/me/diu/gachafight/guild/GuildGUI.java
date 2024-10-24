@@ -2,6 +2,7 @@ package me.diu.gachafight.guild;
 
 import me.diu.gachafight.GachaFight;
 import me.diu.gachafight.guild.GuildManager;
+import me.diu.gachafight.hooks.VaultHook;
 import me.diu.gachafight.utils.ColorChat;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
@@ -11,6 +12,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.*;
@@ -31,6 +33,12 @@ public class GuildGUI implements Listener {
         Inventory inventory = Bukkit.createInventory(null, 27, ColorChat.chat("&8Guild Menu"));
 
         String guildId = GuildManager.getGuildId(player);
+        ItemStack filler = new ItemStack(Material.ORANGE_STAINED_GLASS_PANE);
+        ItemMeta fillermeta = filler.getItemMeta();
+        filler.setItemMeta(fillermeta);
+        for (int i = 0; i < inventory.getSize(); i++) {
+            inventory.setItem(i, filler);
+        }
         if (guildId == null) {
             // Player is not in a guild
             inventory.setItem(12, createGuiItem(Material.DIAMOND, "&bJoin Guild", "&7Click to join an existing guild"));
@@ -39,6 +47,11 @@ public class GuildGUI implements Listener {
         } else {
             // Player is in a guild
             inventory.setItem(10, createGuiItem(Material.BOOK, "&eList Members", "&7Click to view guild members"));
+            inventory.setItem(11, createGuiItem(Material.GOLD_INGOT, "&eGuild Bank", "&7Click to open guild bank"));
+            inventory.setItem(12, createGuiItem(Material.ENCHANTING_TABLE, "&eGuild Upgrades", "&7Click to view guild upgrades"));
+            inventory.setItem(13, createGuiItem(Material.BARRIER, "&c&lComing Soon"));
+            inventory.setItem(14, createGuiItem(Material.BARRIER, "&c&lComing Soon"));
+            inventory.setItem(15, createGuiItem(Material.BARRIER, "&c&lComing Soon"));
             inventory.setItem(16, createGuiItem(Material.REDSTONE, "&cLeave Guild", "&7Click to leave the guild"));
             if (GuildManager.isGuildLeader(player, guildId) || GuildManager.isCoLeader(player, guildId)) {
                 inventory.setItem(25, createGuiItem(Material.BOOK, "&6Manage Requests", "&7Click to view and manage guild join requests"));
@@ -76,6 +89,14 @@ public class GuildGUI implements Listener {
                 event.setCancelled(true);
                 handleGuildRequestClick(event);
             }
+            if (ColorChat.strip(event.getView().getTitle()).equalsIgnoreCase("Guild Bank")) {
+                event.setCancelled(true);
+                handleBankClick(player, slot);
+            }
+            if (ColorChat.strip(event.getView().getTitle()).equalsIgnoreCase("Guild Upgrades")) {
+                event.setCancelled(true);
+                handleUpgradeMenuClick(player, slot);
+            }
         }
     }
 
@@ -95,8 +116,11 @@ public class GuildGUI implements Listener {
                 case 10:
                     listGuildMembers(player);
                     break;
+                case 11:
+                    openGuildBankGUI(player);
+                    break;
                 case 12:
-                    //guild upgrades
+                    openGuildUpgradeMenu(player);
                     break;
                 case 14:
                     showGuildInfo(player);
@@ -130,7 +154,7 @@ public class GuildGUI implements Listener {
         player.sendMessage(ColorChat.chat("&aYou have left the guild."));
     }
 
-    private static void listGuildMembers(Player player) {
+    public static void listGuildMembers(Player player) {
         String guildId = GuildManager.getGuildId(player);
         if (guildId == null) {
             player.sendMessage(ColorChat.chat("&cYou are not in a guild."));
@@ -139,17 +163,51 @@ public class GuildGUI implements Listener {
 
         String guildName = GuildManager.getGuildName(guildId);
         int guildLevel = GuildManager.getGuildLevel(guildId);
+        Set<OfflinePlayer> memberSet = GuildManager.getGuildMembers(guildId);
 
-        player.sendMessage(ColorChat.chat("&6=== " + guildName + " (Level " + guildLevel + ") ==="));
-        player.sendMessage(ColorChat.chat("&eMembers (" + GuildManager.getGuildMembers(guildId).size() + "/" + GuildManager.MAX_GUILD_SIZE + "):"));
+        // Convert Set to List for sorting
+        List<OfflinePlayer> members = new ArrayList<>(memberSet);
 
-        for (OfflinePlayer member : GuildManager.getGuildMembers(guildId)) {
+        // Sort members: Leader first, then Co-Leaders, then regular members
+        members.sort((m1, m2) -> {
+            if (GuildManager.isGuildLeader(m1, guildId)) return -1;
+            if (GuildManager.isGuildLeader(m2, guildId)) return 1;
+            if (GuildManager.isCoLeader(m1, guildId)) return -1;
+            if (GuildManager.isCoLeader(m2, guildId)) return 1;
+            return 0;
+        });
+
+        Inventory inventory = Bukkit.createInventory(null, 54, ColorChat.chat("&6" + guildName + " Members"));
+
+        for (int i = 0; i < members.size() && i < 54; i++) {
+            OfflinePlayer member = members.get(i);
+            ItemStack head = new ItemStack(Material.PLAYER_HEAD);
+            SkullMeta meta = (SkullMeta) head.getItemMeta();
+            meta.setOwningPlayer(member);
+
             String status = member.isOnline() ? "&a[Online]" : "&c[Offline]";
             String role = GuildManager.isGuildLeader(member, guildId) ? "&6[Leader]" :
                     GuildManager.isCoLeader(member, guildId) ? "&e[Co-Leader]" : "&7[Member]";
-            player.sendMessage(ColorChat.chat(status + " " + role + " &f" + member.getName()));
+
+            meta.setDisplayName(ColorChat.chat(role + " &f" + member.getName()));
+            List<String> lore = new ArrayList<>();
+            lore.add(ColorChat.chat(status));
+
+            int expContribution = GuildContributionManager.getExpContribution(guildId, member.getUniqueId());
+            int goldContribution = GuildContributionManager.getGoldContribution(guildId, member.getUniqueId());
+            lore.add(ColorChat.chat("&bEXP Contribution: &f" + expContribution));
+            lore.add(ColorChat.chat("&6Gold Contribution: &f" + goldContribution));
+
+            meta.setLore(lore);
+
+            head.setItemMeta(meta);
+            inventory.setItem(i, head);
         }
+
+        player.openInventory(inventory);
     }
+
+
 
     private static void showGuildInfo(Player player) {
         String guildId = GuildManager.getGuildId(player);
@@ -180,11 +238,11 @@ public class GuildGUI implements Listener {
             String logoMaterial = GuildManager.getGuildLogo(guildId);
             OfflinePlayer coLeader = GuildManager.getCoLeader(guildId);
             String coLeaderName = (coLeader != null) ? coLeader.getName() : "N/A";
-            ItemStack logo = createJoinGuildItem(Material.valueOf(logoMaterial), "&b" + guildName, guildId,
+            ItemStack logo = createJoinGuildItem(Material.valueOf(logoMaterial), "&b" + guildName + " " + GuildManager.getGuildChatIcon(guildId), guildId,
+                    "&bLevel : " + GuildManager.getGuildLevel(guildId),
                     "&6Leader: " + GuildManager.getGuildLeader(guildId).getName(),
                     "&eCo-Leader: " + coLeaderName ,
                     "&7Members: " + GuildManager.getGuildMembers(guildId).size() + "/" + GuildManager.MAX_GUILD_SIZE,
-                    "&7Level: " + GuildManager.getGuildLevel(guildId),
                     "&eClick to join!");
             inventory.setItem(i, logo);
         }
@@ -246,8 +304,7 @@ public class GuildGUI implements Listener {
         }
 
         Map<UUID, GuildRequest> requests = GuildRequestManager.getGuildRequests(guildId);
-        int inventorySize = (int) Math.ceil(requests.size() / 9.0) * 9; // Round up to nearest multiple of 9
-        Inventory inventory = Bukkit.createInventory(null, inventorySize, ColorChat.chat("&8Guild Requests"));
+        Inventory inventory = Bukkit.createInventory(null, 54, ColorChat.chat("&8Guild Requests"));
 
         int i = 0;
         for (GuildRequest request : requests.values()) {
@@ -260,21 +317,25 @@ public class GuildGUI implements Listener {
 
     private static ItemStack createRequestItem(GuildRequest request) {
         ItemStack item = new ItemStack(Material.PLAYER_HEAD);
-        ItemMeta meta = item.getItemMeta();
-        meta.setDisplayName(ColorChat.chat("&b" + request.getPlayerName()));
+        SkullMeta skullMeta = (SkullMeta) item.getItemMeta();
+
+        // Set the player's skin
+        skullMeta.setOwningPlayer(Bukkit.getOfflinePlayer(request.getPlayerUUID()));
+
         List<String> lore = new ArrayList<>();
         lore.add(ColorChat.chat("&7Requested: " + request.getRequestTime().toString()));
         lore.add(ColorChat.chat("&aLeft-click to accept"));
         lore.add(ColorChat.chat("&cRight-click to reject"));
-        meta.setLore(lore);
+        skullMeta.setLore(lore);
 
         // Store the player UUID in the item's persistent data container
         NamespacedKey key = new NamespacedKey(GachaFight.getInstance(), "playerUUID");
-        meta.getPersistentDataContainer().set(key, PersistentDataType.STRING, request.getPlayerUUID().toString());
+        skullMeta.getPersistentDataContainer().set(key, PersistentDataType.STRING, request.getPlayerUUID().toString());
 
-        item.setItemMeta(meta);
+        item.setItemMeta(skullMeta);
         return item;
     }
+
     private void handleGuildRequestClick(InventoryClickEvent event) {
         Player player = (Player) event.getWhoClicked();
         ItemStack clickedItem = event.getCurrentItem();
@@ -296,6 +357,10 @@ public class GuildGUI implements Listener {
                     () -> {
                         GuildManager.addToGuild(guildId, Bukkit.getOfflinePlayer(playerUUID));
                         player.sendMessage(ColorChat.chat("&aAccepted " + meta.getDisplayName() + "'s request to join the guild."));
+                        if (Bukkit.getOfflinePlayer(playerUUID).isOnline()) {
+                            Player onlineRequester = Bukkit.getPlayer(playerUUID);
+                            onlineRequester.sendMessage(ColorChat.chat("&aAccepted join request into " + GuildManager.getGuildName(guildId) + " Guild!"));
+                        }
                         updateGuildRequestsMenu(player);
                     },
                     () -> player.sendMessage(ColorChat.chat("&cFailed to accept the request. Please try again."))
@@ -306,6 +371,10 @@ public class GuildGUI implements Listener {
                     () -> {
                         player.sendMessage(ColorChat.chat("&cRejected " + meta.getDisplayName() + "'s request to join the guild."));
                         updateGuildRequestsMenu(player);
+                        if (Bukkit.getOfflinePlayer(playerUUID).isOnline()) {
+                            Player onlineRequester = Bukkit.getPlayer(playerUUID);
+                            onlineRequester.sendMessage(ColorChat.chat("&cRejected join request from " + GuildManager.getGuildName(guildId) + " Guild"));
+                        }
                     },
                     () -> player.sendMessage(ColorChat.chat("&cFailed to reject the request. Please try again."))
             );
@@ -316,7 +385,176 @@ public class GuildGUI implements Listener {
         Bukkit.getScheduler().runTask(GachaFight.getInstance(), () -> openGuildRequestsMenu(player));
     }
 
-    //todo: make a player head system for managing requests. and also make a player head system for viewing guild member
+    public static void openGuildUpgradeMenu(Player player) {
+        String guildId = GuildManager.getGuildId(player);
+        if (guildId == null) {
+            player.sendMessage(ColorChat.chat("&cYou are not in a guild."));
+            return;
+        }
+
+        Inventory inventory = Bukkit.createInventory(null, 27, ColorChat.chat("&8Guild Upgrades"));
+
+        // EXP Multiplier Upgrade
+        int expLevel = GuildManager.getUpgradeLevel(guildId, "exp_multiplier");
+        double currentExpMulti = 1 + (expLevel * 0.1); // 10% increase per level
+        int expUpgradeCost = 10000 * (expLevel + 1);
+        ItemStack expItem = createUpgradeItem(Material.EXPERIENCE_BOTTLE, "&bEXP Multiplier",
+                "&7Current: &e" + String.format("%.1fx", currentExpMulti),
+                "&7Next Level: &e" + String.format("%.1fx", currentExpMulti + 0.1),
+                "&7Cost: &6" + expUpgradeCost + " gold",
+                "",
+                "&eClick to upgrade!");
+
+        // Gold Multiplier Upgrade
+        int goldLevel = GuildManager.getUpgradeLevel(guildId, "gold_multiplier");
+        double currentGoldMulti = 1 + (goldLevel * 0.05); // 5% increase per level
+        int goldUpgradeCost = 15000 * (goldLevel + 1);
+        ItemStack goldItem = createUpgradeItem(Material.GOLD_INGOT, "&6Gold Multiplier",
+                "&7Current: &e" + String.format("%.2fx", currentGoldMulti),
+                "&7Next Level: &e" + String.format("%.2fx", currentGoldMulti + 0.05),
+                "&7Cost: &6" + goldUpgradeCost + " gold",
+                "",
+                "&eClick to upgrade!");
+
+        inventory.setItem(11, expItem);
+        inventory.setItem(15, goldItem);
+
+        player.openInventory(inventory);
+    }
+
+    private static ItemStack createUpgradeItem(Material material, String name, String... lore) {
+        ItemStack item = new ItemStack(material);
+        ItemMeta meta = item.getItemMeta();
+        meta.setDisplayName(ColorChat.chat(name));
+        meta.setLore(Arrays.stream(lore).map(ColorChat::chat).collect(Collectors.toList()));
+        item.setItemMeta(meta);
+        return item;
+    }
+
+
+
+    public static void openGuildBankGUI(Player player) {
+        String guildId = GuildManager.getGuildId(player);
+        if (guildId == null) {
+            player.sendMessage(ColorChat.chat("&cYou are not in a guild."));
+            return;
+        }
+
+        Inventory inventory = Bukkit.createInventory(null, 27, ColorChat.chat("&8Guild Bank"));
+
+        // Display current guild balance
+        int guildBalance = GuildManager.getGuildGold(guildId);
+        ItemStack balanceItem = createGuiItem(Material.GOLD_BLOCK, "&6Guild Balance",
+                "&7Current Balance: &e" + guildBalance + " gold", "&6/guild deposit <amount> to contribute");
+        inventory.setItem(13, balanceItem);
+
+        inventory.setItem(11, createGuiItem(Material.GOLD_INGOT, "&aDeposit 1,000 gold",
+                "&7Click to deposit 1,000 gold to the guild bank"));
+        inventory.setItem(12, createGuiItem(Material.GOLD_BLOCK, "&aDeposit 10,000 gold",
+                "&7Click to deposit 10,000 gold to the guild bank"));
+
+        // Withdraw options (only for leader and co-leader)
+        if (GuildManager.isGuildLeader(player, guildId) || GuildManager.isCoLeader(player, guildId)) {
+            inventory.setItem(14, createGuiItem(Material.GOLD_NUGGET, "&cWithdraw 1,000 gold",
+                    "&7Click to withdraw 1,000 gold from the guild bank"));
+            inventory.setItem(15, createGuiItem(Material.GOLD_NUGGET, "&cWithdraw 10,000 gold",
+                    "&7Click to withdraw 10,000 gold from the guild bank"));
+        }
+
+        player.openInventory(inventory);
+    }
+
+    public void handleBankClick(Player player, int slot) {
+
+        String guildId = GuildManager.getGuildId(player);
+        if (guildId == null) return;
+        switch (slot) {
+            case 11:
+                handleDeposit(player, guildId, 1000);
+                break;
+            case 12:
+                handleDeposit(player, guildId, 10000);
+                break;
+            case 14:
+                if (GuildManager.isGuildLeader(player, guildId) || GuildManager.isCoLeader(player, guildId)) {
+                    handleWithdraw(player, guildId, 1000);
+                }
+                break;
+            case 15:
+                if (GuildManager.isGuildLeader(player, guildId) || GuildManager.isCoLeader(player, guildId)) {
+                    handleWithdraw(player, guildId, 10000);
+                }
+                break;
+        }
+
+        // Refresh the GUI to show updated balance
+        openGuildBankGUI(player);
+    }
+
+    private void handleDeposit(Player player, String guildId, int amount) {
+        if (VaultHook.getBalance(player) >= amount) {
+            VaultHook.withdraw(player, amount);
+            GuildManager.addGuildGold(guildId, amount);
+            GuildContributionManager.addGoldContribution(guildId, player.getUniqueId(), amount);
+            player.sendMessage(ColorChat.chat("&aSuccessfully deposited " + amount + " gold to the guild bank."));
+        } else {
+            player.sendMessage(ColorChat.chat("&cYou don't have enough gold to make this deposit."));
+        }
+    }
+
+    private void handleWithdraw(Player player, String guildId, int amount) {
+        if (GuildManager.getGuildGold(guildId) >= amount) {
+            GuildManager.removeGuildGold(guildId, amount);
+            VaultHook.deposit(player, amount);
+            int currentContribution = GuildContributionManager.getGoldContribution(guildId, player.getUniqueId());
+            GuildContributionManager.addGoldContribution(guildId, player.getUniqueId(), -Math.min(amount, currentContribution));
+            player.sendMessage(ColorChat.chat("&aSuccessfully withdrew " + amount + " gold from the guild bank."));
+        } else {
+            player.sendMessage(ColorChat.chat("&cThe guild bank doesn't have enough gold for this withdrawal."));
+        }
+    }
+
+    public void handleUpgradeMenuClick(Player player, int slot) {
+        String guildId = GuildManager.getGuildId(player);
+        if (guildId == null) return;
+
+        switch (slot) {
+            case 11:
+                // EXP Multiplier Upgrade
+                int expLevel = GuildManager.getUpgradeLevel(guildId, "exp_multiplier");
+                int expUpgradeCost = getExpUpgradeCost(expLevel);
+                if (GuildManager.getGuildGold(guildId) >= expUpgradeCost) {
+                    GuildManager.incrementUpgradeLevel(guildId, "exp_multiplier");
+                    player.sendMessage(ColorChat.chat("&aEXP Multiplier upgraded successfully!"));
+                    openGuildUpgradeMenu(player);
+                } else {
+                    player.sendMessage(ColorChat.chat("&cNot enough gold to upgrade the EXP Multiplier."));
+                }
+                break;
+            case 15:
+                // Gold Multiplier Upgrade
+                int goldLevel = GuildManager.getUpgradeLevel(guildId, "gold_multiplier");
+                int goldUpgradeCost = getGoldUpgradeCost(goldLevel);
+                if (GuildManager.getGuildGold(guildId) >= goldUpgradeCost) {
+                    GuildManager.incrementUpgradeLevel(guildId, "gold_multiplier");
+                    player.sendMessage(ColorChat.chat("&aGold Multiplier upgraded successfully!"));
+                    openGuildUpgradeMenu(player);
+                } else {
+                    player.sendMessage(ColorChat.chat("&cNot enough gold to upgrade the Gold Multiplier."));
+                }
+                break;
+        }
+    }
+
+    private int getExpUpgradeCost(int expLevel) {
+        // calculate EXP upgrade cost based on level
+        return (int) (10000 * Math.pow(1.1, expLevel));
+    }
+
+    private int getGoldUpgradeCost(int goldLevel) {
+        // calculate Gold upgrade cost based on level
+        return (int) (15000 * Math.pow(1.05, goldLevel));
+    }
     //todo: upgrades. Quest give guild exp, Guild Contribution Records (clears every monday), Guild Managing Player GUI.
 }
 

@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 
 public class GuildTabCompleter implements TabCompleter {
 
-    private static final List<String> SUBCOMMANDS = List.of("help", "create", "invite", "accept", "leave", "kick", "list", "info", "upgrade", "promote", "demote", "changeicon", "changelogo");
+    private static final List<String> SUBCOMMANDS = List.of("help", "create", "invite", "accept", "leave", "kick", "list", "info", "upgrade", "promote", "demote", "changeicon", "changelogo", "deposit", "withdraw");
 
 
     public GuildTabCompleter(GachaFight plugin) {

@@ -1,6 +1,8 @@
 package me.diu.gachafight.utils;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.entity.Player;
 
 public class DungeonUtils {
     public static String getDungeonName(Location location) {
@@ -10,7 +12,10 @@ public class DungeonUtils {
             return "RPG";
         } else if (isSafezone(location)){
             return "Safezone";
-        } else {
+        } else if (isArena(location)) {
+            return "Arena";
+        }
+        else {
             return null;
         }
     }
@@ -39,6 +44,17 @@ public class DungeonUtils {
             return true;
         }
         return false;
+    }
+    public static boolean isArena(Location location) {
+        //MinX, MaxX, MinZ, MaxZ
+        if (location.getX() > -853 && location.getX() < -752 && location.getZ() > -312 && location.getZ() < -184) {
+            return true;
+        }
+        return false;
+    }
+
+    public static void teleportPlayerToSpawn(Player player) {
+        player.teleport(new Location(Bukkit.getWorld("Spawn"), 14.5, 99, 175.5));
     }
 
 }

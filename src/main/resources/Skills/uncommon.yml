@@ -11,3 +11,8 @@ sword burst:
   maxDistance: 2.5
   hitboxSize: 0.5
   description: "Release a burst of sword energy that travels <maxDistance> blocks, damaging enemies in its path."
+
+swifty hands:
+  cooldown: 5
+  radius: 5.0
+  description: "Collect dropped items within a <radius> block radius."

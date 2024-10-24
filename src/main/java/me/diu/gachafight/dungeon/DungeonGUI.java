@@ -1,6 +1,7 @@
 
 package me.diu.gachafight.dungeon;
 
+import io.papermc.paper.entity.TeleportFlag;
 import me.diu.gachafight.GachaFight;
 import me.diu.gachafight.combat.DamageListener;
 import me.diu.gachafight.dungeon.Dungeon;
@@ -28,14 +29,12 @@ import java.util.stream.Collectors;
 public class DungeonGUI implements Listener {
 
     private final GachaFight plugin;
-    private final Map<String, Dungeon> dungeons = new HashMap<>();
-    private final Map<String, Integer> dungeonSlots = new HashMap<>();
-    private final Inventory gui;
+    public static final Map<String, Dungeon> dungeons = new HashMap<>();
+    public static final Map<String, Integer> dungeonSlots = new HashMap<>();
 
     public DungeonGUI(GachaFight plugin) {
         this.plugin = plugin;
         initializeDungeons();
-        this.gui = createDungeonGUI();
         Bukkit.getPluginManager().registerEvents(this, plugin);
     }
 
@@ -75,7 +74,7 @@ public class DungeonGUI implements Listener {
         dungeonSlots.put("Goblin Camp", 11);
     }
 
-    private Inventory createDungeonGUI() {
+    private Inventory createDungeonGUI(Player player) {
         Inventory gui = Bukkit.createInventory(null, 27, ColorChat.chat("&6Dungeon Selector"));
         ItemStack cyanPane = new ItemStack(Material.RED_STAINED_GLASS_PANE);
         ItemMeta cyanPaneMeta = cyanPane.getItemMeta();
@@ -91,31 +90,49 @@ public class DungeonGUI implements Listener {
             Dungeon dungeon = entry.getValue();
             int slot = dungeonSlots.get(entry.getKey());
 
-            ItemStack dungeonItem = new ItemStack(Material.DIAMOND_SWORD);
-            ItemMeta meta = dungeonItem.getItemMeta();
-            meta.setDisplayName(ColorChat.chat("&a" + dungeon.getName()));
-
-            List<Component> lore = new ArrayList<>();
-            for (String descLine : dungeon.getDescription()) {
-                lore.add(MiniMessage.miniMessage().deserialize("<!i>" + descLine));
+            ItemStack dungeonItem;
+            if (entry.getKey().equals("Goblin Camp")) {
+                if (!player.hasPermission("gacha.dungeons.1")) {
+                    dungeonItem = new ItemStack(Material.BARRIER);
+                    ItemMeta meta = dungeonItem.getItemMeta();
+                    meta.setDisplayName(ColorChat.chat("&cLocked"));
+                    List<Component> lore = new ArrayList<>();
+                    lore.add(MiniMessage.miniMessage().deserialize("<!i>Pass Complete Arena 1 to unlock Dungeon 2"));
+                    meta.lore(lore);
+                    dungeonItem.setItemMeta(meta);
+                } else {
+                    dungeonItem = new ItemStack(Material.DIAMOND_SWORD);
+                    ItemMeta meta = dungeonItem.getItemMeta();
+                    meta.setDisplayName(ColorChat.chat("&a" + dungeon.getName()));
+                    List<Component> lore = new ArrayList<>();
+                    for (String descLine : dungeon.getDescription()) {
+                        lore.add(MiniMessage.miniMessage().deserialize("<!i>" + descLine));
+                    }
+                    meta.lore(lore);
+                    dungeonItem.setItemMeta(meta);
+                }
+            } else {
+                dungeonItem = new ItemStack(Material.DIAMOND_SWORD);
+                ItemMeta meta = dungeonItem.getItemMeta();
+                meta.setDisplayName(ColorChat.chat("&a" + dungeon.getName()));
+                List<Component> lore = new ArrayList<>();
+                for (String descLine : dungeon.getDescription()) {
+                    lore.add(MiniMessage.miniMessage().deserialize("<!i>" + descLine));
+                }
+                meta.lore(lore);
+                dungeonItem.setItemMeta(meta);
             }
-            meta.lore(lore);
-
-            dungeonItem.setItemMeta(meta);
 
             gui.setItem(slot, dungeonItem);
         }
 
         return gui;
     }
-    public void openDungeonGUI(Player player) {
-        player.openInventory(gui);
-    }
 
     @EventHandler
     public void onPlayerInteract(PlayerInteractEntityEvent event) {
         if (event.getRightClicked().getName() != null && event.getRightClicked().getName().contains("Dungeon Master")) {
-            openDungeonGUI(event.getPlayer());
+            event.getPlayer().openInventory(createDungeonGUI(event.getPlayer()));
         }
     }
 
@@ -251,7 +268,8 @@ public class DungeonGUI implements Listener {
         System.out.println("Teleporting " + player.getName() + " to " + dungeon.getName() + " at " + spawnLocation);
 
         player.stopAllSounds();
-        player.teleport(spawnLocation);
+
+        player.teleport(spawnLocation, TeleportFlag.EntityState.RETAIN_PASSENGERS);
         player.sendMessage(ColorChat.chat("&aTeleported to " + dungeon.getName() + "!"));
         player.sendMessage(ColorChat.chat("&cItems obtained inside dungeon drop on death!"));
         player.sendMessage(ColorChat.chat("&6Find 4 exits to teleport back to spawn."));

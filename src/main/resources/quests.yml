@@ -1,0 +1,111 @@
+quests:
+  - id: 1
+    name: "Kill 10 Green Slime Cube"
+    description: "Kill 10 Green Slime Cube."
+    objective: 
+      type: "killMob"
+      target: "rpg_slime_cube"
+      amount: 10
+    rewards:
+      money: 200
+      gems: 1
+  - id: 2
+    name: "Stay Online for 1 Hour"
+    description: "Stay online for 1 hour."
+    objective: 
+      type: "onlineTime"
+      amount: 3600
+    rewards:
+      money: 500
+      gems: 3
+  - id: 3
+    name: "Open 15 Common Keys"
+    description: "Open 15 Common Keys."
+    objective: 
+      type: "keyOpen"
+      target: "Common Gacha Key"
+      amount: 15
+    rewards:
+      money: 100
+      gems: 1
+  - id: 4
+    name: "Open 2 Uncommon Keys"
+    description: "Open 2 Uncommon Keys."
+    objective: 
+      type: "keyOpen"
+      target: "Uncommon Gacha Key"
+      amount: 2
+    rewards:
+      money: 100
+      gems: 1
+  - id: 1001
+    name: "Kill Stone Golem!"
+    description: "Alpha Phase Special Quest!"
+    objective: 
+      type: "killMob"
+      target: "rpg_stone_golem"
+      amount: 1
+    repeatable: false
+    rewards:
+      gems: 10
+      suffix_tag: "alpha"
+  - id: 1002
+    name: "Slay Skellies!"
+    description: "Kill 10 Skeleton Warriors"
+    objective: 
+      type: "killMob"
+      target: "rpg_skeleton"
+      amount: 10
+    rewards:
+      money: 100
+      gems: 1
+  - id: 1003
+    name: "I hate yellow."
+    description: "Kill 10 Yellow Mushroom"
+    objective: 
+      type: "killMob"
+      target: "rpg_mushroom"
+      amount: 10
+    rewards:
+      money: 100
+      gems: 1
+  - id: 1004
+    name: "I hate red."
+    description: "Kill 10 Red Mushroom"
+    objective: 
+      type: "killMob"
+      target: "rpg_mushroom_red"
+      amount: 10
+    rewards:
+      money: 100
+      gems: 1
+  - id: 1005
+    name: "Brainz..."
+    description: "Kill 10 Zombies"
+    objective: 
+      type: "killMob"
+      target: "rpg_zombie"
+      amount: 10
+    rewards:
+      money: 100
+      gems: 1
+  - id: 1006
+    name: "Covid"
+    description: "Kill 10 Bats"
+    objective: 
+      type: "killMob"
+      target: "rpg_bat"
+      amount: 10
+    rewards:
+      money: 100
+      gems: 1
+  - id: 1007
+    name: "Sewer Puppies"
+    description: "Kill 10 Rats"
+    objective: 
+      type: "killMob"
+      target: "rpg_rat"
+      amount: 10
+    rewards:
+      money: 100
+      gems: 1

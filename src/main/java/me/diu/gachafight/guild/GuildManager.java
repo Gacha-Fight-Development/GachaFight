@@ -38,6 +38,7 @@ public class GuildManager {
             plugin.getLogger().info("Successfully loaded guilds.yml configuration.");
             plugin.getLogger().info("Number of guilds loaded: " + config.getKeys(false).size());
         }
+        GuildContributionManager.initialize(plugin);
     }
 
     public static void createGuild(OfflinePlayer leader, String guildName) {
@@ -134,10 +135,11 @@ public class GuildManager {
         return getGuildId(player) != null;
     }
 
-    public static void addGuildExp(String guildId, int exp) {
+    public static void addGuildExp(String guildId, UUID playerUUID, int exp) {
         int currentExp = config.getInt(guildId + ".exp");
         int currentLevel = config.getInt(guildId + ".level");
         int newExp = currentExp + exp;
+        GuildContributionManager.addExpContribution(guildId, playerUUID, exp);
         int expForNextLevel = getExpForNextLevel(currentLevel);
 
         while (newExp >= expForNextLevel) {
@@ -249,6 +251,9 @@ public class GuildManager {
         saveConfig();
     }
     public static void setGuildName(String guildId, String name) {
+        if (name.length() > 15) {
+            throw new IllegalArgumentException("Guild name cannot exceed 15 characters.");
+        }
         config.set(guildId + ".name", name);
         saveConfig();
     }
@@ -428,6 +433,41 @@ public class GuildManager {
     public static void changeGuildLogo(String guildId, String newLogoMaterial) {
         if (Material.valueOf(newLogoMaterial) != null) {
             setGuildLogo(guildId, newLogoMaterial);
+        }
+    }
+    public static List<String> getAllGuildIcons() {
+        return getAllGuildIds().stream()
+                .map(GuildManager::getChatIcon)
+                .collect(Collectors.toList());
+    }
+
+    public static int getUpgradeLevel(String guildId, String upgrade) {
+        return config.getInt(guildId + ".upgrades." + upgrade, 0);
+    }
+
+    public static void incrementUpgradeLevel(String guildId, String upgrade) {
+        int currentLevel = getUpgradeLevel(guildId, upgrade);
+        config.set(guildId + ".upgrades." + upgrade, currentLevel + 1);
+        saveConfig();
+    }
+
+    public static int getGuildGold(String guildId) {
+        return config.getInt(guildId + ".gold", 0);
+    }
+
+    public static void addGuildGold(String guildId, int amount) {
+        int currentGold = getGuildGold(guildId);
+        config.set(guildId + ".gold", currentGold + amount);
+        saveConfig();
+    }
+
+    public static void removeGuildGold(String guildId, int amount) {
+        int currentGold = getGuildGold(guildId);
+        if (currentGold >= amount) {
+            config.set(guildId + ".gold", currentGold - amount);
+            saveConfig();
+        } else {
+            return;
         }
     }
 }

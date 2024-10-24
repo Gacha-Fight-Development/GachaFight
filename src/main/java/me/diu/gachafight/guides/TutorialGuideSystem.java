@@ -22,8 +22,8 @@ import java.util.UUID;
 public class TutorialGuideSystem implements Listener {
 
     private final GachaFight plugin;
-    private final Map<UUID, Integer> guidingTasks = new HashMap<>();  // Store scheduler task IDs per player
-    private final Map<UUID, ItemDisplay> guidingDisplays = new HashMap<>();  // Store ItemDisplays per player
+    public static final Map<UUID, Integer> guidingTasks = new HashMap<>();  // Store scheduler task IDs per player
+    public static final Map<UUID, ItemDisplay> guidingDisplays = new HashMap<>();  // Store ItemDisplays per player
 
     public TutorialGuideSystem(GachaFight plugin) {
         this.plugin = plugin;

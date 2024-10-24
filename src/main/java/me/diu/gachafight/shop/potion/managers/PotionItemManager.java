@@ -15,13 +15,13 @@ import java.util.Map;
 
 public class PotionItemManager {
     private final GachaFight plugin;
-    private final Map<Integer, List<ItemStack>> potions;
+    public static Map<Integer, List<ItemStack>> potions;
     private final File potionFile;
     private FileConfiguration potionConfig;
 
     public PotionItemManager(GachaFight plugin) {
         this.plugin = plugin;
-        this.potions = new HashMap<>();
+        potions = new HashMap<>();
         this.potionFile = new File(plugin.getDataFolder(), "potion_shop.yml");
 
         // Register ItemStack for serialization

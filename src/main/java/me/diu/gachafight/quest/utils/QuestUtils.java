@@ -1,6 +1,7 @@
 package me.diu.gachafight.quest.utils;
 
 import me.diu.gachafight.GachaFight;
+import me.diu.gachafight.guild.GuildManager;
 import me.diu.gachafight.hooks.VaultHook;
 import me.diu.gachafight.playerstats.PlayerStats;
 import me.diu.gachafight.quest.Quest;
@@ -125,15 +126,24 @@ public class QuestUtils {
             givePlayerTagPermission(player, tagName);
             player.sendMessage("§aYou received " + tagName + " suffix!");
         }
+        if (quest.getRewards().containsKey("guild_exp")) {
+            if (GuildManager.isInGuild(player)) {
+                int exp = (int) quest.getRewards().get("guild_exp");
+                GuildManager.addGuildExp(GuildManager.getGuildId(player), player.getUniqueId(), exp);
+                player.sendMessage("§aYou received " + exp + " guild experience!");
+            } else {
+                player.sendMessage("§cGuild EXP not rewarded due to not being in a guild.");
+            }
+        }
     }
 
     // Method to give player permission for a suffix tag reward (you can move this here as well)
     public static void givePlayerTagPermission(Player player, String tagName) {
         // Logic to give player a suffix tag permission (LuckPerms or your permission system)
-        questManager.getPlugin().getLuckPerms().getUserManager().getUser(player.getUniqueId()).data()
+        GachaFight.getInstance().getLuckPerms().getUserManager().getUser(player.getUniqueId()).data()
                 .add(PermissionNode.builder("gacha.tags." + tagName.toLowerCase()).build());
-        questManager.getPlugin().getLuckPerms().getUserManager().saveUser(
-                questManager.getPlugin().getLuckPerms().getUserManager().getUser(player.getUniqueId())
+        GachaFight.getInstance().getLuckPerms().getUserManager().saveUser(
+                GachaFight.getInstance().getLuckPerms().getUserManager().getUser(player.getUniqueId())
         );
         player.sendMessage("§aYou received the suffix tag: " + tagName + "!");
     }
